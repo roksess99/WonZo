@@ -52,6 +52,9 @@ export type BigBuyCompliance = {
   }[];
 };
 
+/** One row of /shipping/lowest-shipping-costs-by-country/nl; "cost" is a string (GEMETEN 2026-10-05). */
+export type BigBuyLowestShipping = { reference: string; cost: string; carrierName: string | null };
+
 export type BigBuyTaxonomy = { id: number; name: string; parentTaxonomy: number };
 
 export type BigBuyManufacturer = { id: number; name: string };
@@ -74,6 +77,11 @@ export function parseStock(x: unknown): BigBuyStock | null {
   if (!isObj(x) || !isNum(x.id) || !Array.isArray(x.stocks)) return null;
   const ok = x.stocks.every((s) => isObj(s) && isNum(s.quantity) && isNum(s.minHandlingDays) && isNum(s.maxHandlingDays));
   return ok ? (x as unknown as BigBuyStock) : null;
+}
+
+export function parseLowestShipping(x: unknown): BigBuyLowestShipping | null {
+  if (!isObj(x) || !isStr(x.reference) || !isStr(x.cost) || !isAmount(x.cost)) return null;
+  return { reference: x.reference, cost: x.cost, carrierName: isStr(x.carrierName) ? x.carrierName : null };
 }
 
 export function parseInformation(x: unknown): BigBuyInformation | null {

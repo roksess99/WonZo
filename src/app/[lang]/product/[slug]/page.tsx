@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { AddToCart } from "@/components/cart/AddToCart";
 import { ProductImage } from "@/components/catalog/ProductImage";
 import { CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
@@ -8,7 +9,8 @@ import type { Product } from "@/lib/catalog/types";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages, t, type Messages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatMoneyShort } from "@/lib/money";
+import { productShipping } from "@/lib/pricing/shipping";
 import { pageMetadata, siteUrl } from "@/lib/seo";
 
 const idFromSlug = (slug: string) => /-(\d+)$/.exec(slug)?.[1] ?? (/^\d+$/.test(slug) ? slug : null);
@@ -97,6 +99,8 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
   const categoryPath = category ? localizePath(lang, `/${category.slug[lang]}`) : undefined;
   const url = new URL(localizePath(lang, `/product/${p.slug}`), siteUrl).toString();
   const specLabels = m.product.spec as Record<string, string>;
+  // Shipping costs before the button (docs/ONDERZOEK.md § 1.2, ACM), from the same rule as the cart.
+  const shipping = productShipping(p.shippingAlone);
 
   return (
     <Container className="flex flex-col gap-8 py-8">
@@ -145,23 +149,31 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
                   {t(m.product.shipsFrom, { country: countryName(m, p.delivery.shipsFrom) })}
                 </span>
               </li>
-              <li className="flex items-center gap-2 text-muted">
-                <InfoIcon />
-                {m.product.shippingCosts}
+              <li className="flex items-start gap-2">
+                <InfoIcon className="mt-0.5 size-5 shrink-0" />
+                <span className="tabular-nums">
+                  {shipping.kind === "large"
+                    ? t(m.product.shippingLarge, { cost: formatMoney(shipping.perPiece) })
+                    : t(m.product.shippingStandard, { fee: formatMoney(shipping.fee), freeFrom: formatMoneyShort(shipping.freeFrom) })}
+                </span>
               </li>
             </ul>
-            {/* A button that cannot act says why (docs/ACCESSIBILITY.md): ordering arrives in fase 2. */}
-            <button
-              type="button"
-              aria-disabled="true"
-              aria-describedby="order-status"
-              className="min-h-12 w-full cursor-not-allowed rounded-md bg-line px-6 text-body font-bold text-foreground"
-            >
-              {m.product.addToCart}
-            </button>
-            <p id="order-status" role="status" className="text-body-sm text-muted">
-              {m.product.notYet}
-            </p>
+            <AddToCart
+              productId={p.id}
+              stock={p.stock}
+              cartHref={localizePath(lang, "/winkelwagen")}
+              labels={{
+                button: m.product.addToCart,
+                added: m.cart.added,
+                viewCart: m.cart.viewCart,
+                tooMany: m.cart.tooMany,
+                cartFull: m.cart.cartFull,
+                quantity: m.cart.quantity,
+                decrease: m.cart.decrease,
+                increase: m.cart.increase,
+                range: m.cart.range,
+              }}
+            />
             <p className="flex items-center gap-2 text-body-sm">
               <ReturnIcon className="size-4" />
               {m.product.withdrawal} · {m.product.returns}

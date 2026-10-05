@@ -4,7 +4,7 @@
 
 import type { Locale } from "@/lib/i18n/config";
 import type { BigBuyInformation } from "./bigbuy/dto";
-import { parseInformation, parseProduct, parseStock } from "./bigbuy/dto";
+import { parseInformation, parseLowestShipping, parseProduct, parseStock } from "./bigbuy/dto";
 import { toProduct, type SupplierRecord } from "./bigbuy/map";
 import * as fixtures from "./fixtures";
 import type { Product } from "./types";
@@ -39,6 +39,8 @@ function mockRecords(): SupplierRecord[] {
   const en = info("en");
   const images = new Map(fixtures.images.map((i) => [i.id, i]));
   const compliance = new Map(fixtures.compliance.map((c) => [c.id, c]));
+  // Keyed by sku ("reference"), as the supplier sends it.
+  const shipping = new Map(fixtures.lowestShipping.map(parseLowestShipping).filter((x) => x !== null).map((x) => [x.reference, x]));
   const brands = new Map(fixtures.manufacturers.map((m) => [m.id, m.name]));
 
   const records: SupplierRecord[] = [];
@@ -51,6 +53,7 @@ function mockRecords(): SupplierRecord[] {
       info: { nl: nl.get(product.id), en: en.get(product.id) },
       images: images.get(product.id) ?? null,
       compliance: compliance.get(product.id) ?? null,
+      shipping: shipping.get(product.sku) ?? null,
       taxonomyPath: taxonomyPath(product.taxonomy),
       brand: product.manufacturer !== null ? (brands.get(product.manufacturer) ?? null) : null,
     });

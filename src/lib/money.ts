@@ -47,6 +47,17 @@ export function add(a: Money, b: Money): Money {
   return money(a.amount + b.amount, a.currency);
 }
 
+/** A unit price times a quantity; the quantity must be a whole number. */
+export function multiply(m: Money, factor: number): Money {
+  if (!Number.isSafeInteger(factor)) throw new MoneyError(`Factor must be an integer: ${factor}`);
+  return money(m.amount * factor, m.currency);
+}
+
+export function subtract(a: Money, b: Money): Money {
+  if (a.currency !== b.currency) throw new MoneyError(`Cannot subtract ${b.currency} from ${a.currency}`);
+  return money(a.amount - b.amount, a.currency);
+}
+
 export function compare(a: Money, b: Money): number {
   if (a.currency !== b.currency) throw new MoneyError(`Cannot compare ${a.currency} and ${b.currency}`);
   return a.amount - b.amount;
@@ -57,4 +68,11 @@ const formatter = new Intl.NumberFormat("nl-NL", { style: "currency", currency: 
 
 export function formatMoney(m: Money): string {
   return formatter.format(m.amount / 100);
+}
+
+const wholeFormatter = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+/** For round amounts in running text ("gratis vanaf € 50"); anything with cents keeps them. */
+export function formatMoneyShort(m: Money): string {
+  return m.amount % 100 === 0 ? wholeFormatter.format(m.amount / 100) : formatMoney(m);
 }

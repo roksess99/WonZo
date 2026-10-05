@@ -26,4 +26,11 @@ describe("resolvePublicPath — what the proxy does", () => {
     expect(resolvePublicPath("/nl/tuin")).toEqual({ kind: "redirect", to: "/tuin" });
     expect(resolvePublicPath("/nl")).toEqual({ kind: "redirect", to: "/" });
   });
+  it("redirects a Dutch word under /en to the English one, and leaves shared words alone", () => {
+    expect(resolvePublicPath("/en/winkelwagen")).toEqual({ kind: "redirect", to: "/en/cart" });
+    expect(resolvePublicPath("/en/zoeken")).toEqual({ kind: "redirect", to: "/en/search" });
+    expect(resolvePublicPath("/en/cart")).toEqual({ kind: "rewrite", locale: "en", internalPath: "/en/winkelwagen" });
+    expect(resolvePublicPath("/en/contact")).toEqual({ kind: "rewrite", locale: "en", internalPath: "/en/contact" });
+    expect(resolvePublicPath("/en/product/x-1")).toEqual({ kind: "rewrite", locale: "en", internalPath: "/en/product/x-1" });
+  });
 });

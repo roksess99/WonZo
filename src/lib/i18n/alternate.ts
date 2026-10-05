@@ -4,14 +4,14 @@
 
 import { assortment } from "@/lib/catalog/assortment";
 import type { Locale } from "./config";
-import { localizePath, resolvePublicPath } from "./paths";
+import { localizePath, resolvePublicPath, staticSegments } from "./paths";
 
 export function alternatePath(publicPath: string, to: Locale): string {
   const resolved = resolvePublicPath(publicPath);
   if (resolved.kind === "redirect") return alternatePath(resolved.to, to);
   const [, from, ...rest] = resolved.internalPath.split("/");
   const fromLocale = from as Locale;
-  if (rest[0] && rest[0] !== "product" && rest[0] !== "zoeken" && rest[0] !== "zo-werkt-wonzo" && rest[0] !== "contact") {
+  if (rest[0] && !(rest[0] in staticSegments)) {
     const category = assortment.find((c) => c.slug[fromLocale] === rest[0]);
     if (category) {
       rest[0] = category.slug[to];

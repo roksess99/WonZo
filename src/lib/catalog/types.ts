@@ -40,6 +40,12 @@ export type Product = {
   /** The offer price, stock and delivery come from (docs/api/LEVERANCIER.md § 7). */
   offerId: string;
   delivery: Delivery;
+  /**
+   * What the supplier charges to ship this product alone to the Netherlands
+   * (docs/api/LEVERANCIER.md § 10). Decides whether it is a large item with
+   * its own shipping costs (D-13); src/lib/pricing/shipping.ts uses it.
+   */
+  shippingAlone: Money;
   imageUrls: string[];
   categoryKey: string;
   subcategoryKey: string;

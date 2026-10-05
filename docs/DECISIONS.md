@@ -131,8 +131,10 @@ mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
 verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
 (vraag 4 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
 
-**Nog open, niet blokkerend:** incl. of excl. btw (meten met een schermafdruk
-van V0710266); energielabel bij een artikel dat er een heeft; `order/check` en
+**Nog open, niet blokkerend:** of de adviesprijs incl. of excl. btw is — de
+inkoopprijs is excl. btw (`GEMETEN 2026-10-05`, schermafdruk V0710266), de
+adviesprijs vermoedelijk ook, te bevestigen door BigBuy
+(`docs/api/LEVERANCIER.md`); energielabel bij een artikel dat er een heeft; `order/check` en
 bestellen testen (de sandbox heeft geen catalogus); voorraad per variant;
 stabiliteit van de taxonomie-id's over de tijd.
 
@@ -178,6 +180,8 @@ aan **alle** regels voldoet, afgedwongen in de code:
 6. GPSR-gegevens aanwezig (fabrikant met adres).
 7. Een prijsondergrens of minimumbestelling — de waarde volgt uit D-03 en
    D-13.
+8. Verzendkosten bekend — gevolg van D-13 (2026-10-05): ze moeten vóór het
+   bestellen te zien zijn. In de meting had 1 van de 382 artikelen er geen.
 
 Merken worden niet uitgesloten: InnovaGoods, met de diepste voorraad, hoort
 erbij. Woningtextiel komt later (D-36). Niet toegestaan zijn de overige
@@ -367,23 +371,50 @@ reden; geen sterrengemiddelde in de markering zonder echte beoordelingen.
 
 ## D-13 · Verzending
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** D-01
+- **Decided:** 2026-10-05
 
-**Te beantwoorden:** vervoerder en tarieven; drempel voor gratis verzending;
-bestelling uit meerdere bronnen (twee pakketten, één of twee keer
-verzendkosten); na hoeveel dagen geldt een zending als afgeleverd zonder
-melding; **hoe de levertijd getoond wordt** — als bereik uit de gegevens van
-de leverancier, met het land van verzending, op kaart, productpagina,
-winkelwagen, afrekenen en bevestiging (`WETTELIJK`: ACM, zie
-`docs/ONDERZOEK.md`). Ter vergelijking bij de drempel: gemiddeld rond € 25 in
-Nederland, vidaXL € 70 (`GEDOCUMENTEERD`, Sendcloud en vidaXL).
+**Verzendkosten voor de klant** (eigenaar, 2026-10-05):
 
-**In de code tot deze beslissing** (fase 1, `src/lib/catalog/delivery.ts`):
-transport 3–5 werkdagen bovenop de verwerkingstijd van de leverancier, en
-"verzonden vanuit Spanje" — beide `AANNAME`, op één plek, te vervangen door
-de gekozen vervoerdersdienst en het gemeten magazijnland. Verzendkosten staan
-op de productpagina als "worden nog vastgesteld".
+1. **€ 5,95** voor het gewone pakket onder de grens.
+2. **Gratis vanaf € 50** (het hele subtotaal incl. btw; precies € 50 is
+   gratis).
+3. **Grote artikelen** — een artikel dat BigBuy los meer dan **€ 15** kost om
+   te verzenden — hebben **eigen verzendkosten per stuk**: het bedrag dat
+   BigBuy rekent, op de productpagina vóór de knop, en nooit gratis. In de
+   meting 81 van de 381 artikelen (meubels, tuinmeubels, wat sport).
+
+Eén regel in `src/lib/pricing/shipping.ts`, gebruikt door productpagina en
+winkelwagen, straks ook door checkout en bestelling. Een artikel waarvan de
+verzendkosten niet bekend zijn, komt niet in de winkel: ze moeten vóór het
+bestellen te zien zijn (selectieregel, `src/lib/catalog/selection.ts`).
+
+**Waarom dit en niet het alternatief.** Gemeten (`docs/api/LEVERANCIER.md`
+§ 10, `docs/ONDERZOEK.md` § 8): BigBuy rekent per pakket op gewicht —
+minimaal € 8,58, vijf kleine artikelen samen € 13,81 — maar een meubel los
+€ 64 tot € 273. Een grens van € 50 is daardoor betaalbaar voor kleine
+artikelen, en ligt in lijn met woonwinkels (Xenos € 45, fonQ € 50). Verworpen:
+één grens voor alles (verlies op elk groot artikel); altijd de echte kosten
+doorberekenen (€ 8,58 of meer schrikt af, en een grens kan dan niet);
+verzending in de prijs (maakt kleine artikelen duur; hoort bij D-03). Onder
+de grens betaalt WonZo per klein pakket € 2,63 bij (€ 8,58 − € 5,95).
+
+`AANNAME`: het bedrag van BigBuy wordt bij grote artikelen doorgerekend zoals
+het is; of het incl. of excl. btw is, is niet gemeten (zelfde vraag als bij
+de adviesprijs, `docs/api/VRAGEN.md` vraag 1). Niet gemeten: of twee grote
+artikelen samen goedkoper gaan dan per stuk — per stuk is de veilige kant.
+
+**Nog open binnen deze beslissing:** vervoerder kiezen (SEUR en TNT gemeten);
+bestelling uit meerdere bronnen; na hoeveel dagen een zending als afgeleverd
+geldt zonder melding; btw op verzendkosten (D-15).
+
+**Levertijd** (`WETTELIJK`: ACM, `docs/ONDERZOEK.md`): als bereik met het land
+van verzending op kaart, productpagina, winkelwagen, afrekenen en
+bevestiging. In de code (`src/lib/catalog/delivery.ts`): transport 3–5
+werkdagen bovenop de verwerkingstijd, en "verzonden vanuit Spanje" — beide
+`AANNAME`, op één plek, te vervangen door de gekozen vervoerdersdienst en het
+gemeten magazijnland.
 
 ---
 
@@ -413,6 +444,10 @@ brengt btw-tarieven en regels per land mee waar nu geen vraag naar is.
 - **Depends on:** —
 
 Laten bevestigen door de boekhouder; daarna één functie overal.
+
+**Tot deze beslissing** (eigenaar, 2026-10-05): de winkelwagen toont
+"Prijzen inclusief btw" zonder apart btw-bedrag. `docs/SCHERMEN.md` vraagt
+het btw-bedrag in het totaal; dat komt erbij zodra de rekenwijze vastligt.
 
 **Te beantwoorden:** btw per regel of per tarief over het totaal; afronding
 (half-up, bankers); verdeling van een orderkorting (proportioneel, methode voor
@@ -866,8 +901,15 @@ controleren en de uitzondering intrekken zodra er een gerepareerde versie
 is. Komt `braces` ooit in een productie-afhankelijkheid, dan vervalt de
 uitzondering.
 
-**Te beantwoorden:** akkoord met deze uitzondering, of eerst zonder ESLint
-verder (dan valt de importgrens in de lint weg — `docs/CI_CD.md`).
+**Antwoord van de eigenaar (2026-10-05): geen uitzondering — wachten tot de
+makers een gerepareerde versie uitbrengen.** ESLint blijft (verwijderen is
+niet gekozen); tot die versie er is, is "`pnpm audit` schoon" voor deze ene
+melding niet gehaald, en dat wordt bij elke oplevering zo gemeld. Bij elke
+installatie of upgrade controleren of er een versie boven 3.0.3 is; zo ja:
+bijwerken, `pnpm audit` opnieuw, en deze beslissing sluiten.
+
+**Te beantwoorden:** niets meer van de eigenaar; de beslissing sluit zodra de
+reparatie er is.
 
 ---
 
@@ -877,6 +919,10 @@ verder (dan valt de importgrens in de lint weg — `docs/CI_CD.md`).
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-13 | Beslist door de eigenaar: € 5,95, gratis vanaf € 50, grote artikelen (boven € 15 eigen verzendkosten) per stuk en nooit gratis; artikelen zonder bekende verzendkosten niet in de winkel |
+| 2026-10-05 | D-13, D-15 | Fase 2 (winkelwagen): verzendkosten "worden nog vastgesteld" tot D-13; "Prijzen inclusief btw" zonder btw-bedrag tot D-15 (eigenaar). Onderzoek drempel gratis verzending (`docs/ONDERZOEK.md` § 8). Knop "In winkelwagen" alleen op de productpagina; adressen `/winkelwagen` en `/en/cart` (eigenaar) |
+| 2026-10-05 | D-01 | Inkoopprijs excl. btw `GEMETEN` (schermafdruk V0710266); adviesprijs vermoedelijk ook, te bevestigen |
+| 2026-10-05 | D-37 | Eigenaar: geen uitzondering op `pnpm audit`, wachten op een gerepareerde `braces`; ESLint blijft |
 | 2026-10-05 | D-17, D-32 | Taal in de URL en eigen vertaaloplossing, alleen winkelteksten (D-32); Vitest en Playwright (D-17, verder open). Pakketten voor fase 1 goedgekeurd: next, react, react-dom, typescript met types, tailwindcss met @tailwindcss/postcss, eslint met eslint-config-next, vitest |
 | 2026-10-05 | D-01, D-02 | Beslist door de eigenaar: BigBuy (D-01); selectieregel en toegestane subcategorieën, gereviseerd uitgesloten, InnovaGoods toegestaan (D-02). D-04, D-13, D-16, D-22 van BLOCKED naar OPEN |
 | 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |
