@@ -1,0 +1,25 @@
+# Validates the template itself: references, placeholders, frontmatter,
+# configuration, decisions, and the guard hook's behaviour.
+# Example for GitHub Actions; translate to the CI platform chosen in D-17.
+name: validate-template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate template
+        run: node scripts/validate-template.mjs
+      - name: Test guard hook
+        run: node scripts/test-guard.mjs

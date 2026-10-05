@@ -1,0 +1,29 @@
+# Secrets — nooit in Git. .env.example is de uitzondering en bevat geen waarden.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# Persoonlijke Claude Code-instellingen
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Dependencies en build-uitvoer
+node_modules/
+.pnpm-store/
+dist/
+build/
+out/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Logs en tijdelijke bestanden
+*.log
+.DS_Store
+Thumbs.db
+tmp/
