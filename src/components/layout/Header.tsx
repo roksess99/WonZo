@@ -4,7 +4,8 @@ import { assortment } from "@/lib/catalog/assortment";
 import type { Locale } from "@/lib/i18n/config";
 import type { Messages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
-import { CartIcon, CheckIcon, SearchIcon } from "../icons";
+import { CartLink } from "../cart/CartLink";
+import { CheckIcon, SearchIcon } from "../icons";
 import { Container } from "../ui";
 import { LanguageSwitch } from "./LanguageSwitch";
 
@@ -57,11 +58,7 @@ export function Header({ locale, m }: { locale: Locale; m: Messages }) {
           </div>
           <div className="ms-auto flex items-center gap-1 md:ms-0">
             <LanguageSwitch locale={locale} label={m.header.language} title={m.header.languageLabel} />
-            {/* The cart arrives in fase 2; the link is there so the layout is final. */}
-            <span className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-muted" aria-disabled="true">
-              <CartIcon />
-              <span>{m.header.cart}</span>
-            </span>
+            <CartLink href={localizePath(locale, "/winkelwagen")} label={m.header.cart} countLabel={m.header.cartCount} />
           </div>
         </Container>
         <Container>

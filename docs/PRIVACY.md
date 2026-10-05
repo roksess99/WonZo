@@ -58,7 +58,12 @@ bladeren.
 
 | Sleutel | Soort | Geschreven door | Noodzakelijk? |
 |---|---|---|---|
-| | | | |
+| `wonzo.cart.v1` | localStorage: welke producten en hoeveel (product-id, bron, aantal — geen prijs, geen persoonsgegeven) | `src/components/cart/store.ts` | ja: de winkelwagen die de bezoeker zelf vult |
+
+Vastgesteld 2026-10-05 door `src/` te doorzoeken (fase 2):
+**sessionStorage en cookies worden nergens gebruikt**, ook geen
+`Set-Cookie` van de winkel zelf. Een taalcookie is er niet: de taal staat in
+de URL (D-32).
 
 Vul ook in wat **niet** gebruikt wordt ("sessionStorage wordt nergens
 gebruikt"). Dat is net zo goed een bevinding.

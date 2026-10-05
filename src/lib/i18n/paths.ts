@@ -10,6 +10,7 @@ export const staticSegments = {
   "zo-werkt-wonzo": { nl: "zo-werkt-wonzo", en: "how-wonzo-works" },
   contact: { nl: "contact", en: "contact" },
   product: { nl: "product", en: "product" },
+  winkelwagen: { nl: "winkelwagen", en: "cart" },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type StaticSegment = keyof typeof staticSegments;
@@ -46,6 +47,10 @@ export function resolvePublicPath(pathname: string): ResolvedPath {
     if (first !== undefined) {
       const hit = (Object.keys(staticSegments) as StaticSegment[]).find((k) => staticSegments[k][head] === first);
       if (hit) internalFirst = hit;
+      else if (first in staticSegments) {
+        // "/en/winkelwagen": a Dutch word under /en is not a public URL — one address per page.
+        return { kind: "redirect", to: localizePath(head, "/" + [first, ...rest].join("/")) };
+      }
     }
     const internal = [internalFirst, ...rest].filter((p) => p !== undefined).join("/");
     return { kind: "rewrite", locale: head, internalPath: `/${head}${internal ? `/${internal}` : ""}` };

@@ -131,8 +131,10 @@ mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
 verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
 (vraag 4 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
 
-**Nog open, niet blokkerend:** incl. of excl. btw (meten met een schermafdruk
-van V0710266); energielabel bij een artikel dat er een heeft; `order/check` en
+**Nog open, niet blokkerend:** of de adviesprijs incl. of excl. btw is — de
+inkoopprijs is excl. btw (`GEMETEN 2026-10-05`, schermafdruk V0710266), de
+adviesprijs vermoedelijk ook, te bevestigen door BigBuy
+(`docs/api/LEVERANCIER.md`); energielabel bij een artikel dat er een heeft; `order/check` en
 bestellen testen (de sandbox heeft geen catalogus); voorraad per variant;
 stabiliteit van de taxonomie-id's over de tijd.
 
@@ -379,11 +381,23 @@ winkelwagen, afrekenen en bevestiging (`WETTELIJK`: ACM, zie
 `docs/ONDERZOEK.md`). Ter vergelijking bij de drempel: gemiddeld rond € 25 in
 Nederland, vidaXL € 70 (`GEDOCUMENTEERD`, Sendcloud en vidaXL).
 
+**Onderzoek drempel** (`docs/ONDERZOEK.md` § 8, 2026-10-05): woonwinkels
+€ 45–€ 70 (Xenos € 45, fonQ € 50, vidaXL € 70), warenhuizen rond € 25–€ 30.
+Voorstel: eerst meten wat BigBuy rekent naar Nederland
+(`scripts/measure-shipping.mjs`), dan een grens tussen € 45 en € 50 en
+eronder een vast bedrag — beide door de eigenaar te beslissen.
+
 **In de code tot deze beslissing** (fase 1, `src/lib/catalog/delivery.ts`):
 transport 3–5 werkdagen bovenop de verwerkingstijd van de leverancier, en
 "verzonden vanuit Spanje" — beide `AANNAME`, op één plek, te vervangen door
 de gekozen vervoerdersdienst en het gemeten magazijnland. Verzendkosten staan
 op de productpagina als "worden nog vastgesteld".
+
+**Fase 2** (`src/lib/pricing/shipping.ts`): bedrag en drempel staan op één
+plek, nu leeg (`shippingPolicy = null`). De winkelwagen toont dan
+"Verzendkosten: worden nog vastgesteld" en "Totaal zonder verzendkosten", en
+laat "nog € X tot gratis verzending" weg. De rekenregel zelf is getest met
+testbedragen: precies op de drempel is gratis.
 
 ---
 
@@ -413,6 +427,10 @@ brengt btw-tarieven en regels per land mee waar nu geen vraag naar is.
 - **Depends on:** —
 
 Laten bevestigen door de boekhouder; daarna één functie overal.
+
+**Tot deze beslissing** (eigenaar, 2026-10-05): de winkelwagen toont
+"Prijzen inclusief btw" zonder apart btw-bedrag. `docs/SCHERMEN.md` vraagt
+het btw-bedrag in het totaal; dat komt erbij zodra de rekenwijze vastligt.
 
 **Te beantwoorden:** btw per regel of per tarief over het totaal; afronding
 (half-up, bankers); verdeling van een orderkorting (proportioneel, methode voor
@@ -866,8 +884,15 @@ controleren en de uitzondering intrekken zodra er een gerepareerde versie
 is. Komt `braces` ooit in een productie-afhankelijkheid, dan vervalt de
 uitzondering.
 
-**Te beantwoorden:** akkoord met deze uitzondering, of eerst zonder ESLint
-verder (dan valt de importgrens in de lint weg — `docs/CI_CD.md`).
+**Antwoord van de eigenaar (2026-10-05): geen uitzondering — wachten tot de
+makers een gerepareerde versie uitbrengen.** ESLint blijft (verwijderen is
+niet gekozen); tot die versie er is, is "`pnpm audit` schoon" voor deze ene
+melding niet gehaald, en dat wordt bij elke oplevering zo gemeld. Bij elke
+installatie of upgrade controleren of er een versie boven 3.0.3 is; zo ja:
+bijwerken, `pnpm audit` opnieuw, en deze beslissing sluiten.
+
+**Te beantwoorden:** niets meer van de eigenaar; de beslissing sluit zodra de
+reparatie er is.
 
 ---
 
@@ -877,6 +902,9 @@ verder (dan valt de importgrens in de lint weg — `docs/CI_CD.md`).
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-13, D-15 | Fase 2 (winkelwagen): verzendkosten "worden nog vastgesteld" tot D-13; "Prijzen inclusief btw" zonder btw-bedrag tot D-15 (eigenaar). Onderzoek drempel gratis verzending (`docs/ONDERZOEK.md` § 8). Knop "In winkelwagen" alleen op de productpagina; adressen `/winkelwagen` en `/en/cart` (eigenaar) |
+| 2026-10-05 | D-01 | Inkoopprijs excl. btw `GEMETEN` (schermafdruk V0710266); adviesprijs vermoedelijk ook, te bevestigen |
+| 2026-10-05 | D-37 | Eigenaar: geen uitzondering op `pnpm audit`, wachten op een gerepareerde `braces`; ESLint blijft |
 | 2026-10-05 | D-17, D-32 | Taal in de URL en eigen vertaaloplossing, alleen winkelteksten (D-32); Vitest en Playwright (D-17, verder open). Pakketten voor fase 1 goedgekeurd: next, react, react-dom, typescript met types, tailwindcss met @tailwindcss/postcss, eslint met eslint-config-next, vitest |
 | 2026-10-05 | D-01, D-02 | Beslist door de eigenaar: BigBuy (D-01); selectieregel en toegestane subcategorieën, gereviseerd uitgesloten, InnovaGoods toegestaan (D-02). D-04, D-13, D-16, D-22 van BLOCKED naar OPEN |
 | 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |

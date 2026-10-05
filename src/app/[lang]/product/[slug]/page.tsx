@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { AddToCart } from "@/components/cart/AddToCart";
 import { ProductImage } from "@/components/catalog/ProductImage";
 import { CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
@@ -150,18 +151,22 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
                 {m.product.shippingCosts}
               </li>
             </ul>
-            {/* A button that cannot act says why (docs/ACCESSIBILITY.md): ordering arrives in fase 2. */}
-            <button
-              type="button"
-              aria-disabled="true"
-              aria-describedby="order-status"
-              className="min-h-12 w-full cursor-not-allowed rounded-md bg-line px-6 text-body font-bold text-foreground"
-            >
-              {m.product.addToCart}
-            </button>
-            <p id="order-status" role="status" className="text-body-sm text-muted">
-              {m.product.notYet}
-            </p>
+            <AddToCart
+              productId={p.id}
+              stock={p.stock}
+              cartHref={localizePath(lang, "/winkelwagen")}
+              labels={{
+                button: m.product.addToCart,
+                added: m.cart.added,
+                viewCart: m.cart.viewCart,
+                tooMany: m.cart.tooMany,
+                cartFull: m.cart.cartFull,
+                quantity: m.cart.quantity,
+                decrease: m.cart.decrease,
+                increase: m.cart.increase,
+                range: m.cart.range,
+              }}
+            />
             <p className="flex items-center gap-2 text-body-sm">
               <ReturnIcon className="size-4" />
               {m.product.withdrawal} · {m.product.returns}

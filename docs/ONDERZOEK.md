@@ -405,6 +405,48 @@ rapportage en een bijdrage.
 
 ---
 
+## 8. Drempel voor gratis verzending
+
+Onderzoek op verzoek van de eigenaar (2026-10-05), voor D-13: waar ligt de
+grens voor gratis verzending bij vergelijkbare winkels?
+
+### 8.1 Vergelijkbare winkels
+
+| Winkel | Soort | Gratis vanaf | Bron en label |
+|---|---|---|---|
+| Kwantum | wonen | € 20 voor lampen en woonaccessoires; meubels € 6–€ 49 verzendkosten | kortingssites, niet op kwantum.nl gezien (`AANNAME`) |
+| bol | warenhuis | € 25 (sinds 2024, daarvoor € 20) | Kassa / BNNVARA (`GEDOCUMENTEERD`) |
+| zooplus | dieren | € 29 | homepage zooplus.nl, 2026-10-05 (`GEDOCUMENTEERD`) |
+| HEMA | warenhuis, wonen | € 30 (eronder € 3,95) | rekeningopvuller.nl, niet op hema.nl gezien (`AANNAME`) |
+| Xenos | wonen, tafelen | € 45 | homepage xenos.nl, 2026-10-05 (`GEDOCUMENTEERD`) |
+| fonQ | wonen, keuken, tuin | € 50 | homepage fonq.nl, 2026-10-05 (`GEDOCUMENTEERD`) |
+| vidaXL | wonen en tuin, veel uit eigen buitenlandse magazijnen | € 70 | homepage vidaxl.nl, 2026-10-05 (`GEDOCUMENTEERD`) |
+| Leen Bakker | wonen | geen drempel: kosten naar gewicht en afmeting | leenbakker.nl/bezorgopties, 2026-10-05 (`GEDOCUMENTEERD`) |
+
+**Gemiddelde in Nederland, alle soorten winkels: € 25,28** (Sendcloud,
+E-commerce Delivery Compass 2025). Bij een bestelling van € 50 betalen
+Nederlanders gemiddeld € 4,47 verzendkosten.
+
+### 8.2 Wat dit zegt
+
+- **Algemeen ligt de grens rond € 25**, maar dat zijn vooral warenhuizen en
+  winkels met een eigen magazijn in Nederland en veel kleine artikelen.
+- **Woonwinkels zitten hoger: € 45–€ 70** (Xenos, fonQ, vidaXL). De middelste
+  waarde van alle acht winkels hierboven ligt rond € 40.
+- **vidaXL lijkt het meest op WonZo**: woon- en tuinartikelen, vaak uit een
+  magazijn buiten Nederland. Daar ligt de grens het hoogst.
+- **De grens moet boven wat de verzending WonZo zelf kost uitkomen.** Een grens van
+  € 25 met een gemiddeld artikel van € 20 en verzendkosten uit Spanje van een
+  paar euro komt uit de marge. Wat BigBuy rekent naar Nederland is **nog niet
+  gemeten**: `scripts/measure-shipping.mjs` (één aanroep, alleen lezen) geeft
+  de kosten per product in het assortiment en per prijsklasse.
+
+**Voorstel voor D-13:** eerst de verzendkosten meten; dan een grens tussen
+**€ 45 en € 50**, in lijn met de woonwinkels, en eronder een vast bedrag.
+Beide bedragen beslist de eigenaar.
+
+---
+
 ## Bronnen
 
 Geraadpleegd 2026-10-05.
@@ -438,6 +480,15 @@ Geraadpleegd 2026-10-05.
 - Emerce — Hoe Coolblue klanten verandert in ambassadeurs:
   https://www.emerce.nl/cases/hoe-coolblue-klanten-verandert-loyale-ambassadeurs
 - vidaXL — homepage: https://www.vidaxl.nl/
+- Xenos — homepage: https://www.xenos.nl/
+- fonQ — homepage: https://www.fonq.nl/
+- zooplus — homepage: https://www.zooplus.nl/
+- Leen Bakker — Bezorgopties en bezorgkosten: https://www.leenbakker.nl/bezorgopties
+- Kassa (BNNVARA) — Bol.com verhoogt de minimum bestelwaarde voor gratis
+  verzendkosten: https://www.bnnvara.nl/kassa/artikelen/bolcom-verhoogt-de-minimum-bestelwaarde-voor-gratis-verzendkosten
+- Rekeningopvuller — Verzendkosten HEMA: https://rekeningopvuller.nl/verzendkosten-hema-wanneer-gratis
+- Sendcloud — E-commerce Delivery Compass 2025 (gemiddelde drempel):
+  https://www.sendcloud.com/nl/blog/meerderheid-nederlandse-online-shoppers-haakt-af-bij-hoge-verzendkosten/
 - HEMA — homepage: https://www.hema.nl/
 - Xictron — Energielabel in de onlineshop:
   https://www.xictron.com/en/blog/energy-label-requirements-online-shop-product-data/

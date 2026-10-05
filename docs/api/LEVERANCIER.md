@@ -224,10 +224,28 @@ Waarneming:
   De verhouding `inShopsPrice`/`retailPrice` wisselt (1,33–2,24): wat
   `inShopsPrice` is, is onduidelijk.
 - `priceLargeQuantities` leeg en `canon` `null` in de steekproef.
-- **Incl. of excl. btw: nog niet vastgesteld.** Vergelijk V0710266 met het
-  BigBuy-account (schermafdruk).
+- **Incl. of excl. btw:** zie de meting hieronder.
 
-GEMETEN <<DATUM>>: <<ANTWOORD>>
+GEMETEN 2026-10-05 — Omgeving: BigBuy-account van de eigenaar, productpagina
+van V0710266 (schermafdruk van de eigenaar).
+Waarneming:
+- "DP — Distributeur prijs" **18,22 €** = `wholesalePrice`; "AVP — Adviesprijs"
+  **55,79 €** = `retailPrice`; "Marge — Verdien tot: 67 %". Onder het hele
+  prijsblok: "*Exclusief belastingen. Verzendkosten zijn alleen inbegrepen
+  voor producten met gratis verzending."
+- **Inkoopprijs (`wholesalePrice`) is exclusief btw** — vastgesteld.
+- **Adviesprijs (`retailPrice`): vermoedelijk óók exclusief btw**, maar dat is
+  een `AANNAME`. Wat ervoor pleit: de voetnoot staat onder het hele blok, en
+  BigBuy rekent de marge rechtstreeks op beide bedragen
+  ((55,79 − 18,22) / 55,79 = 67 %); als de adviesprijs incl. 21 % btw was,
+  zou de echte marge 60 % zijn. Wat ertegen pleit: een adviesprijs voor de
+  consument is gebruikelijk incl. btw, en de voetnoot zegt het niet per
+  bedrag. **Laten bevestigen door BigBuy** (`docs/api/VRAGEN.md` vraag 1).
+- Gevolg zolang het niet bevestigd is: een verkoopprijs afleiden van
+  `retailPrice` kan 21 % te laag uitvallen — precies de fout uit het vorige
+  project, andersom. Raakt D-03.
+- `inShopsPrice` (74,38) staat niet op de pagina; wat het is blijft onduidelijk.
+- Verzendkosten zitten niet in de inkoopprijs (behalve bij gratis verzending).
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): velden `wholesalePrice`
 (inkoop), `retailPrice` (advies), `inShopsPrice`, `priceLargeQuantities`
