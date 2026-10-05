@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "siteName": "WonZo",
+    "description": "Things for in and around the house: storage, furniture, decor, garden, outdoors and pets. Honest about price and delivery time."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "home": "WonZo, go to the home page",
+    "breadcrumb": "Breadcrumb"
+  },
+  "mock": {
+    "banner": "Test environment: example products and example prices. Ordering is not possible yet."
+  },
+  "usp": {
+    "delivery": "Delivery time shown on every product",
+    "withdrawal": "14-day cooling-off period",
+    "ideal": "Pay with iDEAL"
+  },
+  "header": {
+    "searchLabel": "Search the shop",
+    "searchPlaceholder": "What are you looking for?",
+    "searchButton": "Search",
+    "cart": "Cart",
+    "language": "Nederlands",
+    "languageLabel": "Overschakelen naar Nederlands",
+    "categories": "Categories"
+  },
+  "categories": {
+    "wonen": { "name": "Home", "intro": "Storage, furniture, decor and everything for the kitchen and the table." },
+    "tuin": { "name": "Garden", "intro": "Garden furniture, umbrellas, watering and the barbecue." },
+    "buitenleven": { "name": "Outdoors", "intro": "Camping and working out at home." },
+    "dieren": { "name": "Pets", "intro": "Collars, harnesses, beds and coats for your pet." }
+  },
+  "subcategories": {
+    "opslag": "Storage and organisation",
+    "meubels": "Furniture",
+    "decoratie": "Decor",
+    "keuken": "Kitchen and tableware",
+    "tuinmeubels": "Garden furniture and umbrellas",
+    "bewatering": "Watering",
+    "barbecue": "Barbecue",
+    "kamperen": "Camping",
+    "thuis-sporten": "Home fitness",
+    "halsbanden": "Collars and harnesses",
+    "manden": "Beds and blankets",
+    "kleding": "Dog clothing"
+  },
+  "home": {
+    "title": "Clever things for home",
+    "intro": "A clear range for in and around the house. Every product shows straight away what it costs and when it arrives.",
+    "categoriesTitle": "Choose a category",
+    "popularTitle": "Always in stock"
+  },
+  "listing": {
+    "all": "All",
+    "filters": "Filters",
+    "brand": "Brand",
+    "price": "Price in euros",
+    "priceMin": "From",
+    "priceMax": "Up to",
+    "sort": "Sort",
+    "sortRecommended": "Recommended",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortNewest": "Newest",
+    "apply": "Show results",
+    "reset": "Clear all filters",
+    "results": "{count} products",
+    "resultsOne": "1 product",
+    "activeFilters": "Selected filters",
+    "removeFilter": "Remove filter {name}",
+    "emptyTitle": "No products found",
+    "emptyText": "Nothing matches these filters. Clear a filter or see everything in this category.",
+    "emptyCategory": "Nothing is available here right now. Check back soon, or have a look at another category.",
+    "unavailableTitle": "The products can't be loaded right now",
+    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes."
+  },
+  "search": {
+    "title": "Search",
+    "resultsFor": "Results for ‘{q}’",
+    "noQueryTitle": "What are you looking for?",
+    "noQueryText": "Type a word in the search box, for example ‘umbrella’ or ‘storage’.",
+    "emptyTitle": "Nothing found for ‘{q}’",
+    "emptyText": "Try a different or shorter word, or browse the categories below."
+  },
+  "product": {
+    "inclVat": "including VAT",
+    "inStock": "In stock",
+    "delivery": "Delivered in {min}–{max} working days",
+    "shipsFrom": "Ships from {country}",
+    "shippingCosts": "Shipping costs are still being set",
+    "addToCart": "Add to cart",
+    "notYet": "Ordering is not possible yet: the shop is being built.",
+    "withdrawal": "14-day cooling-off period",
+    "returns": "Returns within 14 days of receipt",
+    "specs": "Product details",
+    "spec": {
+      "brand": "Brand",
+      "sku": "Item number",
+      "ean": "EAN",
+      "dimensions": "Dimensions"
+    },
+    "description": "Description",
+    "safety": "Manufacturer and safety",
+    "manufacturer": "Manufacturer",
+    "address": "Address",
+    "email": "Email",
+    "website": "Website",
+    "warnings": "Warnings",
+    "noWarnings": "The manufacturer gives no separate warnings.",
+    "noImage": "No photo available",
+    "unavailableTitle": "This product can't be loaded right now",
+    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes."
+  },
+  "countries": {
+    "ES": "Spain",
+    "DE": "Germany",
+    "HU": "Hungary",
+    "IT": "Italy",
+    "NL": "the Netherlands"
+  },
+  "howItWorks": {
+    "title": "How WonZo works",
+    "intro": "Good to know before you order.",
+    "sourceTitle": "Where do the products come from?",
+    "sourceText": "WonZo works with a wholesaler in Europe. Your order ships straight to you from their warehouse. Every product shows which country it ships from.",
+    "deliveryTitle": "How long does it take?",
+    "deliveryText": "Every product shows a delivery time in working days. You see it again in your cart and before you pay. We don't promise next-day delivery, because we can't keep that promise.",
+    "stockTitle": "What you see is available",
+    "stockText": "We only show products that are in stock. When something sells out, it disappears from the shop.",
+    "returnsTitle": "Cooling-off period and returns",
+    "returnsText": "You have 14 days to change your mind after receipt. How to send a product back and what it costs will be on the returns page once the shop opens."
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "A question about a product or your order? Email us.",
+    "emailLabel": "Email",
+    "companyTitle": "Company details",
+    "companyName": "Company name",
+    "tradeName": "Trading name",
+    "kvk": "Chamber of Commerce (KvK) number",
+    "vat": "VAT number",
+    "address": "Address",
+    "missing": "to be filled in"
+  },
+  "footer": {
+    "service": "Customer service",
+    "howItWorks": "How WonZo works",
+    "contact": "Contact",
+    "company": "Company details",
+    "kvk": "KvK {kvk}",
+    "vat": "VAT {vat}",
+    "language": "Language"
+  },
+  "notFound": {
+    "title": "This page doesn't exist",
+    "text": "The product may no longer be available, or the address has changed.",
+    "home": "Go to the home page"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "text": "This is our fault. Please try again; if it still doesn't work, email us.",
+    "retry": "Try again"
+  },
+  "loading": "Loading"
+}
