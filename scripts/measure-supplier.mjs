@@ -129,7 +129,8 @@ if (auth.status === 401 || auth.status === 403) {
   const taxItems = list(tax);
   line(`§2 Taxonomieën (eerste niveau, ${language}): ${brief(tax)}; aantal: ${taxItems.length}; voorbeeld: ${JSON.stringify(taxItems.slice(0, 3))}`);
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const taxFile = path.join(OUT_DIR, 'taxonomies-previous.json');
+  // One file per environment: sandbox and production ids differ (GEMETEN 2026-10-05).
+  const taxFile = path.join(OUT_DIR, `taxonomies-previous-${isProduction ? 'production' : 'sandbox'}.json`);
   if (taxItems.length) {
     const current = Object.fromEntries(taxItems.map((t) => [t.id, t.name]));
     if (fs.existsSync(taxFile)) {
@@ -156,6 +157,9 @@ if (auth.status === 401 || auth.status === 403) {
   let pagingWorks = p0.status === 200;
   if (pagingWorks) {
     p1 = await request('bulk', 'GET', `/rest/catalog/products.json?${q('page=1&pageSize=10')}`);
+    // Does the full catalog page without a taxonomy? Decides how D-31 syncs.
+    const noTax = await request('bulk', 'GET', '/rest/catalog/products.json?page=0&pageSize=10');
+    line(`§2 Zonder hoofdgroep (page=0&pageSize=10): ${brief(noTax)}; aantal: ${list(noTax).length}; antwoord bij fout: ${noTax.status === 200 ? '-' : JSON.stringify(noTax.json ?? noTax.notJson ?? null).slice(0, 120)}`);
   } else {
     const bare = await request('bulk', 'GET', `/rest/catalog/products.json?${q('')}`);
     line(`§2/§4 Met hoofdgroep, page=0&pageSize=10: ${brief(p0)}; antwoord: ${JSON.stringify(p0.json ?? p0.notJson ?? null).slice(0, 120)}`);

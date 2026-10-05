@@ -47,7 +47,10 @@ Waarneming: `auth/status` geeft HTTP 200 met een lege body (1640 ms): het
 token werkt op de sandbox. Een ongeldig token geeft HTTP 401
 `{"message":"Invalid Token"}`. Productie: nog niet gemeten.
 
-GEMETEN <<DATUM>>: <<ANTWOORD>>
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming: het productietoken werkt (`auth/status` HTTP 200, 203 ms).
+Sandbox en productie hebben elk een eigen sleutel. De sandbox heeft geen
+productcatalogus (§ 2); productie wel.
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): één API voor alle landen —
 geen platform per land; de taal kies je per call met `isoCode` (standaard
@@ -83,6 +86,35 @@ run. **Elke productlijst zonder `parentTaxonomy` gaf HTTP 400**
 `productsstockbyhandlingdays`, `productsimages`, `productsinformation`. Of
 `parentTaxonomy` in de praktijk verplicht is (tegen de documentatie in), of
 dat de sandbox geen catalogus heeft: volgende meting.
+
+GEMETEN 2026-10-05 (tweede run, 08:26 UTC) — zelfde omgeving.
+Waarneming: **ook mét `parentTaxonomy=19653` ("Elektronica") gaf elke
+productlijst HTTP 400** — met paginering (`page=0&pageSize=10`) én zonder.
+Het was geen limiet: de run viel vóór de reset (08:52 UTC) en het antwoord was
+400, geen 429. De taxonomie-id's waren gelijk aan de eerste run (zelfde dag,
+dus nog geen bewijs van stabiliteit). Conclusie (`AANNAME`): **de sandbox heeft
+geen productcatalogus**, of het account heeft er geen toegang toe. De
+catalogus wordt in productie gemeten, alleen lezen
+(`node --env-file=.env scripts/measure-supplier.mjs --production`).
+
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming:
+- **22 hoofdgroepen** in het Nederlands (de sandbox had er 24, met deels
+  andere id's — sandbox en productie zijn niet uitwisselbaar). Hoofdgroepen:
+  17088 Seks en sensualiteit, 19648 Eten en drinken, 19649 Baby, 19650
+  Schoonheid, 19651 Doe-het-zelf en gereedschap, 19652 Auto en motor, 19653
+  Elektronica, 19654 Bagage, 19656 Huis en koken, 19657 Verlichting, 19658
+  Industrie, bedrijven en wetenschap, 19661 Tuin, 19662 Sieraden, 19663
+  Speelgoed en games, 19664 Kantoorartikelen en schrijfwaren, 19666
+  Dierproducten, 19667 Klokken, 19668 Kleding, 19669 Gezondheid en
+  persoonlijke verzorging, 19671 Schoenen en accessoires, 19685 "Berekenen"
+  (vermoedelijk een vertaling van *computing*), 19756 Sport en outdoor.
+  Relevant voor D-02: er is een hoofdgroep voor volwassenen.
+- **Met `parentTaxonomy` werken de productlijsten** (HTTP 200). Een product
+  draagt zijn eigen, diepere `taxonomy` (bijv. 21319) naast de hoofdgroep.
+- Zonder `parentTaxonomy` in productie: nog niet gemeten (de sandbox weigerde
+  het, maar had helemaal geen catalogus).
+- Stabiliteit van de id's over de tijd: nog niet gemeten (één dag).
 
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
@@ -129,6 +161,19 @@ Waarneming: `page=0` en `page=1` met `pageSize=10` (en `pageSize=1000`)
 gaven allebei HTTP 400 zonder `parentTaxonomy` (zie § 2). Telling 0 of 1:
 nog niet vast te stellen.
 
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming: `page=0` en `page=1` met `pageSize=10` geven elk 10 verschillende
+producten (geen overlap): **`page=0` is de eerste pagina**. Twee verzoeken
+tegelijk: niet gemeten (de lessen uit § 4 gelden tot het tegendeel blijkt:
+sequentieel ophalen).
+
+GEMETEN 2026-10-05 — Omgeving: productie, alleen lezen, `scripts/explore-catalog.mjs` (eerste versie), 09:21 UTC.
+Waarneming: **de lijsten `products`, `productsstockbyhandlingdays` en
+`productsinformation` geven hun pagina's niet in dezelfde volgorde.** In
+"Huis en koken" (meer dan 10 000 producten) kwam op pagina 0 van de namen
+voor geen enkel product van pagina 0 van de producten een naam terug. Koppel
+lijsten dus altijd op product-id over álle pagina's, nooit per pagina.
+
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): `page` en `pageSize`, beide met
@@ -147,7 +192,11 @@ meten.
 > élke filterklik opnieuw vier megabyte ophaalde. Als dat zo is: een eigen cache
 > van een paar minuten in het geheugen.
 
-GEMETEN <<DATUM>>: <<ANTWOORD>>
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming: `pageSize=1000` in één hoofdgroep: **809 223 bytes in 2,2 s**,
+ongeveer 0,8 kB per product. Bij het maximum van 10 000 per pagina dus rond de
+8 MB per antwoord — te groot voor een framework-cache; de kopie van de
+catalogus (D-31) hoort in een eigen opslag.
 
 ---
 
@@ -162,6 +211,21 @@ GEMETEN <<DATUM>>: <<ANTWOORD>>
 > dat beide bedragen op dezelfde basis staan kostte eerder weken met 21% te
 > hoge prijzen. De gangbare conventie: inkoop tussen bedrijven is netto, een
 > adviesprijs voor de consument is bruto. Maar meet het.
+
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming:
+- Bedragen komen als **getal met twee decimalen** in de lijst
+  (`productprices`, `products`) én bij één product (`product/{id}`) — de
+  documentatie noemde een string; gemeten is een getal. Exact naar centen
+  omzetten blijft nodig (geen `parseFloat * 100`).
+- Voorbeelden: sku V0710266 — `wholesalePrice` 18.22, `retailPrice` 55.79,
+  `inShopsPrice` 74.38, `taxRate` 21; V0710254 — 35.72 / 117.63 / 226.21;
+  V0710248 — 25.61 / 85.23 / 190.95. Advies gedeeld door inkoop: 3,06–3,33.
+  De verhouding `inShopsPrice`/`retailPrice` wisselt (1,33–2,24): wat
+  `inShopsPrice` is, is onduidelijk.
+- `priceLargeQuantities` leeg en `canon` `null` in de steekproef.
+- **Incl. of excl. btw: nog niet vastgesteld.** Vergelijk V0710266 met het
+  BigBuy-account (schermafdruk).
 
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
@@ -194,6 +258,46 @@ hetzelfde veld. Incl. of excl. btw staat nergens: meten, met schermafdruk.
 > voorraad — en neem prijs, voorraad en levertijd allemaal daarvandaan. Begrens
 > het aantal dat een klant kan bestellen op die voorraad.
 
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming:
+- Alle 50 producten in de steekproef (Elektronica) staan in **één magazijn**
+  (`warehouse` 1), met **twee voorraadregels**: één met 0–1 dag
+  verwerkingstijd en één met 1–2 dagen.
+- **Maar 2 van de 50 hebben voorraad** (bijv. 10 stuks met 0–1 dag). De
+  catalogus bevat veel artikelen zonder voorraad: zonder voorraadfilter is de
+  winkel grotendeels onverkoopbaar.
+- De vraag "van welke verkoper" wordt hier: welke van de twee regels — en de
+  levertijd van die regel. Prijs en voorraad komen van dezelfde partij.
+
+GEMETEN 2026-10-05 — Omgeving: productie, alleen lezen, `scripts/explore-catalog.mjs` (eerste versie), 09:21 UTC.
+Waarneming: in de groepen die in één pagina passen (koppeling volledig) heeft
+**ongeveer 1 % van de producten voorraad**: Tuin 54 van 6194, Verlichting 28
+van 2809, Bagage 24 van 1583.
+
+GEMETEN 2026-10-05 — productie, `scripts/explore-catalog.mjs` (tweede versie,
+alle pagina's, koppeling op id) en een controle door de eigenaar in het
+BigBuy-account.
+Waarneming:
+- **De voorraad uit de API klopt met het account**: vijf artikelen zonder
+  voorraad volgens de API (D1400967, S7926708, S7923248, S7191227, S7910989)
+  hebben in het account ook geen voorraad; twee met voorraad (D1401142,
+  V0104070) wel.
+- De lage voorraad komt **niet** door inactieve artikelen of varianten: in
+  Tuin, Verlichting en Bagage is elk artikel `active`, en maar 5, 16 en 3
+  artikelen hebben varianten.
+- Conclusie: **ongeveer 1 % van de catalogus is op een gegeven moment
+  leverbaar.** Het aanbod van WonZo is dus klein en wisselend, en voorraad
+  verandert snel (bijv. een parasol met 1 stuk). Gevolgen: alleen artikelen
+  met voorraad tonen (D-02), voorraad vaak verversen en vers controleren bij
+  het afrekenen (D-31, D-22).
+- Over acht hoofdgroepen (132 582 producten): 1 044 nieuw en op voorraad. Van
+  de kandidaten heeft 75 % maar 1–4 stuks; diepe voorraad (≥ 20) is vooral
+  InnovaGoods. Alle leverbare kandidaten: 0–1 dag verwerkingstijd. Details en
+  analyse: `docs/ONDERZOEK.md` § 6.
+- **Varianten:** in Sport en outdoor hebben 5152 producten varianten en maar
+  5646 een voorraadregel; de voorraad per variant
+  (`productsvariationsstockbyhandlingdays`) is nog niet gemeten.
+
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): BigBuy is zelf de enige verkoper,
@@ -223,6 +327,25 @@ eigen prijs- en voorraad-endpoints.
       `energyEfficiency`, `gpsrLabel` en `gpsrWarning`? Genoeg voor het
       energielabel en de GPSR-informatie (D-34)?
 
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming:
+- 18 foto's bij 10 producten, allemaal van **`cdnbigbuy.com`**; JPEG,
+  42–112 kB, verschillend van grootte (geen generieke plaatshouder). Dat
+  domein komt in de HTML te staan tenzij de foto's via het eigen domein lopen.
+- **GPSR:** `productcompliance` geeft voor V0710266 de fabrikant (naam,
+  adres, land, e-mail, website, telefoon — Gigaset Communications GmbH,
+  Duitsland); `imagesLabel`, `imagesWarning`, `safetyWarnings` en
+  `productComplianceDocuments` waren leeg voor dit artikel.
+- **Energielabel:** de vlag `energyEfficiency` stond bij geen van de 18 foto's
+  aan — maar de steekproef bevatte accessoires zonder energielabel. Meten op
+  een artikel dat er wel een moet hebben (bijv. een koelkast of tv).
+
+GEMETEN 2026-10-05 — Omgeving: productie, alleen lezen, `scripts/explore-catalog.mjs` (eerste versie), 09:21 UTC.
+Waarneming: van 20 steekproeven `productcompliance` op artikelen met voorraad
+gaven er **7 HTTP 404** (geen GPSR-gegevens; in "Sport en outdoor" alle 3),
+13 gaven de fabrikant met adres en e-mail. Niet elk artikel heeft dus de
+verplichte GPSR-informatie (D-34).
+
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): `productsimages` geeft per foto een
@@ -247,7 +370,12 @@ Waarneming: `languages` geeft 24 talen, **`nl` is er één van**; de
 taxonomieën komen in het Nederlands terug. Productnamen in het Nederlands:
 nog niet gemeten (de lijst gaf HTTP 400, zie § 2).
 
-GEMETEN <<DATUM>>: <<ANTWOORD>>
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming: `productsinformation?isoCode=nl` geeft 10 van 10 producten met een
+Nederlandse naam — deels gemengd ("Retro Videogame Silicone Case voor iPhone").
+De omschrijving bevat **HTML** (`<b>`) en een standaard verkooptekst ("Als je
+een fan bent van IT en elektronica … koop … tegen een o…"): ontsmetten
+(`.claude/rules/beveiliging.md`) en de toon botst met `docs/BRAND.md`.
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): `productsinformation` en
 `taxonomies` nemen `isoCode` (standaard `es`); de talenlijst komt uit
@@ -285,6 +413,26 @@ Waarneming:
   dan `UNKNOWN`; nooit opnieuw versturen (`docs/IDEMPOTENCY.md`).
 - `order/check` niet uitgevoerd: geen product met voorraad gevonden (de
   voorraadlijst gaf HTTP 400).
+
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming:
+- **Tegoed (`moneybox`) in productie: `"0.00"`.** Automatisch inkopen (D-04)
+  mislukt tot er tegoed op staat.
+- **Opzoeken van een onbekende eigen referentie geeft in productie HTTP 404**
+  `{"code":404,"message":"No order found with refOrder: …"}` (94 ms). Daarmee
+  is na een timeout wél vast te stellen dat een bestelling níet aankwam. De
+  HTTP 500 was een eigenschap van de sandbox.
+- **Vervoerders naar Nederland:** SEUR, TNT en "Standard Shipment"; elke dienst
+  heeft een levertijd als tekst ("1-2 dagen" … "6-10 dagen") en `pod`
+  (afleverbewijs). Per vervoerder een lijst landen (NL erbij) en
+  uitgesloten categorieën. Levertijd aan de klant = verwerkingstijd (§ 7) plus
+  de dienst.
+- Productgegevens: **gewicht en afmetingen staan op `1`** bij het gemeten
+  product — plaatshouders, niet bruikbaar voor verzendkosten.
+- **`condition`: `"REFURBISHED_B"`** bij het gemeten product: BigBuy verkoopt
+  ook gereviseerde artikelen. Tonen of uitsluiten is D-02.
+- `order/check` niet uitgevoerd (productie is alleen lezen; de sandbox heeft
+  geen catalogus en geen vervoerders).
 
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
@@ -334,6 +482,11 @@ Waarneming:
 - Latentie: catalogus 47–76 ms; `auth/status`, `purse` en `order/reference`
   1,6–1,8 s. Te weinig calls voor p50/p95.
 - `Retry-After` kwam niet voor.
+
+GEMETEN 2026-10-05 — Omgeving: productie (`api.bigbuy.eu`), productiesleutel van de eigenaar, alleen lezen (`scripts/measure-supplier.mjs --production`, 08:34 UTC).
+Waarneming: 18 × HTTP 200 en 1 × 404 (bedoeld); geen fouten. Latentie
+productie: catalogus 77–843 ms, `pageSize=1000` 2,2 s, `auth/status` 203 ms —
+sneller dan de sandbox voor `auth/status`, `purse` en `order/reference`.
 
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 

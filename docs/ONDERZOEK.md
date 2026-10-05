@@ -199,6 +199,212 @@ De eigenaar ging akkoord; verwerkt in D-05, D-13, D-34, D-35, `docs/SCHERMEN.md`
 
 ---
 
+## 6. Het assortiment bij BigBuy — wat WonZo kan verkopen
+
+Onderzoek op verzoek van de eigenaar (2026-10-05): welke producten en
+categorieën kan WonZo verkopen zonder de zware wettelijke eisen van
+bijvoorbeeld elektronica.
+
+GEMETEN 2026-10-05 — productie, alleen lezen, `scripts/explore-catalog.mjs`
+(alle pagina's, koppeling op product-id); voorraad gecontroleerd door de
+eigenaar in het BigBuy-account (`docs/api/LEVERANCIER.md` § 7). Acht
+hoofdgroepen: Huis en koken, Tuin, Doe-het-zelf en gereedschap, Verlichting,
+Bagage, Kantoorartikelen, Dierproducten, Sport en outdoor.
+
+**Eerst dit:** geen enkele categorie is vrij van regels. De productveiligheid
+(GPSR) geldt voor elk consumentenproduct. De vraag is welke categorieën
+**alleen** die basis hebben. De indeling hieronder volgt uit de douanecode van
+elk artikel (`intrastat`) plus een controle op de naam; het is een eerste
+schifting, geen juridisch oordeel (`WETTELIJK`, te bevestigen).
+
+| Zwaarte | Wat erbij komt | Voorbeelden |
+|---|---|---|
+| **basis** | alleen GPSR en consumentenrecht | meubels, opslag, decoratie, kaarsen, koffers en tassen, handgereedschap, sportartikelen |
+| **licht** | één extra etiketteringsregel | textiel (vezelsamenstelling), servies en keukengerei (materiaal dat met voedsel in aanraking komt), messen |
+| **zwaar** | een eigen registratie- of keurregime | elektrisch (D-34), verlichting, speelgoed, cosmetica, voeding, chemische middelen, optisch en medisch |
+
+### 6.1 De cijfers
+
+| | Aantal |
+|---|---|
+| Producten in de acht groepen | 132 582 |
+| Nieuw, actief en op voorraad | **1 044** (0,8 %) |
+| Daarvan basis of licht | 764 |
+| Daarvan zonder elektrisch kenmerk in de naam | **739** |
+| Daarvan met voorraad ≥ 20 stuks | 103 — waarvan **89 van InnovaGoods** |
+| Daarvan met inkoop ≥ € 5 | 343 |
+
+Per groep (nieuw, op voorraad, basis of licht, niet elektrisch):
+
+| Groep | Artikelen | Voorraad ≥ 20 | Inkoop ≥ € 5 | Oordeel |
+|---|---|---|---|---|
+| Huis en koken | 426 | 54 | 190 | **Kern van WonZo** |
+| Kantoorartikelen | 120 | 5 | 48 | Vooral schooltassen en schriften; past matig |
+| Sport en outdoor | 98 | 26 | 58 | Kamperen en thuis sporten passen; zie de kanttekening |
+| Tuin | 40 | 10 | 28 | **Klein maar passend** |
+| Dierproducten | 26 | 5 | 11 | Klein; alleen halsbanden, manden, kleding |
+| Bagage | 19 | 2 | 3 | Te klein en te goedkoop |
+| Doe-het-zelf | 10 | 1 | 5 | Vrijwel niets leverbaar (0,2 %) |
+| Verlichting | 0 | — | — | Alles elektrisch: vermijden |
+
+### 6.2 Wat de cijfers betekenen
+
+1. **Het aanbod is klein en wisselend.** Ongeveer 99 % van de catalogus is op
+   een gegeven moment niet leverbaar. WonZo wordt een overzichtelijke winkel
+   met honderden artikelen, geen catalogus van tienduizenden — dat past bij
+   "rustig en overzichtelijk", maar het aanbod verandert voortdurend.
+2. **De meeste voorraad is ondiep.** Van de 764 kandidaten hebben er 571 maar
+   1 tot 4 stuks. Zulke artikelen zijn weg voordat een klant afrekent, tenzij
+   de voorraad vlak vóór de betaling opnieuw wordt gecontroleerd (D-31, D-22).
+3. **De stabiele voorraad is vooral één merk.** 89 van de 103 artikelen met
+   20 stuks of meer zijn van **InnovaGoods** (fabrikant volgens GPSR: Nine New
+   Investments S.L., Spanje): handige gadgets voor huis en keuken, vaak met
+   honderden tot duizenden stuks voorraad. Dat is de ruggengraat die altijd
+   leverbaar is — maar het is een uitgesproken soort product. Of dat bij de
+   uitstraling van WonZo past, is een keuze van de eigenaar.
+4. **Veel artikelen zijn erg goedkoop.** 325 van de 764 kosten minder dan € 3
+   inkoop. Alleen verzonden kost zo'n artikel meer aan verzending dan het
+   oplevert: een minimumbestelling of een ondergrens hoort bij D-13 en D-03.
+5. **Levertijd is goed.** Alle kandidaten hebben 0–1 dag verwerkingstijd. Met
+   de vervoerder erbij (2–5 dagen, `docs/api/LEVERANCIER.md` § 10) is
+   "3–6 werkdagen" een eerlijke belofte.
+6. **GPSR-gegevens ontbreken soms.** In twee steekproefrondes gaven 11 van
+   de 41 controles geen fabrikantgegevens. Zo'n artikel hoort niet in de winkel tot
+   de gegevens er zijn (D-34).
+7. **Gereviseerde artikelen** zitten vooral in Huis en koken (39 van de 584
+   op voorraad) en Sport (26 van de 167). Ze zijn in deze cijfers al
+   weggelaten.
+8. **Seizoen en licenties.** 70 kandidaten zijn kerstartikelen (nu
+   leverbaar, over drie maanden niet); 46 dragen een licentiefiguur (Disney,
+   Peppa Pig, Spider-Man) en zijn vooral voor kinderen.
+9. **Kanttekening Sport:** 5152 producten in Sport hebben varianten (maten,
+   kleuren) en maar 5646 een voorraadregel. De voorraad van varianten staat in
+   een apart endpoint dat nog niet is gemeten; Sport kan meer leverbare kleding
+   hebben dan hier staat.
+10. **De douanecode mist soms iets.** 25 artikelen met "elektrisch",
+    "oplaadbaar", "USB" of "koeling" in de naam hadden een niet-elektrische
+    code (een elektrische deken als textiel, een bierdispenser met koeling
+    als keukengerei). De naamcontrole hoort dus in de selectie, plus een
+    menselijke blik op wat er overblijft.
+
+### 6.3 Aanbevolen subcategorieën
+
+Geschikt voor de eerste versie — basis of licht, leverbaar, passend bij
+"wonen" (de oorsprong van de naam):
+
+| Groep | Subcategorie | Zwaarte | Waarom |
+|---|---|---|---|
+| Huis en koken | Opslag en organisatie (keuken, kleding, was, badkamer) | basis | Veel InnovaGoods met diepe voorraad, € 7–30 inkoop |
+| Huis en koken | Meubilair (lounge, kantoor, bijzettafels) | basis | Hogere prijzen, diepe voorraad |
+| Huis en koken | Huisdecoratie (accessoires, muurdecoratie, kaarsen en kandelaars) | basis | Breed aanbod; vaak ondiepe voorraad |
+| Huis en koken | Woningtextiel (kussens, plaids, keukentextiel, beddengoed) | licht | **Later** (D-36): vraagt registratie bij UPV Textiel |
+| Huis en koken | Servies, keukengerei, bargerei | licht | Materiaal voor voedselcontact; meestal goedkoop |
+| Tuin | Tuinmeubelen, parasols, bewatering, houtskoolbarbecues en accessoires | basis | Klein maar passend; seizoensgebonden |
+| Sport en outdoor | Kampeermeubelen en slaapuitrusting; thuis sporten (spieropbouw) | basis | Diepe voorraad, hogere prijzen; zwaar om te verzenden |
+| Dierproducten | Halsbanden en tuigen, manden en dekens | basis | Klein; merken als Trixie en Julius-K9 |
+
+**Vermijden in de eerste versie** (zwaar, of niet passend): alles
+elektrisch, verlichting, ongediertebestrijding (elektrisch of biociden),
+speelgoed, cosmetica en verzorging, voeding (ook dierenvoer), chemische
+middelen (verf, schoonmaak), doe-het-zelf (vrijwel niets leverbaar), en de
+hoofdgroep voor volwassenen.
+
+### 6.4 Voorstel voor de selectieregel (D-02)
+
+Een artikel komt in de winkel als het aan **alle** regels voldoet; afgedwongen
+in de code, niet als filter in de navigatie:
+
+1. Het valt in een toegestane subcategorie (lijst hierboven, door de eigenaar
+   vastgesteld). Gezocht op naam in de taxonomieboom, niet op vast id, tot de
+   stabiliteit van de id's gemeten is (`.claude/rules/catalogus.md`).
+2. De douanecode valt in **basis** of **licht**.
+3. De naam bevat geen elektrisch kenmerk; twijfelgevallen gaan naar een lijst
+   die de eigenaar nakijkt.
+4. Conditie **nieuw** (of gereviseerd, als de eigenaar dat kiest, en dan
+   duidelijk zo getoond).
+5. **Voorraad > 0**, vers gecontroleerd bij het afrekenen.
+6. **GPSR-gegevens aanwezig** (fabrikant met adres).
+7. Een prijsondergrens of minimumbestelling — de waarde hoort bij D-03 en
+   D-13.
+
+---
+
+## 7. Andere eisen en voorwaarden per categorie
+
+Onderzoek op verzoek van de eigenaar (2026-10-05): welke registraties,
+bijdragen en productregels gelden er voor de categorieën uit § 6 — zoals
+Stichting OPEN voor elektrische apparaten. Alles hieronder is `WETTELIJK`
+(of `GEDOCUMENTEERD` bij de genoemde bron) en **te bevestigen door een
+adviseur**; dit is een overzicht om de juiste vragen te kunnen stellen, geen
+juridisch advies.
+
+### 7.1 Twee rollen tegelijk
+
+| Soort regel | Rol van WonZo | Waarom | Gevolg |
+|---|---|---|---|
+| Productveiligheid (EU: GPSR, voedselcontact, beschermingsmiddelen) | **Distributeur** | Gekocht bij een leverancier in de EU (BigBuy, Spanje); "importeur" is in EU-recht wie van buiten de EU invoert | Controleren dat de fabrikant het geregeld heeft; documenten kunnen opvragen; geen eigen keuring |
+| Afval en producentenverantwoordelijkheid (Nederlandse UPV) | **Producent of importeur** | WonZo brengt het product als eerste op de Nederlandse markt. KVK: wie textiel bij een Nederlands bedrijf koopt heeft geen verplichtingen — wie in het buitenland koopt wel | Registreren, rapporteren en een bijdrage betalen per productstroom |
+
+### 7.2 Voor de hele winkel
+
+| Regel | Wat het is | Wat WonZo moet doen |
+|---|---|---|
+| **Verpakkingen** (Verpact, voorheen Afvalfonds) | Wie verpakte producten als eerste in Nederland op de markt brengt, is verantwoordelijk voor het verpakkingsafval | Onder 50 000 kg verpakking per jaar: **geen aangifte, wel bijhouden hoe je dat berekend hebt**. Wegwerpplastic-verpakkingen altijd melden |
+| **Verpakkingsverordening (PPWR)**, sinds 12-08-2026 | Nieuwe EU-regels voor alle verpakkingen; zwaardere eisen vanaf 2028 en 2030 | Als distributeur die bij een EU-leverancier koopt: weinig directe plichten, wel nagaan dat de leverancier voldoet. **Verstuurt BigBuy in een doos met de naam van WonZo, dan kan WonZo "fabrikant" van die verpakking worden** — navragen |
+| **Ontbossingsverordening (EUDR)**, voor kleine bedrijven vanaf 30-12-2026 | Hout, papier, houtskool, rundleer, rubber en producten daarvan moeten ontbossingsvrij zijn | Als handelaar binnen de EU: **administratie bijhouden** — van wie gekocht, met het referentienummer van de verklaring (DDS) van de leverancier |
+| **REACH artikel 33** | Een consument mag vragen of een product een zeer zorgwekkende stof bevat (boven 0,1 %) | **Binnen 45 dagen antwoorden**, gratis. De SCIP-database geldt niet voor winkels die alleen aan consumenten verkopen. Afspraak met BigBuy over die informatie |
+| **Productveiligheid (GPSR)** en **ACM-regels voor levering uit het buitenland** | Zie § 2 en D-34 | Per artikel de fabrikantgegevens; levertijd, land, retouradres en -kosten |
+
+### 7.3 Per categorie
+
+| Categorie | Extra regel | Wat WonZo moet doen | Advies eerste versie |
+|---|---|---|---|
+| **Woningtextiel** (dekbedovertrekken, lakens, handdoeken, theedoeken, tafellinnen) | **UPV Textiel** (sinds 1-7-2023), geen minimumhoeveelheid; plus **textieletikettering** (vezelsamenstelling, Verordening 1007/2011) | Registreren, jaarlijks rapporteren, **afvalbeheersbijdrage** per kilo, of lid worden van een producentenorganisatie (bijv. Stichting UPV Textiel). Vezelsamenstelling op de productpagina | **Later** (D-36). Of sierkussens en plaids onder "huishoudtextiel" vallen: navragen |
+| **Matrassen en toppers** | **UPV Matrassen** (sinds 2022); verwijderingsbijdrage 2026: € 7,50 eenpersoons, € 9,00 tweepersoons | Registreren en bijdrage per stuk | **Weglaten** |
+| **Servies, keukengerei, bargerei, lunchboxen, drinkflessen** | **Voedselcontactmaterialen** (Verordening 1935/2004, Warenwet); **BPA-verbod** (Verordening 2024/3190): sinds 20-07-2026 mogen de meeste artikelen met BPA niet meer voor het eerst op de markt | Bij BigBuy de conformiteitsverklaring voor kunststof artikelen kunnen opvragen; controleren dat het artikel geschikt is voor levensmiddelen | **Ja**, met die documenten |
+| **Wegwerpplastic** (feestbekers, -borden, bestek, rietjes, bakjes) | **Verbod** op o.a. plastic wegwerpbestek, -borden en -rietjes (EU 2019/904); UPV voor wegwerpbekers en -bakjes | — | **Weglaten** |
+| **Kaarsen en kandelaars** | GPSR; brandveiligheidswaarschuwingen (norm EN 15494) | Controleren dat de waarschuwingen meekomen (GPSR-gegevens) | **Ja** |
+| **Meubels** (binnen en tuin) | GPSR; **EUDR** voor houten meubels; **UPV Meubels** komt eraan (uiterlijk 2030 volgens het programma circulaire economie) | EUDR-administratie; UPV volgen | **Ja** |
+| **Opslag, organisatie, decoratie** | GPSR | — | **Ja** |
+| **Tuin: houtskoolbarbecues, parasols, bewatering** | GPSR; **houtskool** valt onder EUDR | EUDR-administratie bij houtskool | **Ja**; gasbarbecues (gastoestellenverordening) en ongediertebestrijding (biociden) **weglaten** |
+| **Sport: kamperen, thuis sporten** | GPSR (fitness: norm ISO 20957) | — | **Ja** |
+| **Sport: zwemhulpmiddelen, opblaasbaar voor water, beschermers en helmen** | Speelgoedrichtlijn, norm voor zwemhulpmiddelen (EN 13138) of **persoonlijke beschermingsmiddelen** (Verordening 2016/425, CE) | CE en documenten per artikel | **Weglaten** |
+| **Zonnebrillen** (ook in pakketten, bijv. InnovaGoods) | **Persoonlijk beschermingsmiddel** categorie I: CE-markering en EU-conformiteitsverklaring | CE controleren | **Weglaten** of per artikel controleren |
+| **Dieren: halsbanden, tuigen, manden, kleding** | GPSR | — | **Ja**; dierenvoer (diervoederregels), shampoo en verzorging **weglaten**; LED-halsbanden bevatten een batterij |
+| **Kantoor en school: schriften, papier** | **EUDR** (papier) | EUDR-administratie | **Ja** |
+| **Kinderartikelen** (rugzakken met figuren, etuis) | Grens met **speelgoed**: wat bedoeld is om mee te spelen door kinderen onder 14 valt onder de speelgoedrichtlijn | Twijfelgevallen weren | **Voorzichtig**; geen speelgoed |
+| **Messen** | Een wettelijke leeftijdsgrens (18) is in voorbereiding; grote winkels (Action, HEMA, IKEA) verkopen al vrijwillig niet aan minderjarigen | Leeftijdscontrole bij afrekenen | **Weglaten** in de eerste versie (4 artikelen) |
+| **Alles met een batterij** (ook led-decoratie) | **Batterijverordening** 2023/1542: producentenregistratie (in Nederland via Stichting OPEN) | Registreren | **Weglaten** via de naamcontrole uit § 6 |
+
+### 7.4 Wat WonZo als bedrijf moet regelen
+
+Bij het aanbevolen assortiment uit § 6.3, zonder woningtextiel:
+
+1. **Verpact:** bijhouden hoeveel kilo verpakking er op de markt komt, en hoe
+   dat berekend is (waarschijnlijk ver onder 50 000 kg).
+2. **EUDR:** vanaf 30-12-2026 per leverancier de DDS-referenties bewaren voor
+   hout, papier en houtskool.
+3. **REACH:** een vaste weg om een vraag over zorgwekkende stoffen binnen 45
+   dagen te beantwoorden.
+4. **Documenten van BigBuy** kunnen opvragen: GPSR, conformiteitsverklaringen
+   voor voedselcontact (en BPA-vrij), EUDR-referenties.
+
+Met woningtextiel erbij komt daar **UPV Textiel** bij: registratie, jaarlijkse
+rapportage en een bijdrage.
+
+### 7.5 Vragen voor de adviseur
+
+1. Is WonZo voor de Nederlandse UPV (textiel, verpakkingen) producent,
+   terwijl BigBuy rechtstreeks uit Spanje aan de Nederlandse klant levert?
+2. Vallen sierkussens, plaids en keukentextiel onder UPV Textiel?
+3. Wat moet WonZo als kleine handelaar onder de EUDR bijhouden, en vanaf
+   wanneer precies?
+4. Oud-voor-nieuw en Stichting OPEN (D-34), als er toch elektrische artikelen
+   bij komen.
+5. Is er inmiddels een wettelijke leeftijdsgrens voor de verkoop van messen?
+
+---
+
 ## Bronnen
 
 Geraadpleegd 2026-10-05.
@@ -242,6 +448,32 @@ Geraadpleegd 2026-10-05.
   https://id.nl/zekerheid-en-gemak/veilig-online/beveiligingssoftware/elektronica-recyclen-zo-helpen-webshops-je-daar-bij
 - Stichting OPEN — Producentenflyer (november 2024):
   https://www.stichting-open.org/wp-content/uploads/2024/11/Producentenflyer-nov-2024.pdf
+- Ondernemersplein — Afvalbeheersbijdrage verpakkingen betalen:
+  https://ondernemersplein.overheid.nl/wetten-en-regels/afvalbeheersbijdrage-verpakkingen-betalen/
+- KVK — UPV textiel: https://www.kvk.nl/duurzaamheid/upv-textiel-dit-betekent-het-voor-jou/
+- Ondernemersplein — Nieuwe regels voor hergebruik en recycling textiel:
+  https://ondernemersplein.overheid.nl/duurzaam-ondernemen/milieu/nieuwe-regels-voor-hergebruiken-en-recyclen-textiel/
+- KVK — Wegwerpplastic: https://www.kvk.nl/duurzaamheid/producent-of-importeur-van-wegwerpplastic-dit-moet-je-regelen/
+- KVK — UPV batterijen: https://www.kvk.nl/duurzaamheid/upv-batterijen-en-accus-regels-voor-producent-en-importeur
+- Knab — Nieuwe verpakkingsregels vanaf 12 augustus (17-08-2026):
+  https://bieb.knab.nl/ondernemen/nieuwe-verpakkingsregels-ppwr-2026
+- Douane — EUDR: https://www.douane.nl/onderwerpen/vgem/milieu/eudr/
+- Ondernemersplein — EUDR: https://ondernemersplein.overheid.nl/duurzaam-ondernemen/milieu/verordening-ontbossingsvrije-producten-eudr-wat-betekent-dit-voor-u/
+- Interior Daily — Verwijderingsbijdrage matrassen 2026:
+  https://www.interiordaily.com/article/9784708/disposal-fee-for-mattresses-set-for-2026/
+- HVC — Status en ontwikkeling UPV (2025):
+  https://connect.hvcgroep.nl/rs/944-ZXB-764/images/05_HVC%20Congres%202025_Status%20%26%20ontwikkeling%20van%20UPV_Jochem%20Ballot%20%26%20Paul%20Hofman.pdf
+- Food Packaging Forum — EU BPA ban reaches main transition deadline:
+  https://foodpackagingforum.org/news/eu-bpa-ban-reaches-main-transition-deadline
+- NVWA — Interventiebeleid voedselcontactmaterialen:
+  https://www.nvwa.nl/binaries/nvwa/documenten/nvwa/organisatie/hoe-de-nvwa-werkt/specifiek-interventiebeleid/voedselcontactmaterialen-ib02-spec-61-versie-01/IB02-SPEC61-versie01-voedselcontactmaterialen.pdf
+- Händlerbund — Kennzeichnung von Textilien:
+  https://www.haendlerbund.de/de/news/aktuelles/rechtliches/2543-richtige-kennzeichnung-von-textilien-so-schuetzen-sie-sich-vor-abmahnungen
+- Verordening (EU) 2016/425 persoonlijke beschermingsmiddelen:
+  https://www.legislation.gov.uk/eur/2016/425/data.html
+- CBL — Messenverkoop alleen aan 18+ (januari 2022):
+  https://www.cbl.nl/app/uploads/2022/01/QA-Messenverkoop-alleen-aan-18-januari-2022.pdf
+- CMS — SCIP-database: https://cms.law/en/aut/legal-updates/SCIP-Database-a-step-forward-for-the-circular-economy
 - Riverty — Guide for growth NL:
   https://www.riverty.com/4a7d70/globalassets/media-ressources/merchant-package/guide-of-growth/guide-for-growth-nl.pdf
 - NOS — Achteraf betalen bezorgt vooral jongeren schulden:

@@ -10,7 +10,13 @@ bij waarom je het wilt weten.
 
 | # | Vraag | Gesteld | Antwoord |
 |---|---|---|---|
-| 1 | | | |
+| 1 | Heeft de sandbox een productcatalogus, en zo nee: hoe testen wij bestellen (`order/check`, `order/create`) zonder catalogus en zonder vervoerders? Alle productlijsten geven HTTP 400 en `shipping/carriers` is leeg (`docs/api/LEVERANCIER.md` § 2) | nog niet | |
+| 2 | Opzoeken van een onbekende eigen referentie (`order/reference/{ref}`) geeft HTTP 500, geen 404. Hoe stellen wij na een timeout vast dat een bestelling níet is aangekomen? | nog niet | |
+| 3 | Moet voor API-toegang tot de catalogus in productie iets geactiveerd worden in het account (pakket, abonnement)? | nog niet | |
+| 4 | Ongeveer 1 % van de artikelen in de API heeft voorraad (GEMETEN 2026-10-05, bevestigd in het account). Is dat normaal, komt er regelmatig voorraad bij, en is er een manier om alleen leverbare artikelen op te vragen (een endpoint of filter op voorraad)? | nog niet | |
+| 5 | Versturen jullie in neutrale verpakking of met de naam van de winkel? Wie is dan voor de verpakkingsregels (Verpact, PPWR) de producent van die verpakking? | nog niet | |
+| 6 | Kunnen jullie per artikel leveren: conformiteitsverklaringen voor voedselcontact (en BPA-vrij), EUDR-referenties (DDS) voor hout, papier en houtskool, en informatie over zeer zorgwekkende stoffen (REACH art. 33)? | nog niet | |
+| 7 | Zijn jullie in Nederland geregistreerd voor UPV Textiel, of moet de winkel dat zelf doen? | nog niet | |
 
 ## Vragen die je achteraf had willen stellen
 

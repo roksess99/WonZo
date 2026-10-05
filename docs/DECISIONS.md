@@ -132,8 +132,21 @@ bij bestellen.
 Een harde grens als **allowlist in code**, niet als filter in de navigatie:
 ook een directe URL naar een artikel buiten het assortiment levert niets op.
 
+GEMETEN 2026-10-05 (productie, `docs/api/LEVERANCIER.md` § 2, § 7, § 10):
+BigBuy heeft 22 hoofdgroepen, waaronder één voor volwassenen; artikelen kunnen
+gereviseerd zijn (`condition`, bijv. `REFURBISHED_B`); in de steekproef had 2
+van de 50 artikelen voorraad.
+
 **Te beantwoorden:** welke productgroepen, welke bewust niet, en wat er gebeurt
-met een groep die leeg blijft.
+met een groep die leeg blijft; **gereviseerde artikelen** uitsluiten of
+duidelijk als gereviseerd tonen; artikelen **zonder voorraad** tonen of
+verbergen.
+
+**Voorstel uit het onderzoek** (`docs/ONDERZOEK.md` § 6): selectie op
+toegestane subcategorie, douanecode basis of licht, geen elektrisch kenmerk,
+conditie nieuw, voorraad, GPSR-gegevens aanwezig en een prijsondergrens. Met
+deze regels blijven er rond de 740 artikelen over (2026-10-05), waarvan ruim
+100 met diepe voorraad — vooral InnovaGoods.
 
 ---
 
@@ -699,6 +712,45 @@ de verplichte informatie ontbreekt (niet tonen, of niet koopbaar).
 
 ---
 
+## D-36 · Registraties en productregels per categorie
+
+- **Status:** DECIDED
+- **Depends on:** —
+- **Decided:** 2026-10-05
+
+Naast D-34 (elektronica) gelden er per categorie andere regels
+(`docs/ONDERZOEK.md` § 7, `WETTELIJK`, te bevestigen): UPV Textiel voor
+woningtextiel, UPV Matrassen, voedselcontact en het BPA-verbod voor servies
+en drinkflessen, het verbod op wegwerpplastic, persoonlijke
+beschermingsmiddelen (zonnebrillen, helmen), en voor de hele winkel
+Verpact, de verpakkingsverordening (PPWR), de ontbossingsverordening (EUDR,
+vanaf 30-12-2026 voor kleine bedrijven) en REACH artikel 33.
+
+**Besloten door de eigenaar:**
+
+- **Woningtextiel komt later**, niet in de eerste versie — dan is er geen
+  registratie voor UPV Textiel nodig om te beginnen.
+- **Niet in het assortiment:** matrassen en toppers, wegwerpplastic,
+  zonnebrillen en andere persoonlijke beschermingsmiddelen, zwemhulpmiddelen
+  en opblaasbaar voor water, messen, alles met een batterij, gasbarbecues,
+  ongediertebestrijding en dierenvoer.
+
+Wat blijft voor de hele winkel: Verpact-berekening bijhouden,
+EUDR-administratie vanaf 30-12-2026 (hout, papier, houtskool), REACH-vragen
+binnen 45 dagen beantwoorden, documenten van de leverancier kunnen opvragen.
+
+**Waarom dit en niet het alternatief.** Zo begint WonZo zonder registratie bij
+een producentenorganisatie. Verworpen: woningtextiel nu al meenemen — een
+registratie, jaarlijkse rapportage en bijdrage voor een kleine groep
+artikelen.
+
+**Nog te bevestigen door een adviseur** (`docs/ONDERZOEK.md` § 7.5): de rol
+van WonZo bij levering vanuit Spanje, de EUDR-plichten, en of er inmiddels een
+wettelijke leeftijdsgrens voor messen is. Wijkt het advies af, dan wordt deze
+beslissing herzien.
+
+---
+
 ## D-35 · Inhoud van de eerste versie
 
 - **Status:** DECIDED
@@ -733,6 +785,7 @@ er zonder kan kopen, en een leeg beoordelingssysteem wekt wantrouwen.
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |
 | 2026-10-05 | D-05, D-13, D-34, D-35 | Voorstellen uit `docs/ONDERZOEK.md` doorgevoerd: iDEAL als eis (D-05), levertijd tonen (D-13), wettelijke productinformatie (D-34, open; standpunt eigenaar over oud voor nieuw vastgelegd), inhoud eerste versie (D-35) |
 | 2026-10-05 | D-00, D-30, D-32 | D-30 bevestigd door de eigenaar; Nederlands standaardtaal (D-32); opgave eigenaar dat Next.js op Hostinger draait (D-00) |
 | 2026-10-05 | D-00, D-14, D-32, D-33 | Beslist door de eigenaar: Next.js, TypeScript, pnpm, Tailwind, Hostinger (D-00); euro en Nederland (D-14); Nederlands en Engels (D-32); eerste versie zonder donkere modus (D-33, open). D-05, D-06, D-17, D-18 van BLOCKED naar OPEN: D-00 is beslist, de informatie is nog niet compleet |
