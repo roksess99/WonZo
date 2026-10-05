@@ -100,8 +100,9 @@ na vragen — `ask`-regel), de database (D-06), het CI-platform (D-17).
 
 ## D-01 · Welke leverancier, en wat kan die API echt?
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** —
+- **Decided:** 2026-10-05
 
 Niet de verkooppraat maar het gemeten gedrag: `docs/api/LEVERANCIER.md`
 helemaal invullen vóór er adaptercode komt. Lessen uit een vorig project
@@ -116,18 +117,32 @@ endpoint van 10 per uur voor bulklijsten en 1 per 5 s per artikel — de
 catalogus moet dus als eigen kopie worden gesynchroniseerd; geen
 zoek-endpoint; voorraad per magazijn met levertijd; een eigen
 `internalReference` die na een timeout terug te zoeken is; geen webhooks.
-Nog niet `DECIDED`: het meetformulier is niet ingevuld.
+**Besloten (eigenaar, 2026-10-05): BigBuy.** Gemeten in sandbox en productie
+(`docs/api/LEVERANCIER.md`, `GEMETEN 2026-10-05`): één sleutel voor lezen en
+bestellen; 22 hoofdgroepen in het Nederlands; productlijsten per hoofdgroep,
+pagina's vanaf 0, koppelen op id; ongeveer 1 % van de catalogus op voorraad
+(bevestigd in het account); fabrikantgegevens voor GPSR bij de meeste
+artikelen; een eigen referentie bij bestellen die terug te zoeken is (404 als
+hij niet bestaat); vervoerders naar Nederland met levertijden.
 
-**Te beantwoorden:** welke API; welk token per onderdeel; rate limit; dekking
-van het assortiment; bestellen via de API; idempotentie of eigen referentie
-bij bestellen.
+**Waarom dit en niet het alternatief.** Keuze van de eigenaar; de meting
+bevestigt dat bladeren, voorraad, Nederlandse namen en bestellen via de API
+mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
+verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
+(vraag 4 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
+
+**Nog open, niet blokkerend:** incl. of excl. btw (meten met een schermafdruk
+van V0710266); energielabel bij een artikel dat er een heeft; `order/check` en
+bestellen testen (de sandbox heeft geen catalogus); voorraad per variant;
+stabiliteit van de taxonomie-id's over de tijd.
 
 ---
 
 ## D-02 · Wat verkopen we wel en niet?
 
-- **Status:** BLOCKED
+- **Status:** DECIDED
 - **Depends on:** D-01
+- **Decided:** 2026-10-05
 
 Een harde grens als **allowlist in code**, niet als filter in de navigatie:
 ook een directe URL naar een artikel buiten het assortiment levert niets op.
@@ -141,6 +156,39 @@ van de 50 artikelen voorraad.
 met een groep die leeg blijft; **gereviseerde artikelen** uitsluiten of
 duidelijk als gereviseerd tonen; artikelen **zonder voorraad** tonen of
 verbergen.
+
+**Besloten (eigenaar, 2026-10-05):** een artikel komt in de winkel als het
+aan **alle** regels voldoet, afgedwongen in de code:
+
+1. Het valt in een toegestane subcategorie:
+   - Huis en koken: opslag en organisatie, meubilair, huisdecoratie (ook
+     kaarsen en kandelaars), servies, keukengerei en bargerei;
+   - Tuin: tuinmeubelen, parasols en zonneschermen, bewatering,
+     houtskoolbarbecues en accessoires;
+   - Sport en outdoor: kampeermeubelen en slaapuitrusting, thuis sporten;
+   - Dierproducten: halsbanden en tuigen, manden en dekens, kleding.
+
+   Gezocht op naam in de taxonomieboom, niet op vast id, tot de stabiliteit
+   van de id's gemeten is.
+2. De douanecode valt in **basis** of **licht** (`docs/ONDERZOEK.md` § 6).
+3. Niet in de uitsluitingslijst van D-36, en geen elektrisch kenmerk of
+   batterij in de naam; twijfelgevallen gaan naar een lijst voor de eigenaar.
+4. Conditie **nieuw** — gereviseerde artikelen komen er niet in.
+5. Voorraad > 0, vers gecontroleerd bij het afrekenen (D-31, D-22).
+6. GPSR-gegevens aanwezig (fabrikant met adres).
+7. Een prijsondergrens of minimumbestelling — de waarde volgt uit D-03 en
+   D-13.
+
+Merken worden niet uitgesloten: InnovaGoods, met de diepste voorraad, hoort
+erbij. Woningtextiel komt later (D-36). Niet toegestaan zijn de overige
+hoofdgroepen, waaronder de groep voor volwassenen.
+
+**Waarom dit en niet het alternatief.** Het onderzoek (`docs/ONDERZOEK.md`
+§ 6–7) toont dat deze categorieën leverbaar zijn, bij "wonen" passen en alleen
+de basisplichten hebben. Verworpen: de hele catalogus tonen (99 % niet
+leverbaar), elektronica (registratie bij Stichting OPEN, energielabel,
+inname), en gereviseerde artikelen (uitleg en garantievragen bij elke
+verkoop).
 
 **Voorstel uit het onderzoek** (`docs/ONDERZOEK.md` § 6): selectie op
 toegestane subcategorie, douanecode basis of licht, geen elektrisch kenmerk,
@@ -167,7 +215,7 @@ gebeurt zonder adviesprijs; minimummarge.
 
 ## D-04 · Wie koopt er in: een mens of de code?
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Automatisch doorbestellen is het grootste risico in het systeem. Eerder bleef
@@ -319,7 +367,7 @@ reden; geen sterrengemiddelde in de markering zonder echte beoordelingen.
 
 ## D-13 · Verzending
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 **Te beantwoorden:** vervoerder en tarieven; drempel voor gratis verzending;
@@ -368,7 +416,7 @@ de rest); btw op verzendkosten bij gemengde tarieven.
 
 ## D-16 · Kostprijs (landedCost) en ondergrens
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Tot deze beslissing is `landedCost = supplierCost` een benoemde aanname.
@@ -443,7 +491,7 @@ PDF-bibliotheek getagde, deterministische PDF's maken (meten).
 
 ## D-22 · Voorraad, reservering en geldigheid van de snapshot
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Bij dropship ligt de voorraad bij de leverancier en is lokaal reserveren
@@ -785,6 +833,7 @@ er zonder kan kopen, en een leeg beoordelingssysteem wekt wantrouwen.
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-01, D-02 | Beslist door de eigenaar: BigBuy (D-01); selectieregel en toegestane subcategorieën, gereviseerd uitgesloten, InnovaGoods toegestaan (D-02). D-04, D-13, D-16, D-22 van BLOCKED naar OPEN |
 | 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |
 | 2026-10-05 | D-05, D-13, D-34, D-35 | Voorstellen uit `docs/ONDERZOEK.md` doorgevoerd: iDEAL als eis (D-05), levertijd tonen (D-13), wettelijke productinformatie (D-34, open; standpunt eigenaar over oud voor nieuw vastgelegd), inhoud eerste versie (D-35) |
 | 2026-10-05 | D-00, D-30, D-32 | D-30 bevestigd door de eigenaar; Nederlands standaardtaal (D-32); opgave eigenaar dat Next.js op Hostinger draait (D-00) |
