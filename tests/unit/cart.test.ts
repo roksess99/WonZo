@@ -5,14 +5,14 @@ import { parseQuoteRequest, quoteCart } from "@/lib/cart/quote";
 import type { Product } from "@/lib/catalog/types";
 import { getCatalog } from "@/lib/catalog/provider";
 import { money } from "@/lib/money";
-import { shippingFor, shippingPolicy, type ShippingPolicy } from "@/lib/pricing/shipping";
+import { productShipping, shippingFor, shippingPolicy, type ShippingPolicy } from "@/lib/pricing/shipping";
 
 const line = (productId: string, quantity = 1): CartLine => ({ source: "bigbuy", productId, quantity });
 
-/** Test values, not the shop's policy (D-13 is open). */
-const testPolicy: ShippingPolicy = { fee: money(495), freeFrom: money(5000) };
+/** Test values, deliberately not the shop's policy, so a policy change does not hide a rule change. */
+const testPolicy: ShippingPolicy = { fee: money(495), freeFrom: money(4000), largeAbove: money(2000) };
 
-function product(id: string, cents: number, stock: number, days: [number, number] = [3, 6]): Product {
+function product(id: string, cents: number, stock: number, days: [number, number] = [3, 6], shipCents = 858): Product {
   return {
     id,
     source: "bigbuy",
@@ -27,6 +27,7 @@ function product(id: string, cents: number, stock: number, days: [number, number
     stock,
     offerId: `${id}-1`,
     delivery: { minWorkingDays: days[0], maxWorkingDays: days[1], shipsFrom: "ES" },
+    shippingAlone: money(shipCents),
     imageUrls: [],
     categoryKey: "wonen",
     subcategoryKey: "opslag",
@@ -101,16 +102,33 @@ describe("adding, changing, removing", () => {
   });
 });
 
-describe("shipping (D-13 open: no amounts yet)", () => {
-  it("has no policy, so shipping is unknown", () => {
-    expect(shippingPolicy).toBeNull();
-    expect(shippingFor(money(10000))).toEqual({ kind: "unknown" });
+describe("shipping (D-13)", () => {
+  const small = { shippingAlone: money(858), quantity: 1 };
+  const large = { shippingAlone: money(6380), quantity: 2 };
+
+  it("is the owner's decision: € 5,95 below € 50, large above € 15", () => {
+    expect(shippingPolicy).toEqual({ fee: money(595), freeFrom: money(5000), largeAbove: money(1500) });
+    expect(productShipping(money(1500))).toEqual({ kind: "standard", fee: money(595), freeFrom: money(5000) });
+    expect(productShipping(money(1501))).toEqual({ kind: "large", perPiece: money(1501) });
   });
 
-  it("with a policy: exactly on the threshold ships free, one cent below does not", () => {
-    expect(shippingFor(money(5000), testPolicy)).toEqual({ kind: "free" });
-    expect(shippingFor(money(4999), testPolicy)).toEqual({ kind: "fee", amount: money(495), remainingForFree: money(1) });
-    expect(shippingFor(money(1), testPolicy)).toEqual({ kind: "fee", amount: money(495), remainingForFree: money(4999) });
+  it("exactly on the threshold ships free, one cent below does not", () => {
+    expect(shippingFor(money(4000), [small], testPolicy)).toEqual({ standard: { kind: "free" }, large: money(0), total: money(0) });
+    expect(shippingFor(money(3999), [small], testPolicy)).toEqual({
+      standard: { kind: "fee", amount: money(495), remainingForFree: money(1) },
+      large: money(0),
+      total: money(495),
+    });
+  });
+
+  it("large items pay their own costs per piece, also above the threshold", () => {
+    expect(shippingFor(money(20000), [large], testPolicy)).toEqual({ standard: { kind: "none" }, large: money(12760), total: money(12760) });
+    expect(shippingFor(money(20000), [large, small], testPolicy)).toEqual({ standard: { kind: "free" }, large: money(12760), total: money(12760) });
+    expect(shippingFor(money(1000), [large, small], testPolicy).total).toEqual(money(12760 + 495));
+  });
+
+  it("an empty order has no shipping", () => {
+    expect(shippingFor(money(0), [], testPolicy)).toEqual({ standard: { kind: "none" }, large: money(0), total: money(0) });
   });
 });
 
@@ -122,20 +140,22 @@ describe("quoteCart — every amount from the catalog", () => {
     expect(q.lines.map((l) => l.status)).toEqual(["ok", "ok"]);
     expect(q.subtotal).toEqual(money(3999)); // 2 × 19,99 + 0,01
     expect(q.itemCount).toBe(3);
-    expect(q.shipping).toEqual({ kind: "fee", amount: money(495), remainingForFree: money(1001) });
+    expect(q.shipping.standard).toEqual({ kind: "fee", amount: money(495), remainingForFree: money(1) });
     expect(q.total).toEqual(money(4494));
     expect(q.delivery).toEqual({ minWorkingDays: 4, maxWorkingDays: 8, shipsFrom: ["ES"] });
     expect(q.readyForCheckout).toBe(true);
   });
 
-  it("without a shipping policy the total says it excludes shipping", () => {
-    const q = quoteCart([line("1")], catalog, null);
-    expect(q.total).toEqual(money(1999));
-    expect(q.totalIncludesShipping).toBe(false);
+  it("adds the own shipping costs of a large item to the total", () => {
+    const withLarge = [...catalog, product("3", 9999, 4, [3, 6], 6380)];
+    const q = quoteCart([line("3", 1)], withLarge, testPolicy);
+    expect(q.lines[0]).toMatchObject({ status: "ok", largeShipping: money(6380) });
+    expect(q.shipping).toEqual({ standard: { kind: "none" }, large: money(6380), total: money(6380) });
+    expect(q.total).toEqual(money(9999 + 6380));
   });
 
   it("marks lines over stock and gone products, and is not ready for checkout", () => {
-    const q = quoteCart([line("2", 3), line("404", 1)], catalog, null);
+    const q = quoteCart([line("2", 3), line("404", 1)], catalog, testPolicy);
     expect(q.lines.map((l) => l.status)).toEqual(["limited", "unavailable"]);
     expect(q.subtotal).toEqual(money(3)); // the gone product is not counted
     expect(q.readyForCheckout).toBe(false);
@@ -143,13 +163,13 @@ describe("quoteCart — every amount from the catalog", () => {
 
   it("an empty cart costs nothing and has no shipping", () => {
     const q = quoteCart([], catalog, testPolicy);
-    expect(q).toMatchObject({ itemCount: 0, subtotal: money(0), shipping: { kind: "unknown" }, readyForCheckout: false });
+    expect(q).toMatchObject({ itemCount: 0, subtotal: money(0), total: money(0), readyForCheckout: false });
   });
 
   it("gives the same unit price as the product page (one source)", async () => {
     const nl = await getCatalog("nl");
     const p = nl[0]!;
-    const q = quoteCart([line(p.id, 1)], nl, null);
+    const q = quoteCart([line(p.id, 1)], nl);
     expect(q.lines[0]).toMatchObject({ status: "ok", unitPrice: p.price });
   });
 });

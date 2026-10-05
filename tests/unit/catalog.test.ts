@@ -62,6 +62,7 @@ describe("select — every rule of D-02", () => {
     active: true,
     stock: 3,
     hasManufacturer: true,
+    hasShippingCost: true,
   };
   it("allows a compliant product", () => {
     expect(select(ok)).toEqual({ allowed: true, categoryKey: "tuin", subcategoryKey: "tuinmeubels" });
@@ -73,6 +74,7 @@ describe("select — every rule of D-02", () => {
     [{ hs: "85437090" }, "douanecode: zwaar"],
     [{ names: ["Ligstoel", "Heated lounger"] }, "elektrisch kenmerk in de naam"],
     [{ active: false }, "niet actief"],
+    [{ hasShippingCost: false }, "geen verzendkosten bekend"],
   ])("refuses %o", (change, reason) => {
     const v = select({ ...ok, ...change });
     expect(v.allowed).toBe(false);
@@ -101,7 +103,7 @@ describe("mock catalog through the real mapping", () => {
     expect(nl.map((p) => p.id).sort()).toEqual(en.map((p) => p.id).sort());
     const skus = nl.map((p) => p.sku);
     // Excluded on purpose in the fixtures:
-    for (const sku of ["S3601455", "S7910777", "V0103915", "D1400967", "V0104000", "V0104099", "S0800417", "S7191227"]) {
+    for (const sku of ["S3601455", "S7910777", "V0103915", "D1400967", "V0104000", "V0104099", "S0800417", "S7191227", "S2702120"]) {
       expect(skus).not.toContain(sku);
     }
     // Edge cases that must pass:

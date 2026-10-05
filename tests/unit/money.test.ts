@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { add, formatMoney, fromDecimal, money, MoneyError } from "@/lib/money";
+import { add, formatMoney, formatMoneyShort, fromDecimal, money, MoneyError } from "@/lib/money";
 
 describe("fromDecimal — exact conversion to cents", () => {
   it("converts numbers and strings the supplier sends (GEMETEN 2026-10-05: numbers; documented: strings)", () => {
@@ -37,5 +37,9 @@ describe("formatMoney — Dutch notation on every page (D-14)", () => {
     // Intl uses a non-breaking space between symbol and amount.
     expect(formatMoney(money(4995)).replace(/\s/g, " ")).toBe("€ 49,95");
     expect(formatMoney(money(123456)).replace(/\s/g, " ")).toBe("€ 1.234,56");
+  });
+  it("drops ,00 only for round amounts in running text", () => {
+    expect(formatMoneyShort(money(5000)).replace(/\s/g, " ")).toBe("€ 50");
+    expect(formatMoneyShort(money(595)).replace(/\s/g, " ")).toBe("€ 5,95");
   });
 });

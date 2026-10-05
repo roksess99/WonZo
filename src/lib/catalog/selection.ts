@@ -15,6 +15,8 @@ export type Candidate = {
   active: boolean;
   stock: number;
   hasManufacturer: boolean;
+  /** Shipping costs must be known to show them before ordering (D-13, ACM). */
+  hasShippingCost: boolean;
 };
 
 export type Verdict =
@@ -40,6 +42,7 @@ export function select(c: Candidate): Verdict {
   if (!c.active) reasons.push("niet actief");
   if (c.stock <= 0) reasons.push("geen voorraad");
   if (!c.hasManufacturer) reasons.push("geen GPSR-gegevens");
+  if (!c.hasShippingCost) reasons.push("geen verzendkosten bekend");
   if (reasons.length || !place) return { allowed: false, reasons: [...new Set(reasons)] };
   return { allowed: true, ...place };
 }

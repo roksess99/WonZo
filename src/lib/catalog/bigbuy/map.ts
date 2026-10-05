@@ -7,7 +7,7 @@ import { htmlToParagraphs, slugify } from "@/lib/text";
 import { chooseOffer, deliveryFor } from "../delivery";
 import { select, type Verdict } from "../selection";
 import type { Product } from "../types";
-import type { BigBuyCompliance, BigBuyImages, BigBuyInformation, BigBuyProduct, BigBuyStock } from "./dto";
+import type { BigBuyCompliance, BigBuyImages, BigBuyInformation, BigBuyLowestShipping, BigBuyProduct, BigBuyStock } from "./dto";
 
 export type SupplierRecord = {
   product: BigBuyProduct;
@@ -16,6 +16,7 @@ export type SupplierRecord = {
   info: Partial<Record<Locale, BigBuyInformation>>;
   images: BigBuyImages | null;
   compliance: BigBuyCompliance | null;
+  shipping: BigBuyLowestShipping | null;
   /** Taxonomy names root first (Dutch), from the supplier tree. */
   taxonomyPath: string[];
   brand: string | null;
@@ -36,13 +37,16 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
     active: r.product.active === 1,
     stock: offer?.quantity ?? 0,
     hasManufacturer: Boolean(manufacturer?.name && manufacturer.address),
+    hasShippingCost: r.shipping !== null,
   });
   const info = r.info[locale];
-  if (!verdict.allowed || !offer || !info) return { product: null, verdict };
+  if (!verdict.allowed || !offer || !info || !r.shipping) return { product: null, verdict };
 
   let price;
+  let shippingAlone;
   try {
     price = sellingPrice(fromDecimal(r.product.retailPrice));
+    shippingAlone = fromDecimal(r.shipping.cost);
   } catch (err) {
     if (err instanceof MoneyError) return { product: null, verdict: { allowed: false, reasons: [`ongeldige prijs: ${err.message}`] } };
     throw err;
@@ -75,6 +79,7 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
       stock: offer.quantity,
       offerId: `${r.product.id}:${offer.warehouse}:${offer.minHandlingDays}-${offer.maxHandlingDays}`,
       delivery: deliveryFor(offer),
+      shippingAlone,
       imageUrls: images.map((i) => i.url),
       categoryKey: verdict.categoryKey,
       subcategoryKey: verdict.subcategoryKey,

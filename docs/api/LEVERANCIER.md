@@ -452,7 +452,46 @@ Waarneming:
 - `order/check` niet uitgevoerd (productie is alleen lezen; de sandbox heeft
   geen catalogus en geen vervoerders).
 
-GEMETEN <<DATUM>>: <<ANTWOORD>>
+GEMETEN 2026-10-05 — Omgeving: productie, sleutel van de eigenaar, alleen
+lezen (`scripts/measure-shipping.mjs`, gedraaid door de eigenaar).
+Waarneming — **verzendkosten naar Nederland per product, los verzonden**
+(`GET /rest/shipping/lowest-shipping-costs-by-country/nl`):
+- Eén antwoord voor de hele catalogus: 322 683 regels, 25,9 MB, 16,7 s.
+  `cost` is een **string** ("14.02"); per regel ook vervoerder en id. Of het
+  bedrag incl. of excl. btw is, staat er niet bij.
+- Van de 382 artikelen die door de selectieregel komen (D-02, zonder
+  GPSR-controle) hadden er 381 een bedrag. **Laagste € 8,58, mediaan € 8,63**,
+  75 % € 14,89, 90 % € 25,55, hoogste € 309,86. Vervoerders: SEUR (345), TNT
+  (36).
+- **Kleine artikelen** (decoratie, keuken, opslag, dieren, bewatering,
+  barbecue-accessoires): mediaan € 8,58. **Meubels**: mediaan € 63,80,
+  90 % € 273,25. **Tuinmeubels**: mediaan € 20,27, 90 % € 114,27.
+- Naar prijsklasse (adviesprijs, btw-basis nog niet bevestigd): onder € 15 —
+  164 artikelen, verzending is mediaan **134 % van de prijs**; € 15–25 — 51 %;
+  € 25–50 — 34 %; € 50–100 — 25 %; boven € 100 — 18 %.
+- Eén artikel alleen kost dus al gauw meer om te verzenden dan het zelf kost.
+
+Waarneming — **verzendkosten van een mand** (`POST /rest/shipping/orders`,
+een kostenberekening zonder bestelling, naar 6846XX, zelfde dag):
+
+| Mand | Som los | Mand | Gewicht (kg) |
+|---|---|---|---|
+| 1 klein artikel | € 8,58 | € 8,58 | 0,73 |
+| zelfde artikel 2× | € 17,16 | € 8,58 | 1,46 |
+| zelfde artikel 3× | € 25,74 | € 8,63 | 2,19 |
+| 2 verschillende kleine | € 17,16 | € 8,58 | 1,59 |
+| 3 verschillende kleine | € 25,74 | € 13,81 | 2,84 |
+| 5 verschillende kleine | € 42,90 | € 13,81 | 3,557 |
+| 1 meubel (het lichtste) | € 8,58 | € 8,58 | 0,2 |
+| 1 meubel + 1 klein | € 17,16 | € 8,58 | 0,93 |
+
+- **Eén pakket per bestelling, geprijsd op gewicht** — niet de som per
+  artikel. Gemeten treden: tot ongeveer 2 kg € 8,58, rond 2,2 kg € 8,63,
+  2,8–3,6 kg € 13,81. Steeds SEUR.
+- Het antwoord geeft het **gewicht** van de mand, terwijl de productgegevens
+  plaatshouders hebben (§ 10): BigBuy kent het echte gewicht dus wel.
+- Niet gemeten: een zwaar meubel in een mand (het gekozen meubel was het
+  lichtste), en waar de treden boven 3,6 kg liggen.
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04):
 - `POST /rest/order/check` simuleert een bestelling en geeft de totalen terug;

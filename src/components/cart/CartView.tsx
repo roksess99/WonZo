@@ -39,11 +39,11 @@ export type CartLabels = StepperLabels & {
   subtotal: string;
   subtotalOne: string;
   shipping: string;
-  shippingUnknown: string;
+  shippingLarge: string;
   shippingFree: string;
   remainingForFree: string;
+  largeItem: string;
   total: string;
-  totalWithoutShipping: string;
   inclVat: string;
   delivery: string;
   shipsFrom: string;
@@ -157,23 +157,25 @@ export function CartView({ locale, labels }: { locale: Locale; labels: CartLabel
               <dt>{quote.itemCount === 1 ? labels.subtotalOne : interpolate(labels.subtotal, { count: quote.itemCount })}</dt>
               <dd>{formatMoney(quote.subtotal)}</dd>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt>{labels.shipping}</dt>
-              <dd className={quote.shipping.kind === "unknown" ? "text-end text-muted" : "text-end"}>
-                {quote.shipping.kind === "unknown"
-                  ? labels.shippingUnknown
-                  : quote.shipping.kind === "free"
-                    ? labels.shippingFree
-                    : formatMoney(quote.shipping.amount)}
-              </dd>
-            </div>
+            {quote.shipping.standard.kind !== "none" ? (
+              <div className="flex justify-between gap-4">
+                <dt>{labels.shipping}</dt>
+                <dd>{quote.shipping.standard.kind === "free" ? labels.shippingFree : formatMoney(quote.shipping.standard.amount)}</dd>
+              </div>
+            ) : null}
+            {quote.shipping.large.amount > 0 ? (
+              <div className="flex justify-between gap-4">
+                <dt>{labels.shippingLarge}</dt>
+                <dd>{formatMoney(quote.shipping.large)}</dd>
+              </div>
+            ) : null}
             <div className="flex items-baseline justify-between gap-4 border-t border-line pt-2 font-bold">
-              <dt>{quote.totalIncludesShipping ? labels.total : labels.totalWithoutShipping}</dt>
+              <dt>{labels.total}</dt>
               <dd className="text-h2">{formatMoney(quote.total)}</dd>
             </div>
           </dl>
-          {quote.shipping.kind === "fee" && quote.shipping.remainingForFree ? (
-            <p className="text-body-sm">{interpolate(labels.remainingForFree, { amount: formatMoney(quote.shipping.remainingForFree) })}</p>
+          {quote.shipping.standard.kind === "fee" ? (
+            <p className="text-body-sm">{interpolate(labels.remainingForFree, { amount: formatMoney(quote.shipping.standard.remainingForFree) })}</p>
           ) : null}
           <p className="text-body-sm text-muted">{labels.inclVat}</p>
         </div>
@@ -258,6 +260,9 @@ function CartRow({ locale, line, quoted, labels }: { locale: Locale; line: CartL
               {interpolate(labels.shipsFrom, { country: labels.countries[p.delivery.shipsFrom] ?? p.delivery.shipsFrom })}
             </span>
           </p>
+          {quoted.largeShipping ? (
+            <p className="text-body-sm text-muted tabular-nums">{interpolate(labels.largeItem, { cost: formatMoney(quoted.largeShipping) })}</p>
+          ) : null}
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">

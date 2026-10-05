@@ -6,7 +6,7 @@
 import type { Delivery, Product } from "@/lib/catalog/types";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { add, money, multiply, type Money } from "@/lib/money";
-import { shippingFor, type Shipping, type ShippingPolicy, shippingPolicy } from "@/lib/pricing/shipping";
+import { isLarge, shippingFor, shippingPolicy, type Shipping, type ShippingLine, type ShippingPolicy } from "@/lib/pricing/shipping";
 import { checkLine, MAX_LINES, type CartLine } from "./cart";
 
 export type QuoteLine = CartLine &
@@ -15,6 +15,8 @@ export type QuoteLine = CartLine &
         /** "limited": fewer in stock than asked; the line says so and offers one fix (docs/SCHERMEN.md). */
         status: "ok" | "limited";
         product: { name: string; slug: string; sku: string; imageUrl: string | null; stock: number; delivery: Delivery };
+        /** Own shipping costs per piece for a large item (D-13); null for a standard item. */
+        largeShipping: Money | null;
         unitPrice: Money;
         lineTotal: Money;
       }
@@ -31,20 +33,20 @@ export type CartQuote = {
   /** Sum of the priced lines, incl. VAT. */
   subtotal: Money;
   shipping: Shipping;
-  /** Subtotal plus shipping when shipping is known; otherwise the subtotal. */
+  /** Subtotal plus shipping. */
   total: Money;
-  totalIncludesShipping: boolean;
   /** The slowest line decides when everything is there. */
   delivery: { minWorkingDays: number; maxWorkingDays: number; shipsFrom: string[] } | null;
   /** Only when every line is "ok": nothing to resolve first. */
   readyForCheckout: boolean;
 };
 
-export function quoteCart(lines: CartLine[], catalog: Product[], policy: ShippingPolicy | null = shippingPolicy): CartQuote {
+export function quoteCart(lines: CartLine[], catalog: Product[], policy: ShippingPolicy = shippingPolicy): CartQuote {
   const byId = new Map(catalog.map((p) => [`${p.source}:${p.id}`, p]));
   let subtotal = money(0);
   let itemCount = 0;
   let delivery: CartQuote["delivery"] = null;
+  const shippingLines: ShippingLine[] = [];
 
   const quoted: QuoteLine[] = lines.map((line) => {
     const p = byId.get(`${line.source}:${line.productId}`);
@@ -52,6 +54,7 @@ export function quoteCart(lines: CartLine[], catalog: Product[], policy: Shippin
     const lineTotal = multiply(p.price, line.quantity);
     subtotal = add(subtotal, lineTotal);
     itemCount += line.quantity;
+    shippingLines.push({ shippingAlone: p.shippingAlone, quantity: line.quantity });
     delivery = {
       minWorkingDays: Math.max(delivery?.minWorkingDays ?? 0, p.delivery.minWorkingDays),
       maxWorkingDays: Math.max(delivery?.maxWorkingDays ?? 0, p.delivery.maxWorkingDays),
@@ -61,19 +64,19 @@ export function quoteCart(lines: CartLine[], catalog: Product[], policy: Shippin
       ...line,
       status: line.quantity > p.stock ? "limited" : "ok",
       product: { name: p.name, slug: p.slug, sku: p.sku, imageUrl: p.imageUrls[0] ?? null, stock: p.stock, delivery: p.delivery },
+      largeShipping: isLarge(p.shippingAlone, policy) ? p.shippingAlone : null,
       unitPrice: p.price,
       lineTotal,
     };
   });
 
-  const shipping: Shipping = itemCount > 0 ? shippingFor(subtotal, policy) : { kind: "unknown" };
+  const shipping = shippingFor(subtotal, shippingLines, policy);
   return {
     lines: quoted,
     itemCount,
     subtotal,
     shipping,
-    total: shipping.kind === "fee" ? add(subtotal, shipping.amount) : subtotal,
-    totalIncludesShipping: shipping.kind !== "unknown",
+    total: add(subtotal, shipping.total),
     delivery,
     readyForCheckout: quoted.length > 0 && quoted.every((l) => l.status === "ok"),
   };

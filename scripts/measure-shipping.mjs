@@ -8,6 +8,7 @@
 //
 //   node --env-file=.env scripts/measure-shipping.mjs             measure / report
 //   node --env-file=.env scripts/measure-shipping.mjs --refresh   fetch again
+//   node --env-file=.env scripts/measure-shipping.mjs --baskets   also: cost of baskets of several products
 //
 // One call: GET /rest/shipping/lowest-shipping-costs-by-country/nl
 // (GEDOCUMENTEERD: 36 per 6 hours; carriers without proof of delivery are
@@ -15,7 +16,9 @@
 // shipped ALONE — an order with several products may cost less per product.
 // Whether "cost" includes VAT is not documented.
 //
-// Safety: production only, GET only, never an order call. Output: a summary
+// Safety: production only, read-only — GET, plus with --baskets the cost
+// calculation POST /rest/shipping/orders, which creates nothing; never an
+// /order/ call. Output: a summary
 // on stdout (no token) and data in tmp/shipping/ (ignored by Git).
 
 import fs from 'node:fs';
@@ -114,6 +117,7 @@ for (const g of Object.keys(state.groups)) {
       active: p.active === 1,
       stock: stock.get(p.id) ?? 0,
       hasManufacturer: true, // not known per product here; checked per product in the shop
+      hasShippingCost: shipping.get(String(p.sku))?.cost !== null && shipping.has(String(p.sku)),
     });
     if (!verdict.allowed) continue;
     selected.push({ sku: String(p.sku), sub: `${verdict.categoryKey}/${verdict.subcategoryKey}`, retail: cents(p.retailPrice), ship: shipping.get(String(p.sku)) });
@@ -163,4 +167,48 @@ for (const t of [2500, 3500, 5000, 7000]) line(`   ${eur(t)}: ${pct(withCost.fil
 fs.writeFileSync(path.join(DIR, 'geselecteerd.csv'), '﻿' + ['sku,subcategorie,advies_cent,verzend_cent,vervoerder', ...selected.map((r) => [r.sku, r.sub, r.retail ?? '', r.ship?.cost ?? '', r.ship?.carrier ?? ''].join(','))].join('\n'));
 line('');
 line('Per product: tmp/shipping/geselecteerd.csv (opent in Excel; niet in Git)');
+
+// ---------------------------------------------------------------- --baskets: several products in one order
+
+// The list above is the cost per product shipped ALONE. Whether a basket
+// costs the sum or one parcel decides how a free-shipping threshold works.
+// POST /rest/shipping/orders computes the cost of a basket; it places no
+// order (GEDOCUMENTEERD: "Get shipping costs for an order"; 1 per second).
+if (process.argv.includes('--baskets')) {
+  // The company's own postcode (given by the owner, 2026-10-05), not a customer's.
+  const delivery = { isoCountry: 'nl', postCode: '6846XX' };
+  const small = withCost.filter((r) => r.ship.cost === q(costs, 0) && r.sub.startsWith('wonen/')).sort((a, b) => a.sku.localeCompare(b.sku));
+  const furniture = withCost.filter((r) => r.sub === 'wonen/meubels').sort((a, b) => a.ship.cost - b.ship.cost)[0];
+  const [s1, s2, s3, s4, s5] = small;
+  const baskets = [
+    ['1 klein product', [[s1, 1]]],
+    ['hetzelfde product 2×', [[s1, 2]]],
+    ['hetzelfde product 3×', [[s1, 3]]],
+    ['2 verschillende kleine', [[s1, 1], [s2, 1]]],
+    ['3 verschillende kleine', [[s1, 1], [s2, 1], [s3, 1]]],
+    ['5 verschillende kleine', [[s1, 1], [s2, 1], [s3, 1], [s4, 1], [s5, 1]]],
+    ['1 meubel', [[furniture, 1]]],
+    ['1 meubel + 1 klein', [[furniture, 1], [s1, 1]]],
+  ].filter(([, items]) => items.every(([r]) => r));
+
+  line('');
+  line(`Manden (POST shipping/orders, naar ${delivery.isoCountry.toUpperCase()} ${delivery.postCode}; geen bestelling):`);
+  line('   mand | som van losse kosten | kosten van de mand | goedkoopste vervoerder | gewicht');
+  for (const [label, items] of baskets) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const res = await fetch(`${baseUrl}/rest/shipping/orders.json`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order: { delivery, products: items.map(([r, quantity]) => ({ reference: r.sku, quantity })) } }),
+      signal: AbortSignal.timeout(60000),
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch { /* not JSON */ }
+    const sum = items.reduce((a, [r, n]) => a + r.ship.cost * n, 0);
+    const options = (Array.isArray(json) ? json : [json]).flatMap((s) => s?.shippingOptions ?? []).filter((o) => typeof o?.cost === 'number');
+    const best = options.sort((a, b) => a.cost - b.cost)[0];
+    line(`   ${label} (${items.map(([r, n]) => `${r.sku}×${n}`).join(', ')}) | ${eur(sum)} | ${res.status === 200 && best ? eur(Math.round(best.cost * 100)) : `HTTP ${res.status} ${text.slice(0, 120)}`} | ${best?.shippingService?.name ?? '-'} | ${best?.weight ?? '-'}`);
+  }
+}
 console.log(out.join('\n'));

@@ -445,6 +445,35 @@ Nederlanders gemiddeld € 4,47 verzendkosten.
 **€ 45 en € 50**, in lijn met de woonwinkels, en eronder een vast bedrag.
 Beide bedragen beslist de eigenaar.
 
+### 8.3 Wat BigBuy WonZo rekent (`GEMETEN` 2026-10-05)
+
+Per artikel, los verzonden naar Nederland (`docs/api/LEVERANCIER.md` § 10):
+**minimaal € 8,58** (SEUR), mediaan € 8,63; meubels mediaan € 63,80 en tot
+€ 273 (90 %); tuinmeubels mediaan € 20,27. Bij 164 van de 381 artikelen is
+de verzending duurder dan het artikel zelf.
+
+Gevolgen:
+
+- **Eén grens voor alles werkt niet.** Gratis vanaf € 50 kost bij een
+  bestelling van één klein artikel € 8,58 en bij een meubel € 64–€ 273.
+- **Grote artikelen** (meubels, tuinmeubels) hebben eigen verzendkosten
+  nodig, of horen niet bij gratis verzending, of hun verzending zit in de
+  prijs (D-03).
+- **Kleine artikelen**: de klant betaalt bij een losse bestelling minstens
+  wat het WonZo kost, of de prijs dekt het (D-03), of er komt een
+  ondergrens (D-02 regel 7).
+- **Een mand is één pakket, geprijsd op gewicht** (gemeten met
+  `--baskets`): 2 kleine artikelen € 8,58, 5 kleine artikelen € 13,81 — niet
+  € 42,90. Een drempel "gratis vanaf € X" is daardoor bij kleine artikelen
+  betaalbaar: een mand van € 50 aan kleine artikelen kost WonZo naar
+  verwachting € 8,58–€ 13,81 verzending.
+- **Wat een vast bedrag WonZo kost** bij een kleine bestelling onder de grens
+  (echte kosten € 8,58): bij € 4,95 betaalt WonZo € 3,63 bij; bij € 5,95
+  € 2,63; bij € 6,95 € 1,63; bij € 8,95 niets.
+
+**Beslist (D-13, 2026-10-05):** € 5,95, gratis vanaf € 50, grote artikelen
+(meer dan € 15 eigen verzendkosten) per stuk en nooit gratis.
+
 ---
 
 ## Bronnen

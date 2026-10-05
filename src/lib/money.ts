@@ -69,3 +69,10 @@ const formatter = new Intl.NumberFormat("nl-NL", { style: "currency", currency: 
 export function formatMoney(m: Money): string {
   return formatter.format(m.amount / 100);
 }
+
+const wholeFormatter = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+
+/** For round amounts in running text ("gratis vanaf € 50"); anything with cents keeps them. */
+export function formatMoneyShort(m: Money): string {
+  return m.amount % 100 === 0 ? wholeFormatter.format(m.amount / 100) : formatMoney(m);
+}
