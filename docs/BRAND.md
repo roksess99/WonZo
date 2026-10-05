@@ -63,9 +63,12 @@ in tweehonderd componenten.
   --border:     #8C8276;   /* randen van invoervelden, vinkjes, aantalkiezer (border-control) */
   --line:       #E6DED3;   /* alleen decoratieve scheidingslijnen */
   --in-stock:   #1F7A3A;   /* alleen de voorraadstatus: "Op voorraad" en de stip */
-  --danger:     <<TOKEN_DANGER>>;   /* fouten — nog niet aangeleverd */
-  --success:    <<TOKEN_SUCCESS>>;   /* bevestiging — nog niet aangeleverd */
-  --warning:    <<TOKEN_WARNING>>;   /* "wordt besteld", let op — nog niet aangeleverd */
+  --danger:       #A11D33;   /* fouten — wijnrood, los van het oranje accent */
+  --danger-soft:  #FBE8EB;   /* vlak achter een foutmelding */
+  --success:      #3A6B35;   /* bevestiging — warm olijfgroen, los van --in-stock */
+  --success-soft: #EAF1E4;
+  --warning:      #8A5300;   /* let op — oker, uit de karamelfamilie */
+  --warning-soft: #FCF0D9;
 }
 
 .dark {
@@ -111,6 +114,10 @@ brandbook zelf noemt (4,9 / 16 / 5,5 / 5,9 / 1,2 / 3,5 / 14 / 9,6 / 5) kloppen.
 | focus `#4B2E2B` op paginavlak / op wit / op brand-soft | 11,31:1 / 12,17:1 / 9,89:1 | ja |
 | focus `#4B2E2B` tegen accent / tegen petrol | 2,49:1 / 1,26:1 | **nee** — daarom een ring mét tussenruimte, en op petrol de lichte focuskleur |
 | focus-on-dark `#F5ECE3` op petrol / op ink | 8,26:1 / 14,84:1 | ja |
+| danger `#A11D33` op paginavlak / op wit / op danger-soft | 7,12:1 / 7,67:1 / 6,51:1 | ja |
+| success `#3A6B35` op paginavlak / op wit / op success-soft | 5,85:1 / 6,30:1 / 5,46:1 | ja |
+| warning `#8A5300` op paginavlak / op wit / op warning-soft | 5,88:1 / 6,33:1 / 5,61:1 | ja |
+| de drie soft-vlakken tegen het paginavlak | 1,05–1,09:1 | **niet** als enige begrenzing: een melding krijgt een rand of balk in de tekstkleur |
 
 **De regels die hieruit volgen:**
 
@@ -128,6 +135,13 @@ brandbook zelf noemt (4,9 / 16 / 5,5 / 5,9 / 1,2 / 3,5 / 14 / 9,6 / 5) kloppen.
 - In een donkere modus haalt het accent op ink alleen 3:1: dan alleen voor
   grote tekst, vlakken en UI-onderdelen, niet voor gewone tekst.
 - Een rand van een invoerveld is `--border` (3,50:1), nooit `--line`.
+- **Meldingen** (fout, succes, let op): tekst in `--danger`/`--success`/
+  `--warning` of `--ink`, op het bijbehorende soft-vlak, met een rand of
+  linkerbalk in de tekstkleur, en altijd met icoon **én** woord. De
+  statuskleuren zijn gekozen door Claude op verzoek van de eigenaar
+  (2026-10-05): passend bij het warme palet en duidelijk anders dan het
+  oranje accent (wijnrood heeft een andere tint dan het oranje, 350° tegen
+  18°).
 - **Focus:** een ring van 2px in `--focus` met 2px tussenruimte
   (`outline-offset`), zodat hij tegen het paginavlak staat en niet tegen het
   oranje van een knop (2,49:1). In de petrol header en footer `--focus-on-dark`.
@@ -310,8 +324,7 @@ Wat bij een webshop vrijwel altijd geldt:
 ## Als de huisstijl binnenkomt
 
 1. ~~Vul de hexwaarden in, en de semantische tokens erbij.~~ Gedaan
-   2026-10-04, focuskleur 2026-10-05; `--danger`, `--success` en `--warning`
-   ontbreken.
+   2026-10-04, focus- en statuskleuren 2026-10-05.
 2. ~~Reken de contrasttabel uit~~ en pas de regels aan — gedaan 2026-10-04
    voor het lichte thema; het donkere thema volgt als het er is.
 3. ~~Zet de logobestanden in `public/brand/`.~~ Gedaan; lijnversie en

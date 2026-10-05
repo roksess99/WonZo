@@ -219,6 +219,10 @@ eigen prijs- en voorraad-endpoints.
       zijn leverancier niet weggeven, dan moeten de foto's via het eigen
       domein lopen.
 
+- [ ] Wat geven `productcompliance/{id}` en de afbeeldingen met de vlaggen
+      `energyEfficiency`, `gpsrLabel` en `gpsrWarning`? Genoeg voor het
+      energielabel en de GPSR-informatie (D-34)?
+
 GEMETEN <<DATUM>>: <<ANTWOORD>>
 
 GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04): `productsimages` geeft per foto een

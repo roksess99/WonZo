@@ -79,9 +79,8 @@ staan.
 | 5 | Betaling, webhooks, reconciliatie | OPEN |
 | 6 | Beheerpaneel | OPEN |
 
-Zonder leveranciertoken valt de provider terug op de mock; **de site moet altijd
-zonder token blijven werken**. Waar later serverwerk komt: een lege functie in
-`src/lib/` met `// TODO fase X` — geen halve implementatie.
+Zonder leveranciertoken valt de provider terug op de mock; **de site moet altijd zonder token
+blijven werken**. Later serverwerk: een lege functie in `src/lib/` met `// TODO fase X`, niet half.
 
 ## Stack en commando's
 
@@ -168,6 +167,7 @@ Regels laden pas als Claude een bestand **leest** dat matcht. Maak je een
 | `docs/BRAND.md` | Huisstijl — leidend voor alle UI |
 | `docs/HOSTING.md` | Deploy-valkuilen (providerspecifieke waarnemingen) |
 | `docs/CHECKLIST.md` | Livegang |
+| `docs/ONDERZOEK.md` | Features, vergelijkbare winkels, wettelijke punten elektronica (2026-10-05) |
 | `docs/api/LEVERANCIER.md` | Meetformulier leverancier-API |
 | `docs/api/VRAGEN.md` | Vragen aan de leverancier |
 

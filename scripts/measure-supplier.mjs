@@ -198,6 +198,12 @@ if (auth.status === 401 || auth.status === 403) {
     line(`§6 Eén product (${ids0[0]}): ${brief(one)}; wholesalePrice ${JSON.stringify(one.json?.wholesalePrice)} (${typeof one.json?.wholesalePrice}), retailPrice ${JSON.stringify(one.json?.retailPrice)} (${typeof one.json?.retailPrice}), taxRate ${JSON.stringify(one.json?.taxRate)}, canon ${JSON.stringify(one.json?.canon)}`);
   }
 
+  // §8 / D-34: what the compliance endpoint returns (energy label, GPSR)
+  if (ids0[0] !== undefined) {
+    const comp = await request('single', 'GET', `/rest/catalog/productcompliance/${ids0[0]}.json`);
+    line(`§8/D-34 Compliance (${ids0[0]}): ${brief(comp)}; velden: ${JSON.stringify(types(Array.isArray(comp.json) ? comp.json[0] : comp.json))}; inhoud: ${JSON.stringify(comp.json ?? comp.notJson ?? null).slice(0, 400)}`);
+  }
+
   // §7 stock per warehouse
   const stock = await request('bulk', 'GET', `/rest/catalog/productsstockbyhandlingdays.json?${q('page=0&pageSize=50')}`);
   const st = list(stock);
@@ -212,6 +218,8 @@ if (auth.status === 401 || auth.status === 403) {
   const allImgs = list(imgs).flatMap((p) => p.images ?? []);
   const hosts = new Set(allImgs.map((i) => { try { return new URL(i.url).host; } catch { return 'ongeldige url'; } }));
   line(`§8 Afbeeldingen: ${brief(imgs)}; ${allImgs.length} foto's bij ${list(imgs).length} producten; domeinen: ${[...hosts].join(', ')}`);
+  const flag = (k) => allImgs.filter((i) => i[k] === true || Number(i[k]) > 0).length;
+  line(`   Vlaggen (D-34): energyEfficiency ${flag('energyEfficiency')}, gpsrLabel ${flag('gpsrLabel')}, gpsrWarning ${flag('gpsrWarning')} van ${allImgs.length} foto's`);
   const sizes = [];
   for (const img of allImgs.slice(0, 4)) {
     const r = await request('image', 'GET', img.url);

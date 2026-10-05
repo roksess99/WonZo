@@ -63,7 +63,7 @@ fout.
 | `<<KVK>>`, `<<BTW>>` | Inschrijving en btw-nummer — KvK ingevuld: 42126738 (2026-10-04); btw-nummer nog open | eigenaar |
 | `<<SUPPORT_MAIL>>` | Het adres dat op de site staat — ingevuld: info@wonzo.nl (2026-10-04) | eigenaar |
 | `<<KLEUR_ACCENT>>`, `<<KLEUR_INK>>`, `<<KLEUR_GREY>>`, `<<KLEUR_ZINC>>`, `<<KLEUR_FOCUS>>` | Merkkleuren — ingevuld 2026-10-04; focuskleur 2026-10-05 | huisstijl (`docs/BRAND.md`) |
-| `<<TOKEN_BACKGROUND>>`, `<<TOKEN_FOREGROUND>>`, `<<TOKEN_SURFACE>>`, `<<TOKEN_MUTED>>`, `<<TOKEN_BORDER>>`, `<<TOKEN_DANGER>>`, `<<TOKEN_SUCCESS>>`, `<<TOKEN_WARNING>>` | Semantische kleuren — ingevuld 2026-10-04, behalve `<<TOKEN_DANGER>>`, `<<TOKEN_SUCCESS>>`, `<<TOKEN_WARNING>>` | huisstijl, na contrastmeting |
+| `<<TOKEN_BACKGROUND>>`, `<<TOKEN_FOREGROUND>>`, `<<TOKEN_SURFACE>>`, `<<TOKEN_MUTED>>`, `<<TOKEN_BORDER>>`, `<<TOKEN_DANGER>>`, `<<TOKEN_SUCCESS>>`, `<<TOKEN_WARNING>>` | Semantische kleuren — ingevuld 2026-10-04; statuskleuren 2026-10-05 | huisstijl, na contrastmeting |
 | `<<LOGO_BESTANDSNAAM>>`, `<<LOGO_MIN_AFMETING>>`, `<<LOGO_VRIJE_RUIMTE>>` | Logobestanden en regels — ingevuld 2026-10-04 met de echte bestandsnamen | ontwerper |
 | `<<FONT_WOORDMERK>>`, `<<FONT_KOPPEN>>`, `<<FONT_BODY>>`, `<<FONT_LABELS>>` | Lettertypen — ingevuld 2026-10-04 | ontwerper |
 | `<<RADIUS_KLEIN>>`, `<<RADIUS_GROOT>>` | Afronding — ingevuld 2026-10-04 | ontwerper |
