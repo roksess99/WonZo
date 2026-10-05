@@ -37,6 +37,8 @@ uitgang.
 - Het invulveld waarmee hij zijn product vindt staat **boven de vouw en
   links**. Niet onder een lap tekst, niet in een carrousel.
 - Eén primaire actie. De banner ernaast mag mooi zijn maar niet concurreren.
+- De hoofdgroepen als **beeldtegels met tekst**, niet alleen in een
+  uitklapmenu: rustiger, en grote raakvlakken (`docs/ONDERZOEK.md`).
 - Drie beloftes die twijfelaars overhalen — verzending, bedenktijd, btw —
   staan altijd in beeld, ook als er een actieblok overheen komt.
 - Lopen er acties, dan mogen die de banner vervangen. Lopen ze niet, dan
@@ -57,8 +59,8 @@ uitgang.
   moet kiezen is geen keuze maar een drempel.
 - Sorteren op prijs hoort erbij; sorteren op "relevantie" alleen als je kunt
   uitleggen wat dat betekent.
-- Elke kaart draagt hetzelfde: beeld, naam, artikelnummer, voorraad, prijs.
-  Niet meer. Een kaart met vier knoppen krijgt er geen klikken bij.
+- Elke kaart draagt hetzelfde: beeld, naam, artikelnummer, voorraad, prijs,
+  levertijd (als bereik) en — waar het geldt — de energieklasse. Niet meer. Een kaart met vier knoppen krijgt er geen klikken bij.
 - **Lege staat is een uitnodiging.** "Niets gevonden voor X" plus een weg
   terug, niet een lege pagina.
 - Lopende tekst onderaan: een pagina met alleen een raster heeft voor een
@@ -77,6 +79,13 @@ omlijnd vlak. Niet verspreid over de pagina.
   wát dat bedrag is.
 - **Voorraad** als woord én als kleur, met het aantal erbij als dat klopt met
   wat je echt kunt leveren.
+- **Levertijd als bereik met het land van verzending** ("3–6 werkdagen,
+  verzonden vanuit Spanje"), uit de gegevens van de leverancier. Nooit
+  "morgen in huis" of "vandaag verzonden" als dat niet klopt (`WETTELIJK`:
+  ACM, zie `docs/ONDERZOEK.md`).
+- **Energielabel en productkaart** bij de prijs, voor producten die er een
+  hebben; **veiligheidsinformatie** (fabrikant, waarschuwingen) op de pagina
+  (D-34).
 - **Verzendkosten en levertijd** vóór de knop. Verzendkosten die pas bij het
   afrekenen verschijnen zijn de meest genoemde reden om af te haken.
 - **De knop over de volle breedte**, met de aantalkiezer eronder en niet
@@ -117,7 +126,8 @@ omlijnd vlak. Niet verspreid over de pagina.
   samenvatting als er meer dan één is.
 - Het besteloverzicht blijft in beeld tijdens het invullen.
 - **De knop zegt wat er gebeurt**: "Bestellen en betalen".
-- Vóór die knop: bedenktijd, voorwaarden en het totaalbedrag nog één keer.
+- Vóór die knop: bedenktijd, voorwaarden, de levertijd met het land van
+  verzending en het totaalbedrag nog één keer.
 - Tijdens het verzenden is de knop uitgeschakeld en zegt hij dat hij bezig is.
   Dubbel klikken mag nooit twee bestellingen opleveren — afgedwongen op de
   server met de `checkoutAttemptId` (`docs/IDEMPOTENCY.md`), niet alleen met de
@@ -148,6 +158,7 @@ omlijnd vlak. Niet verspreid over de pagina.
 | Privacy | Wettelijk, en moet kloppen met `docs/PRIVACY.md` |
 | Retourneren | Wettelijk, met het modelformulier |
 | Veelgestelde vragen | Vangt de mails op die je anders beantwoordt |
+| Zo werkt WonZo | Waar de producten vandaan komen, hoe lang levering duurt, hoe retourneren gaat — vertrouwen, en wettelijk (ACM) |
 
 ---
 
@@ -188,6 +199,16 @@ begonnen.
   hebt.
 - Test op een echt toestel. Een versmald browservenster liegt over
   schermtoetsenborden, over traagheid en over duimafstanden.
+
+---
+
+## Voor alle leeftijden
+
+De ontwerpregels uit het onderzoek gelden voor elk scherm
+(`docs/ONDERZOEK.md` § 4). De vier die het vaakst misgaan: iconen altijd met
+een woord erbij; geen tekst kleiner dan 14px; raakvlakken minstens 44×44px;
+een foutmelding zegt wat de oplossing is en het veld accepteert meer dan één
+schrijfwijze (postcode "1234ab" en "1234 AB").
 
 ---
 

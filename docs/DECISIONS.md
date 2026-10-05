@@ -52,7 +52,7 @@ D-01 leverancier ────────┬─► D-02 assortiment, D-04 inkoop
 D-01 + D-05 + D-18 ──────► D-10 privacy en cookies
 D-01 + D-06 ─────────────► D-31 catalogus synchroniseren
 
-Zonder afhankelijkheid (open): D-11, D-12, D-15, D-20, D-21, D-23, D-24, D-29, D-33
+Zonder afhankelijkheid (open): D-11, D-12, D-15, D-20, D-21, D-23, D-24, D-29, D-33, D-34
 ```
 
 ---
@@ -84,8 +84,10 @@ Tailwind in `frontend.md`; `NEXT_PUBLIC_` in `.env.example`; `.next/` in
 `.gitignore`; `pnpm dev` in `.claude/launch.json`. Niet: de donkere modus
 (D-33).
 
-**Nog te meten vóór de eerste uitrol** (`docs/HOSTING.md` § 9) — tot dan
-`AANNAME`: bouwt Next.js op Hostinger (processen en geheugen); werken de
+**Opgave van de eigenaar (2026-10-05):** Next.js draait op dit
+Hostinger-pakket; dat weet de eigenaar zeker. Dat is een opgave, geen eigen
+meting van dit project. **Bij de eerste uitrol nagaan** (`docs/HOSTING.md`
+§ 9), omdat het in een vorig project daar misging: bouwt Next.js op Hostinger (processen en geheugen); werken de
 dependencies zonder native compilatie; overleeft `node_modules` de
 uitrolmethode (pnpm-symlinks); bouwen op de server of een gebouwd artefact
 uploaden; is een webhook-URL van buiten bereikbaar (D-05). Valt die meting
@@ -98,8 +100,9 @@ na vragen — `ask`-regel), de database (D-06), het CI-platform (D-17).
 
 ## D-01 · Welke leverancier, en wat kan die API echt?
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** —
+- **Decided:** 2026-10-05
 
 Niet de verkooppraat maar het gemeten gedrag: `docs/api/LEVERANCIER.md`
 helemaal invullen vóór er adaptercode komt. Lessen uit een vorig project
@@ -114,24 +117,84 @@ endpoint van 10 per uur voor bulklijsten en 1 per 5 s per artikel — de
 catalogus moet dus als eigen kopie worden gesynchroniseerd; geen
 zoek-endpoint; voorraad per magazijn met levertijd; een eigen
 `internalReference` die na een timeout terug te zoeken is; geen webhooks.
-Nog niet `DECIDED`: het meetformulier is niet ingevuld.
+**Besloten (eigenaar, 2026-10-05): BigBuy.** Gemeten in sandbox en productie
+(`docs/api/LEVERANCIER.md`, `GEMETEN 2026-10-05`): één sleutel voor lezen en
+bestellen; 22 hoofdgroepen in het Nederlands; productlijsten per hoofdgroep,
+pagina's vanaf 0, koppelen op id; ongeveer 1 % van de catalogus op voorraad
+(bevestigd in het account); fabrikantgegevens voor GPSR bij de meeste
+artikelen; een eigen referentie bij bestellen die terug te zoeken is (404 als
+hij niet bestaat); vervoerders naar Nederland met levertijden.
 
-**Te beantwoorden:** welke API; welk token per onderdeel; rate limit; dekking
-van het assortiment; bestellen via de API; idempotentie of eigen referentie
-bij bestellen.
+**Waarom dit en niet het alternatief.** Keuze van de eigenaar; de meting
+bevestigt dat bladeren, voorraad, Nederlandse namen en bestellen via de API
+mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
+verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
+(vraag 4 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
+
+**Nog open, niet blokkerend:** incl. of excl. btw (meten met een schermafdruk
+van V0710266); energielabel bij een artikel dat er een heeft; `order/check` en
+bestellen testen (de sandbox heeft geen catalogus); voorraad per variant;
+stabiliteit van de taxonomie-id's over de tijd.
 
 ---
 
 ## D-02 · Wat verkopen we wel en niet?
 
-- **Status:** BLOCKED
+- **Status:** DECIDED
 - **Depends on:** D-01
+- **Decided:** 2026-10-05
 
 Een harde grens als **allowlist in code**, niet als filter in de navigatie:
 ook een directe URL naar een artikel buiten het assortiment levert niets op.
 
+GEMETEN 2026-10-05 (productie, `docs/api/LEVERANCIER.md` § 2, § 7, § 10):
+BigBuy heeft 22 hoofdgroepen, waaronder één voor volwassenen; artikelen kunnen
+gereviseerd zijn (`condition`, bijv. `REFURBISHED_B`); in de steekproef had 2
+van de 50 artikelen voorraad.
+
 **Te beantwoorden:** welke productgroepen, welke bewust niet, en wat er gebeurt
-met een groep die leeg blijft.
+met een groep die leeg blijft; **gereviseerde artikelen** uitsluiten of
+duidelijk als gereviseerd tonen; artikelen **zonder voorraad** tonen of
+verbergen.
+
+**Besloten (eigenaar, 2026-10-05):** een artikel komt in de winkel als het
+aan **alle** regels voldoet, afgedwongen in de code:
+
+1. Het valt in een toegestane subcategorie:
+   - Huis en koken: opslag en organisatie, meubilair, huisdecoratie (ook
+     kaarsen en kandelaars), servies, keukengerei en bargerei;
+   - Tuin: tuinmeubelen, parasols en zonneschermen, bewatering,
+     houtskoolbarbecues en accessoires;
+   - Sport en outdoor: kampeermeubelen en slaapuitrusting, thuis sporten;
+   - Dierproducten: halsbanden en tuigen, manden en dekens, kleding.
+
+   Gezocht op naam in de taxonomieboom, niet op vast id, tot de stabiliteit
+   van de id's gemeten is.
+2. De douanecode valt in **basis** of **licht** (`docs/ONDERZOEK.md` § 6).
+3. Niet in de uitsluitingslijst van D-36, en geen elektrisch kenmerk of
+   batterij in de naam; twijfelgevallen gaan naar een lijst voor de eigenaar.
+4. Conditie **nieuw** — gereviseerde artikelen komen er niet in.
+5. Voorraad > 0, vers gecontroleerd bij het afrekenen (D-31, D-22).
+6. GPSR-gegevens aanwezig (fabrikant met adres).
+7. Een prijsondergrens of minimumbestelling — de waarde volgt uit D-03 en
+   D-13.
+
+Merken worden niet uitgesloten: InnovaGoods, met de diepste voorraad, hoort
+erbij. Woningtextiel komt later (D-36). Niet toegestaan zijn de overige
+hoofdgroepen, waaronder de groep voor volwassenen.
+
+**Waarom dit en niet het alternatief.** Het onderzoek (`docs/ONDERZOEK.md`
+§ 6–7) toont dat deze categorieën leverbaar zijn, bij "wonen" passen en alleen
+de basisplichten hebben. Verworpen: de hele catalogus tonen (99 % niet
+leverbaar), elektronica (registratie bij Stichting OPEN, energielabel,
+inname), en gereviseerde artikelen (uitleg en garantievragen bij elke
+verkoop).
+
+**Voorstel uit het onderzoek** (`docs/ONDERZOEK.md` § 6): selectie op
+toegestane subcategorie, douanecode basis of licht, geen elektrisch kenmerk,
+conditie nieuw, voorraad, GPSR-gegevens aanwezig en een prijsondergrens. Met
+deze regels blijven er rond de 740 artikelen over (2026-10-05), waarvan ruim
+100 met diepe voorraad — vooral InnovaGoods.
 
 ---
 
@@ -152,7 +215,7 @@ gebeurt zonder adviesprijs; minimummarge.
 
 ## D-04 · Wie koopt er in: een mens of de code?
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Automatisch doorbestellen is het grootste risico in het systeem. Eerder bleef
@@ -191,6 +254,10 @@ Wat er nog beantwoord moet worden binnen die keuze:
 
 - **Status:** OPEN
 - **Depends on:** D-00
+
+**Eis (eigenaar, 2026-10-05): iDEAL** moet erbij — 58 % van de online
+betalingen in Nederland (`docs/ONDERZOEK.md`), en het bekende logo is zelf
+een vertrouwenssignaal. Achteraf betalen is een aparte keuze (D-35).
 
 **Te beantwoorden:** welke dienst en methodes; webhook met handtekening of
 alleen "opvragen"; ondersteunt hij idempotentiesleutels; mapping van zijn
@@ -300,13 +367,17 @@ reden; geen sterrengemiddelde in de markering zonder echte beoordelingen.
 
 ## D-13 · Verzending
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 **Te beantwoorden:** vervoerder en tarieven; drempel voor gratis verzending;
 bestelling uit meerdere bronnen (twee pakketten, één of twee keer
 verzendkosten); na hoeveel dagen geldt een zending als afgeleverd zonder
-melding.
+melding; **hoe de levertijd getoond wordt** — als bereik uit de gegevens van
+de leverancier, met het land van verzending, op kaart, productpagina,
+winkelwagen, afrekenen en bevestiging (`WETTELIJK`: ACM, zie
+`docs/ONDERZOEK.md`). Ter vergelijking bij de drempel: gemiddeld rond € 25 in
+Nederland, vidaXL € 70 (`GEDOCUMENTEERD`, Sendcloud en vidaXL).
 
 ---
 
@@ -345,7 +416,7 @@ de rest); btw op verzendkosten bij gemengde tarieven.
 
 ## D-16 · Kostprijs (landedCost) en ondergrens
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Tot deze beslissing is `landedCost = supplierCost` een benoemde aanname.
@@ -420,7 +491,7 @@ PDF-bibliotheek getagde, deterministische PDF's maken (meten).
 
 ## D-22 · Voorraad, reservering en geldigheid van de snapshot
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-01
 
 Bij dropship ligt de voorraad bij de leverancier en is lokaal reserveren
@@ -579,6 +650,8 @@ en 5 was de oplossing een logisch gevolg van de bestaande architectuur.
 **Wat er niet in zit:** geen keuze voor framework, database of maildienst —
 die blijven D-00, D-06 en D-29.
 
+Bevestigd door de eigenaar op 2026-10-05.
+
 ---
 
 ## D-31 · Catalogus synchroniseren
@@ -628,11 +701,12 @@ De winkel is er in het **Nederlands** en het **Engels**.
 alleen Nederlands — de eigenaar wil ook Engelstalige klanten in Nederland
 bedienen.
 
-**Nog te beantwoorden binnen deze keuze:** is Nederlands de standaardtaal
-(volgt uit de Nederlandse markt, maar nog niet bevestigd); hoe de taal in de
-URL staat; in welke taal mail, factuur en algemene voorwaarden gaan (de
-taal van de klant, of altijd Nederlands — juridische teksten laten
-bevestigen).
+**Nederlands is de standaardtaal** (eigenaar, 2026-10-05): wie zonder
+taalkeuze binnenkomt, krijgt Nederlands.
+
+**Nog te beantwoorden binnen deze keuze:** hoe de taal in de URL staat; in
+welke taal mail, factuur en algemene voorwaarden gaan (de taal van de klant,
+of altijd Nederlands — juridische teksten laten bevestigen).
 
 ---
 
@@ -654,12 +728,115 @@ systeeminstelling of een schakelaar.
 
 ---
 
+## D-34 · Wettelijke productinformatie voor elektronica
+
+- **Status:** OPEN
+- **Depends on:** —
+
+Vier punten uit `docs/ONDERZOEK.md` die bij elektronica en huishoudelijke
+apparaten horen. Alle `WETTELIJK`, te bevestigen door een adviseur.
+
+1. **Energielabel** (Verordening (EU) 2017/1369): label en productkaart bij de
+   prijs, klasse ook in lijsten. Verwachting van de eigenaar: BigBuy levert
+   dit via de API (`AANNAME` — meten, `docs/api/LEVERANCIER.md` § 8).
+2. **Productveiligheid (GPSR,** Verordening (EU) 2023/988 art. 19): fabrikant,
+   EU-verantwoordelijke, identificatie en waarschuwingen in het Nederlands bij
+   elk product. Verwachting van de eigenaar: BigBuy levert dit via
+   `productcompliance` (`AANNAME` — meten).
+3. **Oude apparaten innemen (oud voor nieuw):** standpunt van de eigenaar
+   (2026-10-05): "we zijn een dropshipping-webshop, dus dit hoeft niet". Dat
+   is een `AANNAME`: de gevonden bronnen leggen de plicht bij de verkoper aan
+   de consument en noemen webwinkels uitdrukkelijk; een uitzondering voor
+   dropshipping is niet gevonden. **Laten bevestigen**; tot dan wordt er
+   niets voor gebouwd, op instructie van de eigenaar.
+4. **Producentenverantwoordelijkheid (Stichting OPEN):** wie elektrische
+   apparaten als eerste op de Nederlandse markt brengt, registreert zich en
+   betaalt een afvalbeheerbijdrage. Bij inkoop in Spanje vermoedelijk WonZo;
+   de bijdrage hoort dan in de kostprijs (D-16).
+
+**Te beantwoorden:** bevestiging van 3 en 4 door een adviseur; wat BigBuy
+werkelijk levert voor 1 en 2 (meting); wat er gebeurt met een artikel waarvan
+de verplichte informatie ontbreekt (niet tonen, of niet koopbaar).
+
+---
+
+## D-36 · Registraties en productregels per categorie
+
+- **Status:** DECIDED
+- **Depends on:** —
+- **Decided:** 2026-10-05
+
+Naast D-34 (elektronica) gelden er per categorie andere regels
+(`docs/ONDERZOEK.md` § 7, `WETTELIJK`, te bevestigen): UPV Textiel voor
+woningtextiel, UPV Matrassen, voedselcontact en het BPA-verbod voor servies
+en drinkflessen, het verbod op wegwerpplastic, persoonlijke
+beschermingsmiddelen (zonnebrillen, helmen), en voor de hele winkel
+Verpact, de verpakkingsverordening (PPWR), de ontbossingsverordening (EUDR,
+vanaf 30-12-2026 voor kleine bedrijven) en REACH artikel 33.
+
+**Besloten door de eigenaar:**
+
+- **Woningtextiel komt later**, niet in de eerste versie — dan is er geen
+  registratie voor UPV Textiel nodig om te beginnen.
+- **Niet in het assortiment:** matrassen en toppers, wegwerpplastic,
+  zonnebrillen en andere persoonlijke beschermingsmiddelen, zwemhulpmiddelen
+  en opblaasbaar voor water, messen, alles met een batterij, gasbarbecues,
+  ongediertebestrijding en dierenvoer.
+
+Wat blijft voor de hele winkel: Verpact-berekening bijhouden,
+EUDR-administratie vanaf 30-12-2026 (hout, papier, houtskool), REACH-vragen
+binnen 45 dagen beantwoorden, documenten van de leverancier kunnen opvragen.
+
+**Waarom dit en niet het alternatief.** Zo begint WonZo zonder registratie bij
+een producentenorganisatie. Verworpen: woningtextiel nu al meenemen — een
+registratie, jaarlijkse rapportage en bijdrage voor een kleine groep
+artikelen.
+
+**Nog te bevestigen door een adviseur** (`docs/ONDERZOEK.md` § 7.5): de rol
+van WonZo bij levering vanuit Spanje, de EUDR-plichten, en of er inmiddels een
+wettelijke leeftijdsgrens voor messen is. Wijkt het advies af, dan wordt deze
+beslissing herzien.
+
+---
+
+## D-35 · Inhoud van de eerste versie
+
+- **Status:** DECIDED
+- **Depends on:** —
+- **Decided:** 2026-10-05
+
+De eerste versie bevat wat het onderzoek (`docs/ONDERZOEK.md` § 3) onder "Eerste versie"
+noemt: zoeken op de eigen kopie, hoofdgroepen als beeldtegels, filters met
+meervoudige keuze en zichtbare gekozen filters, sorteren op prijs,
+populariteit en nieuwste, een productpagina met koopblok (prijs, levertijd als
+bereik met land van verzending, verzendkosten, voorraad), winkelwagen met
+"nog € X tot gratis verzending", afrekenen zonder account, bevestiging,
+statuspagina, retour aanmelden, bedrijfsgegevens en een uitleg "zo werkt
+WonZo", in het Nederlands en Engels. De ontwerpregels uit § 4 gelden voor elk
+scherm.
+
+**Later**, bewust niet in de eerste versie: klantaccount (D-23),
+beoordelingen (D-12), verlanglijst, vergelijken, achteraf betalen, nieuwsbrief
+(D-11), keurmerk. **Bewust niet:** nep-urgentie, pop-ups bij binnenkomst,
+automatisch draaiende carrousels, een chatbot die zich als mens voordoet.
+
+**Waarom dit en niet het alternatief.** Akkoord van de eigenaar op het
+voorstel uit het onderzoek. Verworpen: alles in één keer — accounts,
+beoordelingen en vergelijken maken de eerste versie groter zonder dat iemand
+er zonder kan kopen, en een leeg beoordelingssysteem wekt wantrouwen.
+
+---
+
 ## Beslislog
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-01, D-02 | Beslist door de eigenaar: BigBuy (D-01); selectieregel en toegestane subcategorieën, gereviseerd uitgesloten, InnovaGoods toegestaan (D-02). D-04, D-13, D-16, D-22 van BLOCKED naar OPEN |
+| 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |
+| 2026-10-05 | D-05, D-13, D-34, D-35 | Voorstellen uit `docs/ONDERZOEK.md` doorgevoerd: iDEAL als eis (D-05), levertijd tonen (D-13), wettelijke productinformatie (D-34, open; standpunt eigenaar over oud voor nieuw vastgelegd), inhoud eerste versie (D-35) |
+| 2026-10-05 | D-00, D-30, D-32 | D-30 bevestigd door de eigenaar; Nederlands standaardtaal (D-32); opgave eigenaar dat Next.js op Hostinger draait (D-00) |
 | 2026-10-05 | D-00, D-14, D-32, D-33 | Beslist door de eigenaar: Next.js, TypeScript, pnpm, Tailwind, Hostinger (D-00); euro en Nederland (D-14); Nederlands en Engels (D-32); eerste versie zonder donkere modus (D-33, open). D-05, D-06, D-17, D-18 van BLOCKED naar OPEN: D-00 is beslist, de informatie is nog niet compleet |
 | 2026-10-05 | D-04 | Documenten aangepast aan automatisch inkopen (beheer, mail, state machine, dreigingsmodel, observability, idempotentie, checklist); wat er na een mislukte inkoop gebeurt blijft open |
 | 2026-10-05 | D-00, D-04, D-31 | Hostingpakket vastgelegd bij D-00; antwoord van de eigenaar op D-04 (automatisch inkopen) vastgelegd, status blijft BLOCKED tot D-01; D-31 toegevoegd |
