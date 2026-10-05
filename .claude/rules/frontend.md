@@ -52,7 +52,11 @@ niet op de sectie eromheen.
 
 ## Componenten
 
-Next.js met TypeScript en Tailwind (D-00). Tailwind gebruikt de
+Next.js met TypeScript en Tailwind (D-00). **Next.js 16.3 wijkt af van wat
+je erover weet** (o.a. `proxy.ts` in plaats van `middleware.ts`, getypeerde
+`PageProps`/`LayoutProps`): lees eerst de bijbehorende handleiding in
+`node_modules/next/dist/docs/` voordat je routing, data of configuratie
+schrijft, en volg de meldingen over verouderde API's. Tailwind gebruikt de
 CSS-variabelen uit `docs/BRAND.md`; geen UI-kit. Talen: Nederlands en Engels
 (D-32). Geen donkere modus in de eerste versie (D-33).
 

@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from docs/BRAND.md. Components use the semantic tokens only
+ * (bg-background, text-foreground, border-border, …), never the brand hex
+ * values, so a dark mode (D-33, later) touches this file and nothing else.
+ */
+:root {
+  /* Semantic */
+  --background: #faf6f0;
+  --foreground: #1d1a17;
+  --surface: #ffffff;
+  --muted: #6b635a;
+  --border: #8c8276;
+  --line: #e6ded3;
+  --in-stock: #1f7a3a;
+  --danger: #a11d33;
+  --danger-soft: #fbe8eb;
+  --success: #3a6b35;
+  --success-soft: #eaf1e4;
+  --warning: #8a5300;
+  --warning-soft: #fcf0d9;
+  --focus: #4b2e2b;
+  --focus-on-dark: #f5ece3;
+  /* Brand */
+  --accent: #c8440c;
+  --accent-contrast: #ffffff; /* white on accent 4.90:1; ink on accent fails (3.54:1) */
+  --brand-soft: #fce3d3;
+  --petrol: #0e4d4a;
+  --on-petrol: #ffffff; /* 9.64:1 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-line: var(--line);
+  --color-in-stock: var(--in-stock);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-brand-soft: var(--brand-soft);
+  --color-petrol: var(--petrol);
+  --color-on-petrol: var(--on-petrol);
+
+  --font-sans: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;
+
+  /* Type scale from the brand tokens */
+  --text-display: 56px;
+  --text-display--line-height: 56px;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: 36px;
+  --text-h1--line-height: 40px;
+  --text-h1--letter-spacing: -0.01em;
+  --text-h2: 24px;
+  --text-h2--line-height: 30px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+  --text-label: 13px;
+  --text-label--line-height: 16px;
+  --text-label--letter-spacing: 0.02em;
+  --text-price: 20px;
+  --text-price--line-height: 24px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+}
+
+/* An explicit background: a transparent page borrows a colour from somewhere. */
+html {
+  background: var(--background);
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/*
+ * Focus (docs/BRAND.md): a 2px ring in Coffee Bean with 2px offset, so it
+ * sits against the page and not against an orange button (2.49:1). On petrol
+ * the light ring (8.26:1). Never removed without a replacement.
+ */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.on-petrol :focus-visible {
+  outline-color: var(--focus-on-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

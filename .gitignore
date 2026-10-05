@@ -27,3 +27,11 @@ coverage/
 .DS_Store
 Thumbs.db
 tmp/
+
+# Next.js en tooling (toegevoegd bij de opzet van fase 1)
+next-env.d.ts
+.vercel/
+.pnp
+.pnp.*
+npm-debug.log*
+.pnpm-debug.log*

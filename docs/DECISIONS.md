@@ -52,7 +52,7 @@ D-01 leverancier ────────┬─► D-02 assortiment, D-04 inkoop
 D-01 + D-05 + D-18 ──────► D-10 privacy en cookies
 D-01 + D-06 ─────────────► D-31 catalogus synchroniseren
 
-Zonder afhankelijkheid (open): D-11, D-12, D-15, D-20, D-21, D-23, D-24, D-29, D-33, D-34
+Zonder afhankelijkheid (open): D-11, D-12, D-15, D-20, D-21, D-23, D-24, D-29, D-33, D-34, D-37
 ```
 
 ---
@@ -379,6 +379,12 @@ winkelwagen, afrekenen en bevestiging (`WETTELIJK`: ACM, zie
 `docs/ONDERZOEK.md`). Ter vergelijking bij de drempel: gemiddeld rond € 25 in
 Nederland, vidaXL € 70 (`GEDOCUMENTEERD`, Sendcloud en vidaXL).
 
+**In de code tot deze beslissing** (fase 1, `src/lib/catalog/delivery.ts`):
+transport 3–5 werkdagen bovenop de verwerkingstijd van de leverancier, en
+"verzonden vanuit Spanje" — beide `AANNAME`, op één plek, te vervangen door
+de gekozen vervoerdersdienst en het gemeten magazijnland. Verzendkosten staan
+op de productpagina als "worden nog vastgesteld".
+
 ---
 
 ## D-14 · Valuta en markten
@@ -434,8 +440,11 @@ opslag; wat de ondergrens voor acties is.
 
 Architectuur: `docs/CI_CD.md`; teststrategie: `docs/TESTEN.md`.
 
-**Te beantwoorden:** CI-platform; test- en E2E-runner; komt er een staging;
-hoe wordt productie-uitrol goedgekeurd.
+**Besloten deel** (eigenaar, 2026-10-05): **Vitest** voor unit- en
+integratietests, **Playwright** voor de browsertests (vanaf de checkout).
+
+**Te beantwoorden:** CI-platform; komt er een staging; hoe wordt
+productie-uitrol goedgekeurd.
 
 ---
 
@@ -704,7 +713,17 @@ bedienen.
 **Nederlands is de standaardtaal** (eigenaar, 2026-10-05): wie zonder
 taalkeuze binnenkomt, krijgt Nederlands.
 
-**Nog te beantwoorden binnen deze keuze:** hoe de taal in de URL staat; in
+**Taal in de URL** (eigenaar, 2026-10-05): Nederlands zonder voorvoegsel
+(`wonzo.nl/tuin`), Engels onder `/en` (`wonzo.nl/en/garden`). Paginanamen in
+de URL zijn woorden in de taal van de pagina.
+
+**Vertalen** (eigenaar, 2026-10-05): een eigen kleine oplossing zonder extra
+pakket. **Alleen de teksten van de winkel zelf** (knoppen, koppen, meldingen)
+staan in `messages/`. Productnamen, omschrijvingen en eigenschappen komen per
+taal van de leverancier (`isoCode` `nl` of `en`) en worden niet door WonZo
+vertaald.
+
+**Nog te beantwoorden binnen deze keuze:** in
 welke taal mail, factuur en algemene voorwaarden gaan (de taal van de klant,
 of altijd Nederlands — juridische teksten laten bevestigen).
 
@@ -827,12 +846,38 @@ er zonder kan kopen, en een leeg beoordelingssysteem wekt wantrouwen.
 
 ---
 
+## D-37 · Uitzondering op `pnpm audit`: braces (alleen ontwikkeltooling)
+
+- **Status:** OPEN
+- **Depends on:** —
+
+`pnpm audit` meldt bij de opzet van fase 1 (2026-10-05) één hoge
+kwetsbaarheid: `braces` tot en met 3.0.3 (GHSA-vfj7-8cjw-p6xm, gepubliceerd
+18-09-2026): een stack overflow bij diep geneste accolade-patronen.
+**Er bestaat geen gerepareerde versie** (3.0.3 is de nieuwste), dus een
+override kan niet. Het pakket komt alleen binnen via `eslint-config-next`
+(lint-tooling, nooit in de winkel), en het lek vraagt om patronen die een
+aanvaller aanlevert; hier verwerkt het alleen onze eigen configuratie.
+
+**Voorstel:** de melding accepteren als bekende uitzondering op "`pnpm audit`
+schoon" (`CLAUDE.md` § Definition of Done), zolang hij alleen via
+ontwikkeltooling binnenkomt; bij elke installatie of upgrade opnieuw
+controleren en de uitzondering intrekken zodra er een gerepareerde versie
+is. Komt `braces` ooit in een productie-afhankelijkheid, dan vervalt de
+uitzondering.
+
+**Te beantwoorden:** akkoord met deze uitzondering, of eerst zonder ESLint
+verder (dan valt de importgrens in de lint weg — `docs/CI_CD.md`).
+
+---
+
 ## Beslislog
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-05 | D-17, D-32 | Taal in de URL en eigen vertaaloplossing, alleen winkelteksten (D-32); Vitest en Playwright (D-17, verder open). Pakketten voor fase 1 goedgekeurd: next, react, react-dom, typescript met types, tailwindcss met @tailwindcss/postcss, eslint met eslint-config-next, vitest |
 | 2026-10-05 | D-01, D-02 | Beslist door de eigenaar: BigBuy (D-01); selectieregel en toegestane subcategorieën, gereviseerd uitgesloten, InnovaGoods toegestaan (D-02). D-04, D-13, D-16, D-22 van BLOCKED naar OPEN |
 | 2026-10-05 | D-36 | Beslist door de eigenaar: woningtextiel later, uitsluitingslijst akkoord |
 | 2026-10-05 | D-05, D-13, D-34, D-35 | Voorstellen uit `docs/ONDERZOEK.md` doorgevoerd: iDEAL als eis (D-05), levertijd tonen (D-13), wettelijke productinformatie (D-34, open; standpunt eigenaar over oud voor nieuw vastgelegd), inhoud eerste versie (D-35) |

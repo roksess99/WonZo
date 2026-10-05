@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "siteName": "WonZo",
+    "description": "Spullen voor in en rond het huis: opslag, meubels, decoratie, tuin, buitenleven en dieren. Eerlijk over prijs en levertijd."
+  },
+  "a11y": {
+    "skipToContent": "Naar de inhoud",
+    "home": "WonZo, naar de startpagina",
+    "breadcrumb": "Kruimelpad"
+  },
+  "mock": {
+    "banner": "Testomgeving: voorbeeldproducten en voorbeeldprijzen. Bestellen kan nog niet."
+  },
+  "usp": {
+    "delivery": "Levertijd staat bij elk product",
+    "withdrawal": "14 dagen bedenktijd",
+    "ideal": "Betalen met iDEAL"
+  },
+  "header": {
+    "searchLabel": "Zoek in de winkel",
+    "searchPlaceholder": "Waar ben je naar op zoek?",
+    "searchButton": "Zoeken",
+    "cart": "Winkelwagen",
+    "language": "English",
+    "languageLabel": "Switch to English",
+    "categories": "Categorieën"
+  },
+  "categories": {
+    "wonen": { "name": "Wonen", "intro": "Opbergen, meubels, decoratie en alles voor de keuken en de tafel." },
+    "tuin": { "name": "Tuin", "intro": "Tuinmeubels, parasols, bewatering en de barbecue." },
+    "buitenleven": { "name": "Buitenleven", "intro": "Kamperen en thuis sporten." },
+    "dieren": { "name": "Dieren", "intro": "Halsbanden, tuigen, manden en jassen voor je huisdier." }
+  },
+  "subcategories": {
+    "opslag": "Opslag en organisatie",
+    "meubels": "Meubels",
+    "decoratie": "Decoratie",
+    "keuken": "Servies en keuken",
+    "tuinmeubels": "Tuinmeubels en parasols",
+    "bewatering": "Bewatering",
+    "barbecue": "Barbecue",
+    "kamperen": "Kamperen",
+    "thuis-sporten": "Thuis sporten",
+    "halsbanden": "Halsbanden en tuigen",
+    "manden": "Manden en dekens",
+    "kleding": "Hondenkleding"
+  },
+  "home": {
+    "title": "Slim spul voor thuis",
+    "intro": "Een overzichtelijk aanbod voor in en rond het huis. Bij elk product zie je meteen wat het kost en wanneer het er is.",
+    "categoriesTitle": "Kies een categorie",
+    "popularTitle": "Altijd leverbaar"
+  },
+  "listing": {
+    "all": "Alles",
+    "filters": "Filters",
+    "brand": "Merk",
+    "price": "Prijs in euro",
+    "priceMin": "Vanaf",
+    "priceMax": "Tot en met",
+    "sort": "Sorteren",
+    "sortRecommended": "Aanbevolen",
+    "sortPriceAsc": "Prijs: laag naar hoog",
+    "sortPriceDesc": "Prijs: hoog naar laag",
+    "sortNewest": "Nieuwste",
+    "apply": "Toon resultaten",
+    "reset": "Alle filters wissen",
+    "results": "{count} producten",
+    "resultsOne": "1 product",
+    "activeFilters": "Gekozen filters",
+    "removeFilter": "Filter {name} verwijderen",
+    "emptyTitle": "Geen producten gevonden",
+    "emptyText": "Met deze filters vinden we niets. Wis een filter of bekijk alles in deze categorie.",
+    "emptyCategory": "Hier is op dit moment niets leverbaar. Kijk binnenkort nog eens, of bekijk een andere categorie.",
+    "unavailableTitle": "De producten zijn even niet te laden",
+    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw."
+  },
+  "search": {
+    "title": "Zoeken",
+    "resultsFor": "Resultaten voor ‘{q}’",
+    "noQueryTitle": "Waar ben je naar op zoek?",
+    "noQueryText": "Typ een woord in het zoekveld, bijvoorbeeld ‘parasol’ of ‘opbergen’.",
+    "emptyTitle": "Niets gevonden voor ‘{q}’",
+    "emptyText": "Probeer een ander of korter woord, of bekijk de categorieën hieronder."
+  },
+  "product": {
+    "inclVat": "inclusief btw",
+    "inStock": "Op voorraad",
+    "delivery": "Bezorgd in {min}–{max} werkdagen",
+    "shipsFrom": "Verzonden vanuit {country}",
+    "shippingCosts": "Verzendkosten worden nog vastgesteld",
+    "addToCart": "In winkelwagen",
+    "notYet": "Bestellen kan nog niet: de winkel is in opbouw.",
+    "withdrawal": "14 dagen bedenktijd",
+    "returns": "Retourneren kan binnen 14 dagen na ontvangst",
+    "specs": "Productgegevens",
+    "spec": {
+      "brand": "Merk",
+      "sku": "Artikelnummer",
+      "ean": "EAN",
+      "dimensions": "Afmetingen"
+    },
+    "description": "Omschrijving",
+    "safety": "Fabrikant en veiligheid",
+    "manufacturer": "Fabrikant",
+    "address": "Adres",
+    "email": "E-mail",
+    "website": "Website",
+    "warnings": "Waarschuwingen",
+    "noWarnings": "De fabrikant geeft geen aparte waarschuwingen.",
+    "noImage": "Geen foto beschikbaar",
+    "unavailableTitle": "Dit product is even niet te laden",
+    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw."
+  },
+  "countries": {
+    "ES": "Spanje",
+    "DE": "Duitsland",
+    "HU": "Hongarije",
+    "IT": "Italië",
+    "NL": "Nederland"
+  },
+  "howItWorks": {
+    "title": "Zo werkt WonZo",
+    "intro": "Goed om te weten voordat je bestelt.",
+    "sourceTitle": "Waar komen de producten vandaan?",
+    "sourceText": "WonZo werkt samen met een groothandel in Europa. Je bestelling wordt vanuit hun magazijn rechtstreeks naar je verstuurd. Bij elk product staat uit welk land het komt.",
+    "deliveryTitle": "Hoe lang duurt het?",
+    "deliveryText": "Bij elk product staat een levertijd in werkdagen. Die levertijd zie je ook in je winkelwagen en voordat je betaalt. We beloven niet dat het morgen in huis is, want dat kunnen we niet waarmaken.",
+    "stockTitle": "Wat je ziet, is leverbaar",
+    "stockText": "We tonen alleen producten die op voorraad zijn. Is iets uitverkocht, dan verdwijnt het uit de winkel.",
+    "returnsTitle": "Bedenktijd en retourneren",
+    "returnsText": "Je hebt 14 dagen bedenktijd na ontvangst. Hoe je een product terugstuurt en wat dat kost, lees je op de retourpagina zodra de winkel open is."
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Een vraag over een product of je bestelling? Mail ons.",
+    "emailLabel": "E-mail",
+    "companyTitle": "Bedrijfsgegevens",
+    "companyName": "Bedrijfsnaam",
+    "tradeName": "Handelsnaam",
+    "kvk": "KvK-nummer",
+    "vat": "Btw-nummer",
+    "address": "Adres",
+    "missing": "nog in te vullen"
+  },
+  "footer": {
+    "service": "Klantenservice",
+    "howItWorks": "Zo werkt WonZo",
+    "contact": "Contact",
+    "company": "Bedrijfsgegevens",
+    "kvk": "KvK {kvk}",
+    "vat": "Btw {vat}",
+    "language": "Taal"
+  },
+  "notFound": {
+    "title": "Deze pagina bestaat niet",
+    "text": "Misschien is het product niet meer leverbaar, of is het adres veranderd.",
+    "home": "Naar de startpagina"
+  },
+  "error": {
+    "title": "Er ging iets mis",
+    "text": "Dit ligt aan ons. Probeer het opnieuw; lukt het niet, mail ons dan.",
+    "retry": "Opnieuw proberen"
+  },
+  "loading": "Bezig met laden"
+}
