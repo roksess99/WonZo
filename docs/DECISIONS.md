@@ -93,6 +93,17 @@ uitrolmethode (pnpm-symlinks); bouwen op de server of een gebouwd artefact
 uploaden; is een webhook-URL van buiten bereikbaar (D-05). Valt die meting
 tegen, dan wordt deze beslissing herzien.
 
+GEMETEN 2026-10-06 — eerste uitrol (bouwlog, door de eigenaar gedeeld): het
+pakket "Unlimited" biedt "Node.js web app" ("Stuur je code, wij hosten het");
+de bouw kloont `main`, gebruikt Node 24 en pnpm 11.20.0 (uit `packageManager`)
+en installeert 382 pakketten in 12 s. `pnpm run build` bleef daarna hangen op
+een vraag van pnpm om `node_modules` opnieuw te installeren; opgelost met
+`verifyDepsBeforeRun: false` (`pnpm-workspace.yaml`). Valkuil: de gewone
+Git-functie van een bestaande website kopieert de repo naar `public_html`
+zonder te bouwen — de broncode stond daardoor kort leesbaar op wonzo.nl
+(geen geheimen: `.env` staat niet in Git); verwijderd door de eigenaar.
+Nog open: bouwen en starten (de bouw zelf), databases, webhook-URL.
+
 **Wat er niet in zit:** de versies van Next.js en Tailwind (bij installatie,
 na vragen — `ask`-regel), de database (D-06), het CI-platform (D-17).
 
