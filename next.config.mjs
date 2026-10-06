@@ -10,6 +10,9 @@ const nextConfig = {
   // validator enforces. The same advice — read the bundled docs in
   // node_modules/next/dist/docs/ first — lives in .claude/rules/frontend.md.
   agentRules: false,
+  // Loaded by Node at run time instead of bundled by webpack: mysql2 loads
+  // parts of itself dynamically (character sets), which a bundle can break.
+  serverExternalPackages: ["mysql2"],
 };
 
 export default nextConfig;
