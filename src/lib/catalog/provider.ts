@@ -1,11 +1,14 @@
 // The catalog as the rest of the shop sees it: canonical Products only.
-// Without a supplier token the mock is used — the shop must always work
-// without a token (CLAUDE.md § Bouwvolgorde). Server-side only.
+// From the mock (default) or from the database copy the refresh keeps up to
+// date (D-31, CATALOG_SOURCE). The shop must always work without a token
+// (CLAUDE.md § Bouwvolgorde). Server-side only.
 
+import { hasDatabase } from "@/lib/db";
 import type { Locale } from "@/lib/i18n/config";
 import type { BigBuyInformation } from "./bigbuy/dto";
 import { parseInformation, parseLowestShipping, parseProduct, parseStock } from "./bigbuy/dto";
 import { toProduct, type SupplierRecord } from "./bigbuy/map";
+import { catalogVersion, loadDatabaseCatalog } from "./bigbuy/read";
 import * as fixtures from "./fixtures";
 import type { Product } from "./types";
 
@@ -61,20 +64,70 @@ function mockRecords(): SupplierRecord[] {
   return records;
 }
 
-const cache = new Map<Locale, Product[]>();
+export type CatalogSource = "mock" | "database";
 
-/** Every product that passes the selection rule (D-02), in one language. */
-export async function getCatalog(locale: Locale): Promise<Product[]> {
-  if (mockScenario() === "unavailable") throw new SupplierUnavailableError();
-  // TODO fase 3: with SUPPLIER_API_TOKEN set, read the synchronised copy of the supplier catalog (D-31).
-  let products = cache.get(locale);
+/**
+ * Where the catalog comes from (D-31): "mock" (the default, and what the live
+ * site keeps until the price rule is decided, D-03) or "database" (the copy
+ * the refresh keeps up to date). Checked when the code loads.
+ */
+export function catalogSource(env: Record<string, string | undefined>, databaseConfigured: boolean): CatalogSource {
+  const value = (env.CATALOG_SOURCE ?? "").trim() || "mock";
+  if (value !== "mock" && value !== "database") throw new Error(`CATALOG_SOURCE must be "mock" or "database" (got ${JSON.stringify(value)}).`);
+  if (value === "database" && !databaseConfigured) throw new Error("CATALOG_SOURCE=database needs the DATABASE_* settings (D-06).");
+  return value;
+}
+
+const source = catalogSource(process.env, hasDatabase);
+
+const mockCache = new Map<Locale, Product[]>();
+
+function mockCatalog(locale: Locale): Product[] {
+  let products = mockCache.get(locale);
   if (!products) {
     products = mockRecords()
       .map((r) => toProduct(locale, r).product)
       .filter((p): p is Product => p !== null);
-    cache.set(locale, products);
+    mockCache.set(locale, products);
   }
   return products;
+}
+
+/** How often the shop asks the database whether a newer copy is there. */
+const VERSION_CHECK_MS = 60_000;
+let version: { value: number | null; checkedAt: number } | null = null;
+const dbCache = new Map<Locale, { version: number | null; products: Promise<Product[]> }>();
+/** The last copy that loaded, per language: shown while the database is out of reach. */
+const lastGood = new Map<Locale, Product[]>();
+
+async function databaseCatalog(locale: Locale): Promise<Product[]> {
+  try {
+    if (!version || Date.now() - version.checkedAt > VERSION_CHECK_MS) version = { value: await catalogVersion(), checkedAt: Date.now() };
+    const current = version.value;
+    let entry = dbCache.get(locale);
+    if (!entry || entry.version !== current) {
+      // One load per version, shared by every request that arrives meanwhile.
+      entry = { version: current, products: current === null ? Promise.resolve([]) : loadDatabaseCatalog(locale) };
+      dbCache.set(locale, entry);
+      entry.products.catch(() => dbCache.delete(locale));
+    }
+    const products = await entry.products;
+    lastGood.set(locale, products);
+    return products;
+  } catch {
+    // docs/SUPPLIER_RESILIENCE.md: the database briefly out of reach — keep
+    // showing the copy we had; without one, an honest "not now".
+    version = null;
+    const previous = lastGood.get(locale);
+    if (previous) return previous;
+    throw new SupplierUnavailableError();
+  }
+}
+
+/** Every product that passes the selection rule (D-02), in one language. */
+export async function getCatalog(locale: Locale): Promise<Product[]> {
+  if (mockScenario() === "unavailable") throw new SupplierUnavailableError();
+  return source === "database" ? databaseCatalog(locale) : mockCatalog(locale);
 }
 
 /**

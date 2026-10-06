@@ -84,6 +84,59 @@ export function parseLowestShipping(x: unknown): BigBuyLowestShipping | null {
   return { reference: x.reference, cost: x.cost, carrierName: isStr(x.carrierName) ? x.carrierName : null };
 }
 
+export function parseTaxonomy(x: unknown): BigBuyTaxonomy | null {
+  if (!isObj(x) || !isNum(x.id) || !isStr(x.name) || !isNum(x.parentTaxonomy)) return null;
+  return { id: x.id, name: x.name, parentTaxonomy: x.parentTaxonomy };
+}
+
+export function parseManufacturer(x: unknown): BigBuyManufacturer | null {
+  if (!isObj(x) || !isNum(x.id) || !isStr(x.name)) return null;
+  return { id: x.id, name: x.name };
+}
+
+/**
+ * The only image host (GEMETEN 2026-10-05) and the only one next.config.mjs
+ * lets the image optimiser fetch from. A photo elsewhere is dropped here —
+ * the optimiser would refuse it and break the page; the product then shows
+ * our placeholder.
+ */
+export const IMAGE_HOST = "cdnbigbuy.com";
+
+const isImageUrl = (u: unknown): u is string => {
+  if (!isStr(u)) return false;
+  try {
+    const url = new URL(u);
+    return url.protocol === "https:" && url.hostname === IMAGE_HOST;
+  } catch {
+    return false;
+  }
+};
+
+export function parseImages(x: unknown): BigBuyImages | null {
+  if (!isObj(x) || !isNum(x.id) || !Array.isArray(x.images)) return null;
+  const images = x.images.filter((i): i is { id: number; isCover: boolean; url: string; position: number } =>
+    isObj(i) && isNum(i.id) && isImageUrl(i.url) && isNum(i.position) && typeof i.isCover === "boolean",
+  );
+  return { id: x.id, images: images.map((i) => ({ id: i.id, isCover: i.isCover, url: i.url, position: i.position })) };
+}
+
+/** One answer of /productcompliance/{id}; the regulations list may be empty. */
+export function parseCompliance(id: number, sku: string, x: unknown): BigBuyCompliance | null {
+  if (!isObj(x)) return null;
+  const list = Array.isArray(x.generalProductSafetyRegulations) ? x.generalProductSafetyRegulations : [];
+  const regulations = list
+    .filter((r): r is Record<string, unknown> => isObj(r) && isStr(r.name))
+    .map((r) => ({
+      name: r.name as string,
+      countryIsoCode: isStr(r.countryIsoCode) ? r.countryIsoCode : null,
+      address: isStr(r.address) ? r.address : null,
+      contact: isStr(r.contact) ? r.contact : null,
+      webSite: isStr(r.webSite) ? r.webSite : null,
+      safetyWarnings: Array.isArray(r.safetyWarnings) ? r.safetyWarnings : [],
+    }));
+  return { id, sku, generalProductSafetyRegulations: regulations };
+}
+
 export function parseInformation(x: unknown): BigBuyInformation | null {
   if (!isObj(x) || !isNum(x.id) || !isStr(x.name) || !isStr(x.isoCode)) return null;
   return { id: x.id, sku: isStr(x.sku) ? x.sku : "", name: x.name, description: isStr(x.description) ? x.description : "", isoCode: x.isoCode };

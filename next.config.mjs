@@ -32,6 +32,14 @@ const nextConfig = {
   // Loaded by Node at run time instead of bundled by webpack: mysql2 loads
   // parts of itself dynamically (character sets), which a bundle can break.
   serverExternalPackages: ["mysql2"],
+  // Product photos through our own domain, resized per screen (D-31). The
+  // optimiser fetches only from the supplier's image host — never a URL from
+  // input (.claude/rules/beveiliging.md § SSRF) — and keeps its result a week:
+  // supplier media servers set short cache times (.claude/rules/frontend.md).
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "cdnbigbuy.com", pathname: "/**" }],
+    minimumCacheTTL: 7 * 24 * 60 * 60,
+  },
   // Says nothing a visitor needs, and tells an attacker which framework to try.
   poweredByHeader: false,
   async headers() {

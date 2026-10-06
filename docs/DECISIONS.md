@@ -378,8 +378,18 @@ niet meer gebruikt (`docs/HOSTING.md` § 4). Verworpen: met de hand vanaf de
 computer van de eigenaar — vergeten betekent nieuwe code tegen een oude
 database, en de live database zou van buiten bereikbaar moeten zijn.
 
-**Nog open binnen deze beslissing:** of de bouwserver van Hostinger de
-database bereikt (eerste uitrol meten); backups en point-in-time-herstel
+GEMETEN 2026-10-06 — eerste uitrol met database: de bouwserver bereikt de
+live database `u676833780_wonzo` met `DATABASE_HOST=localhost`
+(`[db-migrate] … 0 applied, 0 pending`); `https://wonzo.nl/api/health` geeft
+`database: ok`. Migreren bij elke uitrol werkt dus.
+
+Daarbij gezien (D-00): de CDN van Hostinger vervangt onze
+`Content-Security-Policy`-header door zijn eigen (`upgrade-insecure-requests`);
+de andere beveiligingsheaders komen wel aan. Framen blijft verboden via
+`X-Frame-Options: DENY`. Een volledige CSP zal via de CDN-instellingen of een
+andere weg moeten — uitzoeken als die aan de beurt is.
+
+**Nog open binnen deze beslissing:** backups en point-in-time-herstel
 (D-19).
 
 ---
@@ -840,10 +850,30 @@ de eigen kopie.
 (de limieten gelden voor de hele winkel). Foto's rechtstreeks van BigBuy laden
 was eenvoudiger, maar dan praat elke bezoeker met een derde partij.
 
+**Gebouwd (fase 3, 2026-10-06):** tabellen in `db/migrations/0001_catalog.sql`;
+het verversen in stukjes (`src/lib/catalog/bigbuy/sync.ts`) via
+`POST /api/cron/catalog` met `JOB_TOKEN`, lokaal via
+`scripts/catalog-sync.mjs`; de limieten per uur worden in de database geteld
+(geldt voor de hele winkel). Een ronde gaat in fasen: taxonomie en merken →
+producten → foto's, voorraad, namen NL/EN en verzendkosten naast elkaar →
+GPSR alleen voor producten die verder verkoopbaar zijn → beoordelen. De
+winkel kiest de bron met `CATALOG_SOURCE` (`mock` of `database`); live blijft
+`mock` tot D-03. Database en nepdata gaan door dezelfde vertaling en
+selectieregel (test: dezelfde producten).
+
+**Uitleg van een regel** (`docs/AUTHORITY.md`, gemeld aan de eigenaar):
+`.claude/rules/catalogus.md` zegt dat leveranciersvelden niet in "de
+database" komen. Dat geldt voor de bedrijfstabellen (bestellingen, facturen:
+daar alleen `supplierRef` en `supplierOfferId`). De catalogustabellen zijn de
+eigen kopie van de adapter, met neutrale kolomnamen, alleen gelezen door
+`src/lib/catalog/` en opnieuw op te halen; de rest van de winkel ziet alleen
+`Product`.
+
 **Nog open binnen deze beslissing:** hoe oud een getoonde prijs of voorraad
-mag zijn voordat de winkel waarschuwt; hoe de geplande taak op Hostinger
-start (cron in hPanel — meten); of `sharp` op de bouwserver werkt (oude
-glibc, D-00 — meten).
+mag zijn voordat de winkel waarschuwt; of de geplande taak op Hostinger elke
+minuut mag draaien; of `sharp` op de server werkt (vraagt glibc 2.28, de
+server heeft minder dan 2.29 — meten bij de eerste echte foto's); het eerste
+volledige verversen tegen de echte BigBuy (door de eigenaar, lokaal).
 
 ---
 
