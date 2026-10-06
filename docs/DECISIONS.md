@@ -102,7 +102,16 @@ een vraag van pnpm om `node_modules` opnieuw te installeren; opgelost met
 Git-functie van een bestaande website kopieert de repo naar `public_html`
 zonder te bouwen — de broncode stond daardoor kort leesbaar op wonzo.nl
 (geen geheimen: `.env` staat niet in Git); verwijderd door de eigenaar.
-Nog open: bouwen en starten (de bouw zelf), databases, webhook-URL.
+Tweede bouw: de systeembibliotheek op de bouwserver is te oud voor de
+compiler van Next.js 16.3 (`GLIBC_2.29 not found`, bekend als
+vercel/next.js#96960, geen herstelde versie). Next valt terug op
+WebAssembly, en daarmee kan het `next.config.ts` niet laden en werkt
+Turbopack niet. Oplossing: `next.config.mjs` en `next build --webpack`;
+`pnpm dev` blijft Turbopack. Alternatief, niet gekozen: Next.js terugzetten
+naar een versie vóór 16.3 (wijziging van een afhankelijkheid, en de fout
+komt terug bij de volgende upgrade).
+Nog open: of de webpack-bouw daar slaagt en de site start, databases,
+webhook-URL.
 
 **Wat er niet in zit:** de versies van Next.js en Tailwind (bij installatie,
 na vragen — `ask`-regel), de database (D-06), het CI-platform (D-17).
