@@ -259,6 +259,13 @@ dan één percentage; de sleutel van de opslag moet overal gelijk zijn.
 **Te beantwoorden:** vaste opslag of per groep; waar de regel aan hangt; wat er
 gebeurt zonder adviesprijs; minimummarge.
 
+**Afspraak tot deze beslissing** (eigenaar, 2026-10-06): de echte catalogus
+wordt gebouwd en lokaal getest, maar de BigBuy-sleutel komt pas op de live
+site als de prijsregel vaststaat — anders staan echte artikelen met
+mogelijk 21 % te lage prijzen op een vindbare site (de adviesprijs is
+vermoedelijk excl. btw, `docs/api/LEVERANCIER.md` § 6). Eerst het antwoord
+van BigBuy op vraag 1 (`docs/api/VRAGEN.md`).
+
 ---
 
 ## D-04 · Wie koopt er in: een mens of de code?
@@ -317,8 +324,9 @@ zijn bestellingen van € 0 toegestaan. Architectuur: `docs/PAYMENTS.md`.
 
 ## D-06 · Database
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** D-00
+- **Decided:** 2026-10-06
 
 Dat er een database met transacties komt staat vast (D-25). Hier gaat het om
 **welke**, en hoe migraties lopen.
@@ -328,15 +336,57 @@ een server (`DATABASE_HOST/PORT/USER` in `.env.example`), rijvergrendeling
 met `SELECT … FOR UPDATE` en `IF NOT EXISTS` in migraties
 (`.claude/rules/database.md`, `docs/HOSTING.md`).
 
-**Te beantwoorden:** welk systeem en welke versie; wat de hosting toestaat
-(gemeten op een wegwerptabel); wie migraties draait in productie (pipeline of
-mens); hoe point-in-time-herstel werkt.
+**Besloten (eigenaar, 2026-10-06): MySQL bij Hostinger**, in hetzelfde
+pakket als de winkel, te bekijken met phpMyAdmin. De catalogus komt erin
+(D-31), en straks bestellingen, tellers en audit (fase 4).
+
+**Waarom dit en niet het alternatief.** Alles bij één partij die al betaald
+wordt, met een beheerscherm dat de eigenaar kent. Verworpen: een database bij
+een andere partij (bijv. PostgreSQL als dienst) — een extra verwerker voor de
+AVG, een extra rekening en een verbinding over het internet; en een bestand
+op de server voor de catalogus (D-31) — de eigenaar wil de gegevens kunnen
+bekijken, en fase 4 heeft de database toch nodig.
+
+`AANNAME`: wat Hostinger "MySQL" noemt is op gedeelde hosting vaak MariaDB;
+welke en welke versie wordt gemeten, met wat de hosting toestaat
+(transacties, `SELECT … FOR UPDATE`, gegenereerde kolommen —
+`docs/HOSTING.md` § 5) op een wegwerptabel.
+
+GEMETEN 2026-10-06 — `wonzo_dev` bij Hostinger, via Remote MySQL vanaf de
+machine van de eigenaar (`scripts/db-check.mjs`): **MariaDB 11.8.9**; InnoDB,
+utf8mb4 / utf8mb4_unicode_ci; isolatie **READ-COMMITTED**; tijdzone SYSTEM =
+UTC; `sql_mode` **zonder strikte modus** (IGNORE_SPACE, NO_AUTO_CREATE_USER,
+NO_ENGINE_SUBSTITUTION); `wait_timeout` **20 s**; max_allowed_packet 1 GB;
+gebruiker heeft alle rechten op alleen die database. Verbinding in 127 ms.
+Werkt: tabel maken (ook `IF NOT EXISTS`), emoji en accenten, BIGINT exact,
+unieke sleutel (ER_DUP_ENTRY), rollback, `SELECT … FOR UPDATE` (tweede
+verbinding wacht en krijgt ER_LOCK_WAIT_TIMEOUT), gegenereerde kolommen
+(STORED en VIRTUAL), JSON, `ON DUPLICATE KEY UPDATE`, `GET_LOCK`.
+
+Gevolgen voor de code: elke verbinding zet zelf een **strikte `sql_mode`**
+(anders knipt de database te lange tekst of te grote getallen stil af) en
+tijdzone UTC; de pool sluit ongebruikte verbindingen **vóór 20 s**;
+vergrendelen altijd expliciet met `FOR UPDATE` (bij READ-COMMITTED geen
+gap-locks).
+
+**Migraties in productie** (eigenaar, 2026-10-06): **automatisch bij elke
+uitrol, vóór de bouw** — het bouwscript draait eerst de migraties, met een
+slot (`GET_LOCK`) zodat ze nooit dubbel lopen. Mislukt een migratie, dan
+stopt de uitrol en blijft de vorige versie draaien. Daarom voegt een migratie
+alleen toe; iets weghalen gebeurt pas in een latere uitrol, als de code het
+niet meer gebruikt (`docs/HOSTING.md` § 4). Verworpen: met de hand vanaf de
+computer van de eigenaar — vergeten betekent nieuwe code tegen een oude
+database, en de live database zou van buiten bereikbaar moeten zijn.
+
+**Nog open binnen deze beslissing:** of de bouwserver van Hostinger de
+database bereikt (eerste uitrol meten); backups en point-in-time-herstel
+(D-19).
 
 ---
 
 ## D-07 · Beheerpaneel, inloggen en rechten
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-06
 
 Uitgangspunten staan in `.claude/rules/beveiliging.md` (MFA verplicht, sessies
@@ -541,7 +591,7 @@ monitor; wie alerts ontvangt.
 
 ## D-19 · Backup- en hersteldoelen
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-06
 
 Eisen en plaatshouders: `docs/DISASTER_RECOVERY.md`.
@@ -744,8 +794,9 @@ Bevestigd door de eigenaar op 2026-10-05.
 
 ## D-31 · Catalogus synchroniseren
 
-- **Status:** BLOCKED
+- **Status:** DECIDED
 - **Depends on:** D-01, D-06
+- **Decided:** 2026-10-06
 
 BigBuy staat het niet toe de catalogus per paginaweergave op te vragen:
 productlijsten, prijzen en voorraad 10 keer per uur, één artikel 1 keer per
@@ -767,6 +818,32 @@ controleert (`POST /rest/order/check`, 1 per seconde voor de hele bestelling,
 of per artikel, 1 per 5 seconden); wat er gebeurt als die controle de limiet
 raakt; hoe oud een getoonde prijs of voorraad mag zijn; zoeken en filteren op
 de eigen kopie.
+
+**Besloten (eigenaar, 2026-10-06):**
+
+- **De kopie staat in de database** (D-06), niet in een bestand. Daarom komt
+  de basis van fase 4 (verbinding, migraties) vóór fase 3.
+- **Verversen:** de hele catalogus één keer per nacht; de voorraad elke 2 uur.
+  Sneller kan niet binnen de limieten: één ronde voor de vier groepen is
+  12 pagina's producten, 11 pagina's voorraad en 24 pagina's namen (NL en
+  EN), bij 10 (namen 24) per uur (`GEMETEN` 2026-10-05, verkenning).
+  GPSR-gegevens alleen voor nieuwe artikelen (1 per 5 s). Bij het afrekenen
+  wordt de voorraad nog eens live gecontroleerd (fase 5).
+- **Productfoto's** lopen via het eigen domein, verkleind per scherm (de
+  beeldbewerker van Next.js met `sharp`); in de database staan alleen de
+  adressen, niet de foto's zelf. De verkleinde foto's zijn een cache op de
+  server, opnieuw te maken (`.claude/rules/database.md`). Alleen
+  `cdnbigbuy.com` is toegestaan als bron (`.claude/rules/beveiliging.md`
+  § SSRF).
+
+**Waarom dit en niet het alternatief.** Per paginaweergave opvragen kan niet
+(de limieten gelden voor de hele winkel). Foto's rechtstreeks van BigBuy laden
+was eenvoudiger, maar dan praat elke bezoeker met een derde partij.
+
+**Nog open binnen deze beslissing:** hoe oud een getoonde prijs of voorraad
+mag zijn voordat de winkel waarschuwt; hoe de geplande taak op Hostinger
+start (cron in hPanel — meten); of `sharp` op de bouwserver werkt (oude
+glibc, D-00 — meten).
 
 ---
 
@@ -963,6 +1040,7 @@ reparatie er is.
 |---|---|---|
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
+| 2026-10-06 | D-03, D-06, D-07, D-19, D-31 | Beslist door de eigenaar: MySQL bij Hostinger (D-06); catalogus in de database, nachtelijk verversen en voorraad elke 2 uur, foto's via het eigen domein (D-31); sleutel pas live na de prijsregel (D-03). D-07 en D-19 van BLOCKED naar OPEN |
 | 2026-10-05 | D-13 | Beslist door de eigenaar: € 5,95, gratis vanaf € 50, grote artikelen (boven € 15 eigen verzendkosten) per stuk en nooit gratis; artikelen zonder bekende verzendkosten niet in de winkel |
 | 2026-10-05 | D-13, D-15 | Fase 2 (winkelwagen): verzendkosten "worden nog vastgesteld" tot D-13; "Prijzen inclusief btw" zonder btw-bedrag tot D-15 (eigenaar). Onderzoek drempel gratis verzending (`docs/ONDERZOEK.md` § 8). Knop "In winkelwagen" alleen op de productpagina; adressen `/winkelwagen` en `/en/cart` (eigenaar) |
 | 2026-10-05 | D-01 | Inkoopprijs excl. btw `GEMETEN` (schermafdruk V0710266); adviesprijs vermoedelijk ook, te bevestigen |
