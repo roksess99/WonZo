@@ -173,7 +173,7 @@ hij niet bestaat); vervoerders naar Nederland met levertijden.
 bevestigt dat bladeren, voorraad, Nederlandse namen en bestellen via de API
 mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
 verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
-(vraag 4 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
+(vraag 6 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
 
 **Nog open, niet blokkerend:** of de adviesprijs incl. of excl. btw is — de
 inkoopprijs is excl. btw (`GEMETEN 2026-10-05`, schermafdruk V0710266), de
@@ -506,7 +506,7 @@ de grens betaalt WonZo per klein pakket € 2,63 bij (€ 8,58 − € 5,95).
 
 `AANNAME`: het bedrag van BigBuy wordt bij grote artikelen doorgerekend zoals
 het is; of het incl. of excl. btw is, is niet gemeten (zelfde vraag als bij
-de adviesprijs, `docs/api/VRAGEN.md` vraag 1). Niet gemeten: of twee grote
+de adviesprijs; `docs/api/VRAGEN.md` vraag 2). Niet gemeten: of twee grote
 artikelen samen goedkoper gaan dan per stuk — per stuk is de veilige kant.
 
 **Nog open binnen deze beslissing:** vervoerder kiezen (SEUR en TNT gemeten);
