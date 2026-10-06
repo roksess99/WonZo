@@ -110,8 +110,32 @@ Turbopack niet. Oplossing: `next.config.mjs` en `next build --webpack`;
 `pnpm dev` blijft Turbopack. Alternatief, niet gekozen: Next.js terugzetten
 naar een versie vóór 16.3 (wijziging van een afhankelijkheid, en de fout
 komt terug bij de volgende upgrade).
-Nog open: of de webpack-bouw daar slaagt en de site start, databases,
-webhook-URL.
+Derde bouw: `NEXT_PUBLIC_SITE_URL` stond op `wonzo.nl` zonder `https://`
+("Invalid URL" bij het bouwen); door de eigenaar gezet op `https://wonzo.nl`.
+
+GEMETEN 2026-10-06 — **de site draait op https://wonzo.nl** (vanaf deze
+machine, met curl): alle pagina's 200 (NL en EN), 308 voor `/nl/…`,
+`/en/winkelwagen` en een oude productnaam, 404 voor onbekende adressen en
+uitgesloten producten; `POST /api/cart` rekent goed (2 × € 29,99 + € 99,99
++ € 63,80 groot artikel = € 223,77) en weigert een fout verzoek met 400;
+canonical en taallinks op `https://wonzo.nl`; antwoorden in ongeveer 0,1 s;
+broncodebestanden geven 404, `.env` 403. Bouwen en starten werkt op dit
+pakket: de bouw met webpack duurt ongeveer 36 s.
+**Keuze van de eigenaar (2026-10-06):** zoekmachines mogen de site ook in de
+testfase opnemen — geen `noindex`, geen schakelaar. Gevolg om te kennen:
+Google kan voorbeeldproducten en -prijzen tonen tot de echte catalogus er
+staat (fase 3).
+
+**Na de livegang toegevoegd** (`next.config.mjs`): beveiligingsheaders
+(HSTS zonder subdomeinen, nosniff, referrer-policy, framen verboden,
+cross-origin-opener, geen camera/microfoon/locatie) en geen `X-Powered-By`.
+Een volledige CSP voor scripts blijft een eigen taak
+(`.claude/rules/beveiliging.md` § Headers en CSP). `NEXT_PUBLIC_SITE_URL`
+wordt bij het laden gecontroleerd, met een duidelijke melding
+(`src/lib/seo.ts`).
+
+Nog open: beeldoptimalisatie voor echte productfoto's (fase 3, `sharp` staat
+uit); volledige CSP; databases; webhook-URL.
 
 **Wat er niet in zit:** de versies van Next.js en Tailwind (bij installatie,
 na vragen — `ask`-regel), de database (D-06), het CI-platform (D-17).
