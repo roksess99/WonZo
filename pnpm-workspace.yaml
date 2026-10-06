@@ -2,3 +2,12 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 
+# `pnpm run` checks node_modules before every script and, when it finds them
+# "out of date", reinstalls — after a prompt. On Hostinger `pnpm run build`
+# stopped at "The modules directory ... will be removed and reinstalled from
+# scratch. Proceed? (Y/n)" with nobody to answer (GEMETEN 2026-10-06, first
+# deploy). Why pnpm judged the fresh install out of date there is not known;
+# locally, also with NODE_ENV=production, it does not. The install right
+# before the build is fresh, so the check adds nothing there. Locally: run
+# `pnpm install` yourself after pulling new dependencies.
+verifyDepsBeforeRun: false
