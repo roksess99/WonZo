@@ -110,6 +110,15 @@
     "warnings": "Warnings",
     "noWarnings": "The manufacturer gives no separate warnings.",
     "noImage": "No photo available",
+    "gallery": {
+      "list": "Photos of {name}",
+      "show": "Show photo {n} of {total}",
+      "enlarge": "View photo large",
+      "position": "Photo {n} of {total}",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "close": "Close"
+    },
     "unavailableTitle": "This product can't be loaded right now",
     "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes."
   },

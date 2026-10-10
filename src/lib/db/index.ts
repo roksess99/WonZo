@@ -11,6 +11,14 @@ if (typeof window !== "undefined") {
 
 export type { DbConfig } from "./config.mjs";
 export type Connection = mysql.PoolConnection;
+/** Anything that runs a query: the pool, or one connection from it. */
+export type Queryable = Pick<mysql.Pool, "query">;
+
+/** Rows of a SELECT, typed by the caller (the shape is checked where the rows are used). */
+export async function selectRows<T>(db: Queryable, sql: string, params: unknown[] = []): Promise<T[]> {
+  const [rows] = await db.query(sql, params);
+  return rows as T[];
+}
 
 const config = parseDbConfig(process.env);
 

@@ -510,6 +510,39 @@ GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04):
   per bestelling (`carriers`).
 - Tracking via polling (`/rest/tracking/order/{id}`, `/rest/tracking/orders`);
   **webhooks komen in de documentatie niet voor**.
+- **Annuleren:** geen endpoint; het woord komt in `doc.json` niet voor
+  (geraadpleegd 2026-10-10). Volgens de BigBuy Academy alleen via een ticket
+  zolang de bestelling niet in voorbereiding is (`AANNAME`, zoekresultaat;
+  vraag 13).
+
+GEDOCUMENTEERD (BigBuy, "Guarantee Terms and Conditions",
+`bigbuy.eu/en/guarantee.html`, geraadpleegd 2026-10-10) — **retouren en
+klachten.** Geen enkel deel hiervan gaat via de API; alles in het BigBuy-paneel.
+
+- BigBuy heeft **geen contact met de eindklant**: de klant meldt en stuurt
+  terug naar de winkel.
+- **Herroeping (artikel in perfecte staat): BigBuy neemt niets terug**, "in
+  any case". De winkel betaalt de klant terug en houdt het artikel; er komt
+  geen geld terug op het tegoed.
+- **Fabrieksfout:** de winkel verzamelt de artikelen en maakt een concept aan
+  onder RETURNS; BigBuy haalt gratis op bij de winkel, elke twee maanden vanaf
+  € 90 kostprijs, anders uiterlijk na 6 maanden. Na controle door hun
+  technische dienst een vervanging of terugbetaling **op het tegoed (wallet)**,
+  "several weeks" na ontvangst. Verpakking beschadigd: 50 % minder; geen echte
+  fout of onderdelen kwijt: niets, en het artikel wordt na 7 dagen vernietigd
+  tenzij de winkel de terugzending betaalt.
+- **Transportschade of niet ontvangen:** de klant meldt binnen **48 uur** bij
+  de winkel; de winkel meldt binnen **5 kalenderdagen** na ontvangst bij
+  BigBuy (Contact → Logistics and After Sales), met paklijst, foto's en
+  uitleg. Een zichtbaar beschadigd pakket moet bij aflevering met "PACKAGE
+  VISIBLY DAMAGED" worden afgetekend, anders wordt de klacht afgewezen.
+- **Pakket niet opgehaald of geweigerd:** terug naar BigBuy; terugbetaling
+  minus de verzendkosten heen en terug, na "several weeks".
+- Garantie 2 jaar (gereviseerd 12 maanden).
+
+Gevolg: retouren komen op het adres van de winkel binnen, en of het tegoed
+een terugbetaling heeft gekregen is alleen te zien aan het saldo
+(`user/purse`) — mutaties niet via de API (vraag 23).
 
 ---
 

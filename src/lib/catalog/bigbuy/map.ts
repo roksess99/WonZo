@@ -60,7 +60,9 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
   // GEMETEN 2026-10-05: dimensions of 1 × 1 × 1 are placeholders; only show real ones.
   const { width, height, depth } = r.product;
   if (width && height && depth && !(width === 1 && height === 1 && depth === 1)) {
-    specs.push({ label: "dimensions", value: `${width} × ${height} × ${depth} cm` });
+    // In the notation of the page: 59,1 on Dutch pages, 59.1 on English ones.
+    const cm = new Intl.NumberFormat(locale === "nl" ? "nl-NL" : "en-GB", { maximumFractionDigits: 2 });
+    specs.push({ label: "dimensions", value: `${cm.format(width)} × ${cm.format(height)} × ${cm.format(depth)} cm` });
   }
 
   return {
@@ -95,7 +97,7 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
               website: manufacturer.webSite,
             }
           : null,
-        warnings: (manufacturer?.safetyWarnings ?? []).map((w) => (typeof w === "string" ? w : JSON.stringify(w))).filter(Boolean),
+        warnings: manufacturer?.safetyWarnings ?? [],
       },
       addedAt: r.product.dateAdd,
     },
