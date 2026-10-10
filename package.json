@@ -11,6 +11,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:db": "node --env-file=.env node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts",
     "check:messages": "node scripts/check-messages.mjs",
     "validate": "node scripts/validate-template.mjs && node scripts/test-guard.mjs"
   },

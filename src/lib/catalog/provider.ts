@@ -3,12 +3,14 @@
 // date (D-31, CATALOG_SOURCE). The shop must always work without a token
 // (CLAUDE.md § Bouwvolgorde). Server-side only.
 
-import { hasDatabase } from "@/lib/db";
+import { getPool, hasDatabase, selectRows } from "@/lib/db";
 import type { Locale } from "@/lib/i18n/config";
+import { fromDecimal, money, type Money } from "@/lib/money";
 import type { BigBuyInformation } from "./bigbuy/dto";
 import { parseInformation, parseLowestShipping, parseProduct, parseStock } from "./bigbuy/dto";
 import { toProduct, type SupplierRecord } from "./bigbuy/map";
 import { catalogVersion, loadDatabaseCatalog } from "./bigbuy/read";
+import { SOURCE } from "./bigbuy/store";
 import * as fixtures from "./fixtures";
 import type { Product } from "./types";
 
@@ -147,4 +149,31 @@ export async function getCatalogOrUnavailable(locale: Locale): Promise<Product[]
 
 export async function getProduct(locale: Locale, id: string): Promise<Product | null> {
   return (await getCatalog(locale)).find((p) => p.id === id) ?? null;
+}
+
+/**
+ * What the supplier charges for one piece, for the order snapshot
+ * (docs/DATAMODEL.md § OrderLine). Server-only, never part of Product
+ * (D-16: the purchase price does not reach the browser). Keyed
+ * "source:productId"; a product without a known cost is missing from the map.
+ */
+export async function getSupplierCosts(ids: { source: string; productId: string }[]): Promise<Map<string, Money>> {
+  const wanted = ids.filter((i) => i.source === SOURCE && /^\d{1,12}$/.test(i.productId));
+  const costs = new Map<string, Money>();
+  if (!wanted.length) return costs;
+  if (source === "database") {
+    const rows = await selectRows<{ product_id: number | string; cost_cents: number | string }>(
+      getPool(),
+      "SELECT product_id, cost_cents FROM catalog_products WHERE source = ? AND product_id IN (?)",
+      [SOURCE, wanted.map((i) => Number(i.productId))],
+    );
+    for (const r of rows) costs.set(`${SOURCE}:${r.product_id}`, money(Number(r.cost_cents)));
+    return costs;
+  }
+  const byId = new Map(fixtures.products.map(parseProduct).filter((p) => p !== null).map((p) => [String(p.id), p]));
+  for (const { productId } of wanted) {
+    const p = byId.get(productId);
+    if (p) costs.set(`${SOURCE}:${productId}`, fromDecimal(p.wholesalePrice));
+  }
+  return costs;
 }

@@ -61,13 +61,14 @@ Daarnaast een **hold-vlag** (`holdReason`, bijv. `AMOUNT_MISMATCH`,
 | Van | Naar | Actor | Voorwaarde | Neveneffecten |
 |---|---|---|---|---|
 | — | `PENDING_PAYMENT` | customer | server-side quote geldig, voorraad gecontroleerd | snapshot bevriezen; payment `CREATED` |
-| `PENDING_PAYMENT` | `PAID` | provider / reconciliation | payment `PAID`, bedrag en valuta = snapshot | outbox: bevestiging, factuur, melding beheerder; codegebruik vastleggen |
+| `PENDING_PAYMENT` | `PAID` | provider / reconciliation | payment `PAID`, bedrag en valuta = snapshot | annuleervenster van 30 minuten begint (D-04); outbox: orderbevestiging, melding beheerder; codegebruik vastleggen |
 | `PENDING_PAYMENT` | `PAYMENT_FAILED` | provider / reconciliation | laatste payment `FAILED`/`CANCELED`/`EXPIRED` | — |
 | `PAYMENT_FAILED` | `PENDING_PAYMENT` | customer | nieuwe betaalpoging, snapshot nog geldig (anders nieuwe quote) | nieuwe payment `CREATED` |
 | `PENDING_PAYMENT`, `PAYMENT_FAILED` | `CANCELLED` | system / customer | snapshot verlopen of klant breekt af, **en** provider bevestigt dat geen payment geslaagd is | reservering vrijgeven |
 | `PENDING_PAYMENT` | `PAID` (bedrag 0) | system | totaal is exact 0 en D-05 staat dit toe | als bij `PAID` |
-| `PAID` | `FULFILLMENT_PENDING` | admin / system | geen hold; bij WonZo direct, want inkopen gaat automatisch (D-04 — of er een korte wachttijd komt is nog open) | — |
-| `PAID`, `FULFILLMENT_PENDING` | `CANCELLED` | admin | refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; creditnota bij `SUCCEEDED`; mail |
+| `PAID` | `FULFILLMENT_PENDING` | admin / system | geen hold; het annuleervenster van 30 minuten is voorbij (D-04) | outbox: inkoop, factuur (D-21: de factuur pas na het venster) |
+| `PAID` | `CANCELLED` | customer | binnen het annuleervenster (D-04); refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; mail — geen creditnota, want er is nog geen factuur |
+| `PAID`, `FULFILLMENT_PENDING` | `CANCELLED` | admin | refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; creditnota bij `SUCCEEDED` als er een factuur was; mail |
 | `FULFILLMENT_PENDING` | `PURCHASED` | admin / system | alle inkooporders `PLACED` | mail optioneel |
 | `FULFILLMENT_PENDING`, `PURCHASED` | `PARTIALLY_FULFILLED` | admin / system | één inkooporder `REJECTED` of deels verzonden | alert; beheerder kiest: vervangen of deel terugbetalen |
 | `PURCHASED`, `PARTIALLY_FULFILLED` | `SHIPPED` | admin / provider | alle inkooporders verzonden | mail "onderweg" |
@@ -217,5 +218,7 @@ plaatsen voor een order die niet `FULFILLMENT_PENDING` is.
 **Herstel bij `REJECTED`:** de order gaat naar `PARTIALLY_FULFILLED`; de
 beheerder kiest een andere aanbieding (nieuwe `DRAFT`, prijsverschil zichtbaar)
 of betaalt het deel terug (refund-flow). De klant krijgt bericht. Bij WonZo is
-de waarschijnlijke oorzaak te weinig tegoed bij de leverancier; of er dan na
-opwaarderen opnieuw besteld wordt of terugbetaald, is nog open in D-04.
+de waarschijnlijke oorzaak te weinig tegoed bij de leverancier: dan krijgt de
+eigenaar meteen een melding en probeert de winkel het 24 uur opnieuw met
+dezelfde eigen referentie; daarna kiest de eigenaar tussen opnieuw proberen en
+terugbetalen (D-04).

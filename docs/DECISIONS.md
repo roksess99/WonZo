@@ -427,6 +427,14 @@ de andere beveiligingsheaders komen wel aan. Framen blijft verboden via
 `X-Frame-Options: DENY`. Een volledige CSP zal via de CDN-instellingen of een
 andere weg moeten — uitzoeken als die aan de beurt is.
 
+GEMETEN 2026-10-10 — `wonzo_test` (derde database, Remote MySQL, alleen het
+IP van de eigenaar), `pnpm test:db`, 16 integratietests groen: migraties van
+leeg tot nu (0001 en 0002); foreign keys werken; vijf gelijktijdige bestellingen
+met dezelfde sleutel geven één order; de teller geeft tien gelijktijdige
+transacties 1 tot en met 10 en een nummer terug bij een rollback (geen gat);
+van twee gelijktijdige statusovergangen gaat er precies één door. Een
+JSON-kolom komt via mysql2 al geparsed terug (object, geen tekst).
+
 **Nog open binnen deze beslissing:** backups en point-in-time-herstel
 (D-19).
 

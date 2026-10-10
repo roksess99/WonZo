@@ -84,7 +84,11 @@ aanwijzen.
 
 | Tabel | Persoonsgegeven | Grondslag | Bewaartermijn | Verdwijnt met de bestelling? |
 |---|---|---|---|---|
-| | | | | |
+| `orders` (fase 4) | e-mail, telefoon, voor- en achternaam, straat, huisnummer, postcode, plaats, land | b (levering: BigBuy vraagt naam, adres, mail en telefoon); c (de gegevens waaruit de factuur volgt) | 7 jaar voor wat de factuur draagt (`WETTELIJK`, te bevestigen); telefoon en e-mail zijn niet nodig voor de factuur — korter, D-24 | — (is de bestelling) |
+| `order_lines`, `order_events` | geen direct; via de bestelling | b, c | als de bestelling | ja |
+| `order_access_tokens` | geen: alleen de hash van een sleutel | b (de klant ziet zijn bestelling zonder account) | als de bestelling, of korter (D-24) | ja |
+| `audit_log` | welke klantvelden zijn gewijzigd, niet de waarden (`.claude/rules/beveiliging.md` § Auditlog) | f (verantwoording van wijzigingen) | D-24 | nee — eigen termijn |
+| `outbox` | geen: ordernummer en id | b | tot verzonden, daarna D-24 | ja |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
 
