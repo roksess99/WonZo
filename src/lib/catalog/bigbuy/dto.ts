@@ -48,7 +48,7 @@ export type BigBuyCompliance = {
     address: string | null;
     contact: string | null;
     webSite: string | null;
-    safetyWarnings: unknown[];
+    safetyWarnings: string[];
   }[];
 };
 
@@ -120,6 +120,19 @@ export function parseImages(x: unknown): BigBuyImages | null {
   return { id: x.id, images: images.map((i) => ({ id: i.id, isCover: i.isCover, url: i.url, position: i.position })) };
 }
 
+/**
+ * A safety warning as text. BigBuy sends an object with a name and a group
+ * (GEMETEN 2026-10-08: `{ name: "Volwassenen", safetyWarningGroup: { name:
+ * "Aanbevolen leeftijd" } }`); text is accepted too, so rows already parsed
+ * once parse to the same thing again.
+ */
+function warningText(w: unknown): string | null {
+  if (isStr(w)) return w.trim() || null;
+  if (!isObj(w) || !isStr(w.name) || !w.name.trim()) return null;
+  const group = isObj(w.safetyWarningGroup) && isStr(w.safetyWarningGroup.name) ? w.safetyWarningGroup.name.trim() : "";
+  return group ? `${group}: ${w.name.trim()}` : w.name.trim();
+}
+
 /** One answer of /productcompliance/{id}; the regulations list may be empty. */
 export function parseCompliance(id: number, sku: string, x: unknown): BigBuyCompliance | null {
   if (!isObj(x)) return null;
@@ -132,7 +145,9 @@ export function parseCompliance(id: number, sku: string, x: unknown): BigBuyComp
       address: isStr(r.address) ? r.address : null,
       contact: isStr(r.contact) ? r.contact : null,
       webSite: isStr(r.webSite) ? r.webSite : null,
-      safetyWarnings: Array.isArray(r.safetyWarnings) ? r.safetyWarnings : [],
+      safetyWarnings: Array.isArray(r.safetyWarnings)
+        ? [...new Set(r.safetyWarnings.map(warningText).filter((w): w is string => w !== null))]
+        : [],
     }));
   return { id, sku, generalProductSafetyRegulations: regulations };
 }

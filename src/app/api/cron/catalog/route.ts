@@ -27,6 +27,13 @@ export async function POST(request: Request): Promise<Response> {
   const given = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
   if (!given || !sameSecret(given, secret)) return json(401, { error: "unauthorized" });
 
-  const result = await runSyncSlice();
-  return json(200, result);
+  try {
+    return json(200, await runSyncSlice());
+  } catch (err) {
+    // The full error goes to the server log; the answer names only its kind
+    // (no host, no SQL). The progress is in the database: the next call retries.
+    console.error("[cron/catalog]", err);
+    const code = (err as { code?: unknown }).code;
+    return json(500, { status: "error", error: typeof code === "string" ? code : err instanceof Error ? err.name : "unknown" });
+  }
 }

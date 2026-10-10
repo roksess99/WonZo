@@ -4,7 +4,7 @@
 // owner tested on the mock is what the real catalog does. Pure, no I/O.
 
 import type { Locale } from "@/lib/i18n/config";
-import type { BigBuyCompliance, BigBuyInformation, BigBuyProduct } from "./dto";
+import { parseCompliance, type BigBuyCompliance, type BigBuyInformation, type BigBuyProduct } from "./dto";
 import type { SupplierRecord } from "./map";
 
 export type ProductRow = {
@@ -89,8 +89,10 @@ export function toSupplierRecord(rows: CatalogRows): SupplierRecord {
     if (t.locale === "nl" || t.locale === "en") info[t.locale] = { id, sku: p.sku, name: t.name, description: t.description, isoCode: t.locale };
   }
   const regulations = rows.safety && rows.safety.http_status === 200 ? parseJson(rows.safety.regulations) : null;
+  // Through the same parser as the supplier's answer: rows stored before a
+  // parser fix (warnings as objects) read the same as new ones.
   const compliance: BigBuyCompliance | null = Array.isArray(regulations)
-    ? { id, sku: p.sku, generalProductSafetyRegulations: regulations as BigBuyCompliance["generalProductSafetyRegulations"] }
+    ? parseCompliance(id, p.sku, { generalProductSafetyRegulations: regulations })
     : null;
   return {
     product,

@@ -80,6 +80,31 @@ describe("supplier data at the edge", () => {
     expect(parseCompliance(1, "S1", { generalProductSafetyRegulations: [] })?.generalProductSafetyRegulations).toEqual([]);
   });
 
+  it("turns BigBuy's warning objects into text, also for rows stored before the fix", () => {
+    // As the real API answers (GEMETEN 2026-10-08).
+    const regulations = [{
+      name: "Maker", address: "Straat 1",
+      safetyWarnings: [
+        { id: 112874, name: "Niet rechtstreeks op de vlam gebruiken", isoCode: "nl", safetyWarningGroup: { id: 17, name: "Belangrijke informatie", isoCode: "nl" } },
+        { id: 1, name: "Zonder groep" },
+        { id: 2 },
+      ],
+    }];
+    const expected = ["Belangrijke informatie: Niet rechtstreeks op de vlam gebruiken", "Zonder groep"];
+    expect(parseCompliance(1, "S1", { generalProductSafetyRegulations: regulations })?.generalProductSafetyRegulations[0]?.safetyWarnings).toEqual(expected);
+    const rows = rowsFor(1300118);
+    rows.safety = { product_id: 1300118, http_status: 200, regulations: JSON.stringify(regulations) };
+    expect(toProduct("nl", toSupplierRecord(rows)).product?.safety.warnings).toEqual(expected);
+  });
+
+  it("writes dimensions in the notation of the page", () => {
+    const rows = rowsFor(1300118);
+    rows.product = { ...rows.product, width: "1.00", height: "59.10", depth: "23.50" };
+    const dims = (locale: "nl" | "en") => toProduct(locale, toSupplierRecord(rows)).product?.specs.find((s) => s.label === "dimensions")?.value;
+    expect(dims("nl")).toBe("1 × 59,1 × 23,5 cm");
+    expect(dims("en")).toBe("1 × 59.1 × 23.5 cm");
+  });
+
   it("finds the assortment's groups by name, not by a hard-coded id", () => {
     expect(assortmentGroups(tree)).toEqual([19656, 19661, 19666, 19756]);
   });
@@ -116,10 +141,12 @@ describe("schedule (D-31): full at night, stock every 2 hours", () => {
     const done = (step: ProgressRow["step"]): ProgressRow => ({ step, group: 0, done: true });
     const all = () => true;
     expect(nextStep("full", [], all)).toEqual({ step: "taxonomies" });
-    expect(nextStep("full", [done("taxonomies"), done("manufacturers")], all)).toEqual({ step: "products" });
-    const afterProducts = [done("taxonomies"), done("manufacturers"), { step: "products" as const, group: 19656, done: true }];
+    // Manufacturers do not hold up the products (they took an hour on the first run).
+    const manufacturersOpen = { step: "manufacturers" as const, group: 0, done: false };
+    expect(nextStep("full", [done("taxonomies"), manufacturersOpen], (e) => e !== "manufacturers")).toEqual({ step: "products" });
+    const afterProducts = [done("taxonomies"), manufacturersOpen, { step: "products" as const, group: 19656, done: true }];
     expect(nextStep("full", afterProducts, (e) => e !== "productsimages")).toEqual({ step: "stock" });
-    expect(nextStep("full", afterProducts, () => false)).toEqual({ step: null, waiting: ["images", "stock", "info-nl", "info-en", "shipping"] });
+    expect(nextStep("full", afterProducts, () => false)).toEqual({ step: null, waiting: ["images", "stock", "info-nl", "info-en", "shipping", "manufacturers"] });
     expect(nextStep("stock", [done("stock"), done("evaluate")], all)).toEqual({ step: null, waiting: [] });
   });
 

@@ -339,6 +339,12 @@ export async function runSyncSlice(budgetMs = 40_000, now: () => Date = () => ne
   const conn = await getPool().getConnection();
   let locked = false;
   try {
+    // This connection holds the lock for the whole slice and sits idle while
+    // a supplier page downloads (a page of 10 000 products can take longer
+    // than 20 s). The server closes idle connections after 20 s (wait_timeout,
+    // GEMETEN 2026-10-06), which broke the first real run with "connection is
+    // in closed state" (GEMETEN 2026-10-08). Give this one session longer.
+    await conn.query("SET SESSION wait_timeout = 600");
     const [lock] = await selectRows<{ got: number }>(conn, "SELECT GET_LOCK('wonzo_catalog_sync', 0) AS got");
     if (Number(lock?.got) !== 1) return { status: "busy" };
     locked = true;

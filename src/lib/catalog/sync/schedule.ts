@@ -59,8 +59,11 @@ export type Step = "taxonomies" | "manufacturers" | "products" | "images" | "sto
  * within the limit of its own endpoint — so a full run takes about as long as
  * its slowest list (12 pages at 9 an hour), not the sum of all lists.
  */
+// Manufacturers run beside the lists, not before the products: only the brand
+// name needs them, and their list is long at 4 calls an hour (GEMETEN
+// 2026-10-06: more than 4 pages of 1000 — it held up the first run an hour).
 export const PHASES: Record<RunKind, readonly (readonly Step[])[]> = {
-  full: [["taxonomies", "manufacturers"], ["products"], ["images", "stock", "info-nl", "info-en", "shipping"], ["safety"], ["evaluate"]],
+  full: [["taxonomies"], ["products"], ["images", "stock", "info-nl", "info-en", "shipping", "manufacturers"], ["safety"], ["evaluate"]],
   stock: [["stock"], ["evaluate"]],
 };
 

@@ -854,9 +854,11 @@ was eenvoudiger, maar dan praat elke bezoeker met een derde partij.
 het verversen in stukjes (`src/lib/catalog/bigbuy/sync.ts`) via
 `POST /api/cron/catalog` met `JOB_TOKEN`, lokaal via
 `scripts/catalog-sync.mjs`; de limieten per uur worden in de database geteld
-(geldt voor de hele winkel). Een ronde gaat in fasen: taxonomie en merken →
-producten → foto's, voorraad, namen NL/EN en verzendkosten naast elkaar →
-GPSR alleen voor producten die verder verkoopbaar zijn → beoordelen. De
+(geldt voor de hele winkel). Een ronde gaat in fasen: taxonomie →
+producten → foto's, voorraad, namen NL/EN, verzendkosten en merken naast
+elkaar → GPSR alleen voor producten die verder verkoopbaar zijn → beoordelen
+(de merken stonden eerst vóór de producten en hielden de eerste ronde een uur
+op: meer dan 4 pagina's van 1000 bij 4 per uur). De
 winkel kiest de bron met `CATALOG_SOURCE` (`mock` of `database`); live blijft
 `mock` tot D-03. Database en nepdata gaan door dezelfde vertaling en
 selectieregel (test: dezelfde producten).
@@ -869,11 +871,31 @@ eigen kopie van de adapter, met neutrale kolomnamen, alleen gelezen door
 `src/lib/catalog/` en opnieuw op te halen; de rest van de winkel ziet alleen
 `Product`.
 
+GEMETEN 2026-10-08 — eerste volledige ronde tegen de echte BigBuy (lokaal,
+door de eigenaar, naar de dev-database; ronde 1 en 2 strandden op fouten die
+in deze fase zijn verholpen). Duur **5 u 42 min** (07:24–13:06 UTC). In de
+vier groepen 51.456 artikelen, waarvan **471 met voorraad** en **341
+verkoopbaar** (Wonen 279, Buitenleven 31, Tuin 19, Dieren 12). Van de
+artikelen met voorraad vallen er 24 alleen af op ontbrekende GPSR-gegevens,
+de andere ongeveer 100 op douanecode, D-36, een elektrisch kenmerk of
+verzendkosten (niet per regel gemeten); 8 artikelen waren niet meer bij de
+leverancier. De schatting van ongeveer 740 bij D-02 (2026-10-05) was te
+hoog; waar het verschil zit is niet gemeten. Een ronde past dus niet in het
+nachtvenster van 01–06 uur, en de voorraad wordt tijdens een ronde niet apart
+ververst.
+
+GEMETEN 2026-10-08 — de lokale winkel met `CATALOG_SOURCE=database` (in de
+browser, door Claude): categorieën, productpagina's, GPSR-blok en
+verzendkosten werken (groot artikel per stuk, bijv. € 17,97 en € 129,06);
+foto's komen via de beeldbewerker van het eigen domein (lokaal, Windows).
+Gezien in de data van BigBuy: sommige Nederlandse namen zijn Zweeds
+("Trädgårdsstol", "Solstol"); het adres van InnovaGoods mist postcode, plaats
+en land. Waarschuwingen komen als object (naam en groep), niet als tekst.
+
 **Nog open binnen deze beslissing:** hoe oud een getoonde prijs of voorraad
 mag zijn voordat de winkel waarschuwt; of de geplande taak op Hostinger elke
 minuut mag draaien; of `sharp` op de server werkt (vraagt glibc 2.28, de
-server heeft minder dan 2.29 — meten bij de eerste echte foto's); het eerste
-volledige verversen tegen de echte BigBuy (door de eigenaar, lokaal).
+server heeft minder dan 2.29 — meten bij de eerste echte foto's).
 
 ---
 

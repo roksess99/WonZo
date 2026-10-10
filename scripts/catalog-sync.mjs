@@ -23,6 +23,10 @@ if (secret.length < 32) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toLocaleTimeString('nl-NL');
+// A server error is retried, like the scheduled task would: the progress is
+// in the database. Five in a row means something is really wrong: stop.
+const MAX_ERRORS_IN_A_ROW = 5;
+let errorsInARow = 0;
 
 for (;;) {
   let res;
@@ -33,10 +37,18 @@ for (;;) {
     process.exit(1);
   }
   const body = await res.json().catch(() => ({}));
+  if (res.status >= 500) {
+    errorsInARow++;
+    console.log(`${stamp()} serverfout (HTTP ${res.status} ${JSON.stringify(body)}), poging ${errorsInARow} van ${MAX_ERRORS_IN_A_ROW}; zie het venster van pnpm dev voor de melding`);
+    if (errorsInARow >= MAX_ERRORS_IN_A_ROW) process.exit(1);
+    await sleep(60_000);
+    continue;
+  }
   if (res.status !== 200) {
     console.log(`${stamp()} HTTP ${res.status} ${JSON.stringify(body)}`);
     process.exit(1);
   }
+  errorsInARow = 0;
   if (body.status === 'not-configured') {
     console.log(`${stamp()} niet ingesteld: ${body.missing.join(', ')} ontbreekt in .env`);
     process.exit(1);
