@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/cart/AddToCart";
-import { ProductImage } from "@/components/catalog/ProductImage";
+import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
 import { categoryByKey } from "@/lib/catalog/assortment";
@@ -56,7 +56,7 @@ function productJsonLd(p: Product, url: string) {
     sku: p.sku,
     ...(p.ean ? { gtin13: p.ean } : {}),
     ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
-    ...(p.imageUrls[0] ? { image: new URL(p.imageUrls[0], siteUrl).toString() } : {}),
+    ...(p.imageUrls.length ? { image: p.imageUrls.map((u) => new URL(u, siteUrl).toString()) } : {}),
     description: p.description.join(" "),
     offers: {
       "@type": "Offer",
@@ -122,7 +122,7 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
       />
 
       <div className="grid gap-8 md:grid-cols-2">
-        <ProductImage src={p.imageUrls[0]} alt={p.name} noImageText={m.product.noImage} priority sizes="(min-width: 768px) 50vw, 100vw" />
+        <ProductGallery urls={p.imageUrls} name={p.name} labels={{ ...m.product.gallery, noImage: m.product.noImage }} />
 
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">

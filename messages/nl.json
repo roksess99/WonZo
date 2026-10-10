@@ -110,6 +110,15 @@
     "warnings": "Waarschuwingen",
     "noWarnings": "De fabrikant geeft geen aparte waarschuwingen.",
     "noImage": "Geen foto beschikbaar",
+    "gallery": {
+      "list": "Foto's van {name}",
+      "show": "Foto {n} van {total} tonen",
+      "enlarge": "Foto groot bekijken",
+      "position": "Foto {n} van {total}",
+      "previous": "Vorige foto",
+      "next": "Volgende foto",
+      "close": "Sluiten"
+    },
     "unavailableTitle": "Dit product is even niet te laden",
     "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw."
   },
