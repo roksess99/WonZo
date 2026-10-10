@@ -90,7 +90,7 @@ gaat; de pricing-laag krijgt het via een server-only type.
 |---|---|
 | `id` | intern |
 | `reference` | het nummer dat de klant ziet; mag raadbaar zijn |
-| `accessTokenHash` | hash van het token in de statuslink; het token zelf wordt niet opgeslagen |
+| toegangssleutels | hash van het token in de statuslink, in een eigen tabel `order_access_tokens`: elk bericht krijgt een eigen sleutel, zodat het token zelf nergens bewaard hoeft te worden |
 | `checkoutAttemptId` | idempotentiesleutel, uniek (`docs/IDEMPOTENCY.md`) |
 | `status`, `holdReason?` | `docs/STATE_MACHINES.md` |
 | `currency` | ISO 4217 |
@@ -103,6 +103,15 @@ gaat; de pricing-laag krijgt het via een server-only type.
 
 Bijbehorend: `order_events` (append-only statuslog), `payments`,
 `refunds`, `supplier_orders`, `returns`, `outbox`.
+
+**Gebouwd in fase 4** (`db/migrations/0002_orders.sql`): `orders`,
+`order_lines`, `order_events`, `order_access_tokens`, `outbox`, `audit_log` en
+`counters` (order- en straks factuurnummers, per reeks en jaar). Het ordernummer
+is `WZ-2026-00001`; een order mag 60 minuten na het aanmaken betaald worden
+(`snapshot_expires_at`); het annuleervenster eindigt 30 minuten na de betaling
+(`cancel_window_ends_at`, D-04). Nog niet: btw-bedragen per regel (D-15; het
+tarief wordt wel bevroren), korting (D-08), `payments` en `refunds` (fase 5,
+D-05), `supplier_orders`, `returns`.
 
 ### Payment, Refund, ProviderEvent
 

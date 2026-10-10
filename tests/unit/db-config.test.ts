@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { connectionOptions, parseDbConfig, SESSION_SETUP_SQL } from "@/lib/db/config.mjs";
+import { testDatabaseEnv } from "../integration/db-env";
 
 const full = {
   DATABASE_HOST: "db.example.test",
@@ -39,5 +40,21 @@ describe("session settings", () => {
   it("returns big numbers safely and dates as UTC strings", () => {
     const o = connectionOptions(parseDbConfig(full)!);
     expect(o).toMatchObject({ charset: "utf8mb4", supportBigNumbers: true, bigNumberStrings: false, dateStrings: true });
+  });
+});
+
+describe("the integration tests' database guard", () => {
+  const test = { TEST_DATABASE_HOST: "h", TEST_DATABASE_NAME: "u1_wonzo_test", TEST_DATABASE_USER: "u", TEST_DATABASE_PASSWORD: "p" };
+
+  it("maps TEST_DATABASE_* onto DATABASE_*, on the mock catalog", () => {
+    expect(testDatabaseEnv({ ...test, DATABASE_NAME: "u1_wonzo_dev", CATALOG_SOURCE: "database" })).toMatchObject({
+      DATABASE_NAME: "u1_wonzo_test", DATABASE_HOST: "h", CATALOG_SOURCE: "mock",
+    });
+  });
+
+  it("refuses a database that is not a test database, or is the dev one", () => {
+    expect(() => testDatabaseEnv({ ...test, TEST_DATABASE_NAME: "u1_wonzo" })).toThrow(/must contain "test"/);
+    expect(() => testDatabaseEnv({ ...test, DATABASE_NAME: "u1_wonzo_test" })).toThrow(/same database/);
+    expect(() => testDatabaseEnv({ TEST_DATABASE_NAME: "x_test" })).toThrow(/TEST_DATABASE_HOST, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD not set/);
   });
 });

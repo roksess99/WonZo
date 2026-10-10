@@ -20,6 +20,21 @@ export async function selectRows<T>(db: Queryable, sql: string, params: unknown[
   return rows as T[];
 }
 
+/** A Date as a DATETIME(3) value in UTC (the session time zone, SESSION_SETUP_SQL). */
+export function toDbTime(d: Date): string {
+  return d.toISOString().replace("T", " ").replace("Z", "");
+}
+
+/** A DATETIME(3) value (a string, `dateStrings`) back to a Date; it is UTC. */
+export function fromDbTime(s: string): Date {
+  return new Date(`${s.replace(" ", "T")}Z`);
+}
+
+/** MariaDB's error for a duplicate unique key. */
+export function isDuplicateKey(err: unknown): boolean {
+  return (err as { code?: unknown }).code === "ER_DUP_ENTRY";
+}
+
 const config = parseDbConfig(process.env);
 
 /** Whether this shop has a database; without one it runs on the mock (CLAUDE.md § Bouwvolgorde). */
