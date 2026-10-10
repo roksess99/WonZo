@@ -8,8 +8,11 @@ gokt het antwoord.
 traag en vaak maar op de eerste vraag; nummer ze dus en zet er bij elke vraag
 bij waarom je het wilt weten.
 
-**Stand:** mail opgesteld op 2026-10-06 (hieronder), nog niet verstuurd. Zet de
-datum van versturen erbij, en per nummer het antwoord en wat je ermee deed.
+**Stand:** mail met vraag 1–21 opgesteld op 2026-10-06 (hieronder) en
+verstuurd door de eigenaar (gemeld op 2026-10-10; datum van versturen niet
+opgegeven). Vraag 22–23 en een aanvulling op 13 en 16 staan in de vervolgmail
+daaronder, nog niet verstuurd. Zet per nummer het antwoord erbij en wat je
+ermee deed.
 
 | # | Onderwerp | Waarom | Raakt | Antwoord |
 |---|---|---|---|---|
@@ -34,6 +37,8 @@ datum van versturen erbij, en per nummer het antwoord en wat je ermee deed.
 | 19 | Rate limit per sleutel of per account; gevolg van overschrijden | Verversen binnen de limieten | D-31 | |
 | 20 | Statuspagina of storingsmelding | Storing bij hen onderscheiden van een fout bij ons | SUPPLIER_RESILIENCE | |
 | 21 | Moet API-toegang in productie geactiveerd worden | Zekerheid voor livegang | D-01 | |
+| 22 | Adres InnovaGoods voor GPSR (BigBuy geeft een onvolledig, ander adres dan hun aviso legal) | Wettelijke fabrikantgegevens bij het grootste merk | D-31, D-34 | |
+| 23 | Mutaties van het tegoed (moneybox) inzien | Terugbetalingen van retouren en weigeringen controleren | D-04, D-09 | |
 
 ## De mail (Engels)
 
@@ -124,6 +129,43 @@ Kind regards,
 WonZo – R.M.A. Marketing
 Thaliastraat 267, 6846 XX Arnhem, the Netherlands
 info@wonzo.nl
+```
+
+## Vervolgmail (Engels, nog niet verstuurd)
+
+Als antwoord in dezelfde ticket of mail, zodat de nummers blijven kloppen.
+
+```text
+Subject: Re: API questions before going live – WonZo (the Netherlands) – customer no. [YOUR CUSTOMER NUMBER]
+
+Hello BigBuy team,
+
+Two additions to our earlier questions, and two new ones.
+
+13 (addition). The API has no endpoint to cancel an order. Is cancelling only
+    possible through a ticket in the Contact area while the order is not yet
+    in preparation? Can we delay the validation of orders placed through the
+    API, and does that also apply to Standard Shipment?
+16 (addition). Your guarantee page says you do not take back products in
+    perfect condition, and that defective products are collected from us
+    through the RETURNS tab (free every two months from 90 EUR) and refunded
+    to the wallet. Is that still current? When a consumer refuses a parcel,
+    what exactly is deducted from the refund?
+22. For InnovaGoods (Nine New Investments S.L.) productcompliance gives the
+    address "Av. Paret del patriarca, 15" without postal code, city or
+    country, while their own legal notice gives "C/ Enguera 7, 46018
+    Valencia". Which address is correct for GPSR, and can the record be
+    completed?
+23. /rest/user/purse gives the wallet balance. Is there a way (API or an
+    export in the panel) to see the wallet movements, so we can match
+    refunds of returns and refused parcels?
+
+Thank you.
+
+Kind regards,
+
+[YOUR NAME]
+WonZo – R.M.A. Marketing
 ```
 
 ## Antwoorden die het ontwerp raken

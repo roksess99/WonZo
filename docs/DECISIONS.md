@@ -303,6 +303,40 @@ Wat er nog beantwoord moet worden binnen die keuze:
 - **Prijsverschil**: wijkt het bedrag van BigBuy (`/order/check`) af van de
   bevroren inkoopprijs, wordt er dan toch besteld, en tot welk verschil?
 
+**Antwoorden van de eigenaar (2026-10-10):**
+
+- **Wanneer:** direct nadat de betaaldienst `PAID` bevestigt, nooit eerder.
+  Klopt het bedrag niet, dan blijft de bestelling staan voor de eigenaar.
+- **Te weinig tegoed of BigBuy weigert:** meteen een melding aan de eigenaar,
+  24 uur opnieuw proberen met dezelfde `internalReference`; lukt het dan nog
+  niet, dan kiest de eigenaar: opnieuw proberen of terugbetalen.
+- **Betalen bij BigBuy: alleen `moneybox`.** Het saldo staat altijd in het
+  beheerpaneel. Kan: `GET /rest/user/purse` geeft het saldo als string
+  (`GEMETEN` 2026-10-05, productie `"0.00"`), 1 per seconde
+  (`GEDOCUMENTEERD`). Een opwaardeerfunctie of transactieoverzicht heeft de
+  API niet.
+- **Annuleren:** opnieuw nagekeken (2026-10-10). De API heeft geen
+  annuleerfunctie: het woord komt in `doc.json` niet voor (`GEDOCUMENTEERD`).
+  Volgens de BigBuy Academy kan een bestelling alleen via een ticket in het
+  BigBuy-paneel worden geannuleerd, zolang hij nog niet in voorbereiding is;
+  "Standard Shipment" niet meer na validatie (`AANNAME`: zoekresultaat, de
+  pagina zelf was niet te openen). De klant hoort dus: annuleren kan niet
+  meer, retourneren binnen 14 dagen wel.
+- **Prijsverschil:** een klein verschil wordt geaccepteerd, uitgedrukt in een
+  percentage; het getal wordt nog bevestigd.
+
+**Aangevuld door de eigenaar (2026-10-10):**
+
+- **Eigen annuleervenster van 30 minuten.** Na de betaling kan de klant
+  30 minuten zijn bestelling annuleren of zijn gegevens aanpassen; pas daarna
+  gaat de bestelling naar BigBuy. Dit vervangt "direct" hierboven: na `PAID`
+  én na het venster. Annuleren binnen het venster betaalt automatisch terug
+  via de betaaldienst. Aan te passen zijn naam, adres, telefoon en e-mail;
+  artikelen en aantallen niet (dat verandert het bedrag): daarvoor annuleren
+  en opnieuw bestellen.
+- **Prijsverschil: tot 10 %** hoger dan de bevroren inkoopprijs wordt er
+  doorbesteld; daarboven blijft de bestelling staan voor de eigenaar.
+
 ---
 
 ## D-05 · Betaaldienst
@@ -319,6 +353,10 @@ alleen "opvragen"; ondersteunt hij idempotentiesleutels; mapping van zijn
 statussen naar `docs/STATE_MACHINES.md` § Payment; geldigheid van een
 betaalpoging; zijn rol onder de AVG; toegankelijkheid van zijn betaalpagina;
 zijn bestellingen van € 0 toegestaan. Architectuur: `docs/PAYMENTS.md`.
+
+**Voorkeur van de eigenaar (2026-10-10): Mollie**, nog niet beslist: eerst
+moet de zakelijke rekening er zijn. Vóór `DECIDED` de vragen hierboven voor
+Mollie uitzoeken en waar mogelijk meten (testmodus).
 
 ---
 
@@ -406,6 +444,10 @@ in de database, rechten per onderdeel, audit).
 (inactief en absoluut); wie mag terugbetalen en tot welk bedrag zonder tweede
 persoon.
 
+**Eigenaar (2026-10-10):** inloggen met tweestapsverificatie (2FA) — in lijn
+met "MFA verplicht" in `.claude/rules/beveiliging.md`. De andere vragen
+hierboven blijven open.
+
 ---
 
 ## D-08 · Kortingen en acties
@@ -431,6 +473,13 @@ Wettelijke kaders en stroom: `docs/RETOUREN.md`.
 **Te beantwoorden:** hoe een klant aanmeldt; wie de retourzending betaalt bij
 een fout van de winkel; terugbetalen na ontvangst of na verzendbewijs;
 waardevermindering ja/nee en hoe vastgesteld.
+
+**Gegeven (2026-10-10):** BigBuy neemt een artikel in perfecte staat niet
+terug; een fabrieksfout gaat via de winkel en wordt na weken op het tegoed
+terugbetaald (`docs/api/LEVERANCIER.md` § 10, `GEDOCUMENTEERD`). Herroepingen
+komen dus bij de winkel binnen en kosten het artikel — dat hoort ook in de
+kostprijs (D-16). **Retouradres** (eigenaar, 2026-10-10): voorlopig
+Thaliastraat 267, 6846 XX Arnhem, het woon- en bedrijfsadres.
 
 ---
 
@@ -634,6 +683,21 @@ Laten bevestigen door de boekhouder (`docs/FACTUUR.md`).
 **Te beantwoorden:** altijd een factuur, ook voor consumenten; nummerformaat;
 aparte reeks voor creditnota's; PDF opslaan of regenereren; kan de gekozen
 PDF-bibliotheek getagde, deterministische PDF's maken (meten).
+
+**Antwoorden van de eigenaar (2026-10-10), te bevestigen door de boekhouder:**
+
+- **Altijd een factuur**, ook voor consumenten.
+- **Nummer per jaar: `2026-00001`**; creditnota's in een eigen reeks
+  **`C2026-00001`**, met verwijzing naar de oorspronkelijke factuur.
+- **De PDF wordt altijd opgeslagen** bij het maken — een eis van de eigenaar.
+  Een factuur verandert nooit, ook niet als het ontwerp later wijzigt.
+- KvK-nummer 42126738 (R.M.A. Marketing) staat al in `src/lib/company.ts`;
+  het btw-nummer volgt.
+
+- **Wanneer:** direct na de betaling een orderbevestiging met het
+  ordernummer; de factuur pas als het annuleervenster van 30 minuten (D-04)
+  dicht is en de bestelling naar BigBuy gaat. Zo vraagt annuleren binnen het
+  venster nooit een creditnota.
 
 ---
 
@@ -1090,6 +1154,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-10 | D-04, D-05, D-07, D-21 | Antwoorden eigenaar op D-04 (na `PAID` en een eigen annuleervenster van 30 minuten, 24 uur opnieuw proberen, alleen moneybox met saldo in beheer, annuleren kan niet via de API, prijsverschil tot 10 %) en D-21 (altijd factuur, `2026-00001` en `C2026-00001`, PDF altijd opslaan, orderbevestiging bij betaling en factuur na het venster; bevestiging door de boekhouder volgt); retouren bij BigBuy uitgezocht en retouradres (D-09); voorkeur Mollie na de zakelijke rekening (D-05, open); beheer met 2FA (D-07, verder open) |
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
 | 2026-10-06 | D-03, D-06, D-07, D-19, D-31 | Beslist door de eigenaar: MySQL bij Hostinger (D-06); catalogus in de database, nachtelijk verversen en voorraad elke 2 uur, foto's via het eigen domein (D-31); sleutel pas live na de prijsregel (D-03). D-07 en D-19 van BLOCKED naar OPEN |
