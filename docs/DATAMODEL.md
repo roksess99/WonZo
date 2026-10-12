@@ -113,6 +113,13 @@ is `WZ-2026-00001`; een order mag 60 minuten na het aanmaken betaald worden
 tarief wordt wel bevroren), korting (D-08), `payments` en `refunds` (fase 5,
 D-05), `supplier_orders`, `returns`.
 
+**Gebouwd in fase 5** (`db/migrations/0003_payments.sql`): `payments`,
+`payment_events`, `refunds`, `refund_events`, `provider_events` en
+`rate_limits`. Een betaling bestaat lokaal vóór Mollie hem kent; haar id is de
+idempotentiesleutel. Mollie heeft geen event-id: `provider_events` is uniek op
+(betaling, opgevraagde stand). Het terugbetaalde bedrag wordt afgeleid uit
+`refunds`, nooit los bijgehouden.
+
 ### Payment, Refund, ProviderEvent
 
 | Entiteit | Kernvelden |

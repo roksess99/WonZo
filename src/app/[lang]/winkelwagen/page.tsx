@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { CartView } from "@/components/cart/CartView";
 import { Breadcrumb, Container } from "@/components/ui";
+import { checkoutAvailable } from "@/lib/checkout";
 import { isLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
@@ -32,6 +33,7 @@ export default async function CartPage({ params }: PageProps<"/[lang]/winkelwage
       </div>
       <CartView
         locale={lang}
+        checkoutOn={checkoutAvailable()}
         labels={{
           ...m.cart,
           delivery: m.product.delivery,

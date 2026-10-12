@@ -10,7 +10,7 @@ export function StateMessage({
   children,
 }: {
   title: string;
-  text: string;
+  text?: string;
   tone?: "info" | "warning";
   action?: { href: string; label: string };
   children?: React.ReactNode;
@@ -27,7 +27,7 @@ export function StateMessage({
         <Icon className="size-6 shrink-0" />
         {title}
       </h2>
-      <p className="max-w-prose">{text}</p>
+      {text ? <p className="max-w-prose">{text}</p> : null}
       {action ? (
         <p>
           <Link href={action.href} className="font-medium underline decoration-2 underline-offset-4">

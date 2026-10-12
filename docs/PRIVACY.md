@@ -37,7 +37,7 @@ geen "nvt".
 |---|---|---|---|---|---|---|---|
 | Browser → applicatie | formuliervelden, IP, user agent | bestelling, beveiliging | b (overeenkomst), f (beveiliging) | IP in logs: `<<LOG_RETENTIE>>` | — | — | TLS |
 | Applicatie → database | naam, adres, mail, telefoon, bestelling | levering, administratie | b; c (fiscale bewaarplicht) | `docs/DATAMODEL.md` § Bewaren | eigen (hosting = verwerker) | `<<HOSTING_LOCATIE>>` | TLS naar database; at rest: `<<DB_ENCRYPTIE>>` |
-| Applicatie → betaaldienst | bedrag, ordernummer, mail (indien vereist) | betaling | b | volgens de betaaldienst | doorgaans zelfstandig verwerkingsverantwoordelijke voor de betaling — vastleggen bij D-05 | `<<BETAALDIENST_LOCATIE>>` | TLS |
+| Applicatie → betaaldienst (Mollie, D-05) | bedrag, ordernummer, order-id en betaal-id (metadata), taal; de klant geeft zijn betaalgegevens rechtstreeks aan Mollie (hosted checkout) | betaling | b | volgens de betaaldienst | doorgaans zelfstandig verwerkingsverantwoordelijke voor de betaling — nog te bevestigen bij Mollie (D-05) | `<<BETAALDIENST_LOCATIE>>` | TLS |
 | Applicatie → leverancier (BigBuy) | naam, afleveradres, **mailadres en telefoonnummer** (verplichte velden bij bestellen — `docs/api/LEVERANCIER.md` § 10), artikelen | levering (dropship) | b | volgens de leverancier | verwerker of zelfstandig — vastleggen bij D-01 | `<<LEVERANCIER_LOCATIE>>` | TLS |
 | Applicatie → mailprovider | mailadres, naam, inhoud bericht | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS |
 | Applicatie → error tracking | technische context, **geen** persoonsgegevens (`docs/OBSERVABILITY.md`) | stabiliteit | f | `<<ERROR_RETENTIE>>` | verwerker | `<<ERROR_LOCATIE>>` | TLS |
@@ -89,6 +89,9 @@ aanwijzen.
 | `order_access_tokens` | geen: alleen de hash van een sleutel | b (de klant ziet zijn bestelling zonder account) | als de bestelling, of korter (D-24) | ja |
 | `audit_log` | welke klantvelden zijn gewijzigd, niet de waarden (`.claude/rules/beveiliging.md` § Auditlog) | f (verantwoording van wijzigingen) | D-24 | nee — eigen termijn |
 | `outbox` | geen: ordernummer en id | b | tot verzonden, daarna D-24 | ja |
+| `payments`, `refunds` en hun events (fase 5) | geen direct: bedrag, status, betaalmethode, id bij Mollie | b, c (de betaling hoort bij de administratie) | als de bestelling | ja |
+| `provider_events` | geen: id bij Mollie en een status | b | D-24 | nee — eigen termijn |
+| `rate_limits` | een **hash** van het IP-adres, niet het adres | f (misbruik van afrekenen tegengaan) | één dag; de dagelijkse taak ruimt op | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
 

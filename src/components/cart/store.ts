@@ -68,4 +68,8 @@ export const cartActions = {
   remove(ref: Pick<CartLine, "source" | "productId">) {
     save(removeLine(load(), ref));
   },
+  /** After a paid order: the cart has done its work. */
+  clear() {
+    if (load().length) save([]);
+  },
 };

@@ -11,6 +11,8 @@ export const staticSegments = {
   contact: { nl: "contact", en: "contact" },
   product: { nl: "product", en: "product" },
   winkelwagen: { nl: "winkelwagen", en: "cart" },
+  afrekenen: { nl: "afrekenen", en: "checkout" },
+  bestelling: { nl: "bestelling", en: "order" },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type StaticSegment = keyof typeof staticSegments;
