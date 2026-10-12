@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { MAX_QUANTITY, type CartLine } from "@/lib/cart/cart";
-import type { CartQuote, QuoteLine } from "@/lib/cart/quote";
+import type { QuoteLine } from "@/lib/cart/quote";
 import type { Locale } from "@/lib/i18n/config";
 import { localizePath } from "@/lib/i18n/paths";
 import { formatMoney } from "@/lib/money";
@@ -13,6 +12,7 @@ import { AlertIcon, CloseIcon, InfoIcon, TruckIcon } from "../icons";
 import { StateMessage } from "../ui";
 import { QuantityStepper, type StepperLabels } from "./QuantityStepper";
 import { cartActions, useCart } from "./store";
+import { useQuote } from "./useQuote";
 
 export type CartLabels = StepperLabels & {
   loading: string;
@@ -55,43 +55,18 @@ export type CartLabels = StepperLabels & {
   countries: Record<string, string>;
 };
 
-type Result = { kind: "ok"; quote: CartQuote } | { kind: "error" } | { kind: "unavailable" };
-
 const sameRef = (a: Pick<CartLine, "source" | "productId">, b: Pick<CartLine, "source" | "productId">) =>
   a.source === b.source && a.productId === b.productId;
 
 /**
  * The cart: confirm that it is right (docs/SCHERMEN.md § Winkelwagen). The
  * browser knows only references; every price on this screen comes from the
- * quote endpoint, recalculated on each change.
+ * quote endpoint, recalculated on each change. `checkoutOn`: whether the shop
+ * takes orders yet (CHECKOUT_ENABLED).
  */
-export function CartView({ locale, labels }: { locale: Locale; labels: CartLabels }) {
+export function CartView({ locale, labels, checkoutOn }: { locale: Locale; labels: CartLabels; checkoutOn: boolean }) {
   const lines = useCart();
-  const [result, setResult] = useState<{ key: string; value: Result } | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  const key = lines ? JSON.stringify(lines) : "";
-
-  useEffect(() => {
-    if (!lines || lines.length === 0) return;
-    const controller = new AbortController();
-    const requestKey = JSON.stringify(lines);
-    fetch("/api/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale, lines }),
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        if (res.status === 503) return setResult({ key: requestKey, value: { kind: "unavailable" } });
-        if (!res.ok) return setResult({ key: requestKey, value: { kind: "error" } });
-        setResult({ key: requestKey, value: { kind: "ok", quote: (await res.json()) as CartQuote } });
-      })
-      .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        setResult({ key: requestKey, value: { kind: "error" } });
-      });
-    return () => controller.abort();
-  }, [lines, locale, attempt]);
+  const { quote, current, busy, retry } = useQuote(lines, locale);
 
   const shopHref = localizePath(locale, "/");
 
@@ -100,11 +75,6 @@ export function CartView({ locale, labels }: { locale: Locale; labels: CartLabel
   if (lines.length === 0) {
     return <StateMessage title={labels.emptyTitle} text={labels.emptyText} action={{ href: shopHref, label: labels.emptyAction }} />;
   }
-
-  const current = result?.key === key ? result.value : null;
-  // Keep showing the last good quote while a change is recalculated, so the page does not jump.
-  const quote = current?.kind === "ok" ? current.quote : result?.value.kind === "ok" ? result.value.quote : null;
-  const busy = current === null;
 
   if (!quote) {
     if (current?.kind === "unavailable" || current?.kind === "error") {
@@ -116,14 +86,7 @@ export function CartView({ locale, labels }: { locale: Locale; labels: CartLabel
           text={unavailable ? labels.unavailableText : labels.errorText}
         >
           <p>
-            <button
-              type="button"
-              onClick={() => {
-                setResult(null);
-                setAttempt((n) => n + 1);
-              }}
-              className="min-h-11 rounded-md bg-petrol px-4 font-medium text-on-petrol"
-            >
+            <button type="button" onClick={retry} className="min-h-11 rounded-md bg-petrol px-4 font-medium text-on-petrol">
               {labels.retry}
             </button>
           </p>
@@ -189,18 +152,29 @@ export function CartView({ locale, labels }: { locale: Locale; labels: CartLabel
             </span>
           </p>
         ) : null}
-        {/* A button that cannot act says why (.claude/rules/frontend.md): checkout arrives with payments. */}
-        <button
-          type="button"
-          aria-disabled="true"
-          aria-describedby="checkout-status"
-          className="min-h-12 w-full cursor-not-allowed rounded-md bg-line px-6 text-body font-bold text-foreground"
-        >
-          {labels.checkout}
-        </button>
-        <p id="checkout-status" role="status" className="text-body-sm text-muted">
-          {hasProblems ? labels.resolveFirst : labels.checkoutNotYet}
-        </p>
+        {checkoutOn && !hasProblems && !busy ? (
+          <Link
+            href={localizePath(locale, "/afrekenen")}
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-accent px-6 text-body font-bold text-accent-contrast"
+          >
+            {labels.checkout}
+          </Link>
+        ) : (
+          <>
+            {/* A button that cannot act says why (.claude/rules/frontend.md). */}
+            <button
+              type="button"
+              aria-disabled="true"
+              aria-describedby="checkout-status"
+              className="min-h-12 w-full cursor-not-allowed rounded-md bg-line px-6 text-body font-bold text-foreground"
+            >
+              {labels.checkout}
+            </button>
+            <p id="checkout-status" role="status" className="text-body-sm text-muted">
+              {hasProblems ? labels.resolveFirst : checkoutOn ? labels.updating : labels.checkoutNotYet}
+            </p>
+          </>
+        )}
         <Link href={shopHref} className="inline-flex min-h-11 items-center font-medium underline decoration-2 underline-offset-4">
           {labels.continueShopping}
         </Link>

@@ -8,24 +8,12 @@
 // (GET_LOCK), so two calls never run together (.claude/rules/beveiliging.md
 // § Geplande taken). Without JOB_TOKEN the route does not exist (404).
 
-import { createHash, timingSafeEqual } from "node:crypto";
 import { runSyncSlice } from "@/lib/catalog/sync";
-
-const json = (status: number, body: unknown) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
-
-/** Same length, constant time: hash both sides first. */
-function sameSecret(given: string, expected: string): boolean {
-  const a = createHash("sha256").update(given).digest();
-  const b = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(a, b);
-}
+import { json, refuseJob } from "@/lib/http";
 
 export async function POST(request: Request): Promise<Response> {
-  const secret = (process.env.JOB_TOKEN ?? "").trim();
-  if (secret.length < 32) return json(404, { error: "not-found" });
-  const header = request.headers.get("authorization") ?? "";
-  const given = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!given || !sameSecret(given, secret)) return json(401, { error: "unauthorized" });
+  const refused = refuseJob(request);
+  if (refused) return refused;
 
   try {
     return json(200, await runSyncSlice());

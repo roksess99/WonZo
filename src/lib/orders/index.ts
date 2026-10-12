@@ -66,6 +66,10 @@ export async function placeOrder(input: unknown, now: Date = new Date()): Promis
   }
   const quote = quoteCart(lines, products);
   if (!quote.readyForCheckout) return { kind: "not-ready", quote };
+  // The total the customer saw, sent along only as a check: a price that
+  // changed in between is shown before paying, never charged silently
+  // (docs/SCHERMEN.md § Afrekenen). The amount itself is always ours.
+  if (typeof body.expectedTotalCents === "number" && body.expectedTotalCents !== quote.total.amount) return { kind: "not-ready", quote };
   const snapshot = freeze(quote, products, await getSupplierCosts(lines));
 
   try {

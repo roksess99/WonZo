@@ -7,6 +7,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { appendAudit } from "@/lib/admin/audit";
 import { fromDbTime, selectRows, toDbTime, type Connection, type Queryable } from "@/lib/db";
 import type { Locale } from "@/lib/i18n/config";
+import { money, type Money } from "@/lib/money";
 import type { CustomerDetails } from "./customer";
 import { enqueue } from "./outbox";
 import type { Snapshot } from "./snapshot";
@@ -160,6 +161,66 @@ export async function changeCustomerDetails(
   // Which fields, not their values (.claude/rules/beveiliging.md § Auditlog: no full personal data).
   await appendAudit(conn, { actor: "customer", action: "order.details-changed", objectType: "order", objectId: c.orderId, after: { fields: changed } }, c.now);
   return { ok: true, changed };
+}
+
+export type LockedOrder = {
+  id: number;
+  reference: string;
+  status: OrderStatus;
+  holdReason: string | null;
+  locale: Locale;
+  total: Money;
+  snapshotExpiresAt: Date;
+  cancelWindowEndsAt: Date | null;
+};
+
+/**
+ * Reads an order and locks its row until the transaction ends: everything
+ * that decides about its money (a payment, a refund, a cancel) runs one at a
+ * time per order (.claude/rules/geld.md § Gelijktijdigheid).
+ */
+export async function lockOrder(conn: Connection, orderId: number): Promise<LockedOrder | null> {
+  const [row] = await selectRows<{
+    id: number | string; reference: string; status: string; hold_reason: string | null; locale: string;
+    total_cents: number | string; currency: string; snapshot_expires_at: string; cancel_window_ends_at: string | null;
+  }>(conn, "SELECT id, reference, status, hold_reason, locale, total_cents, currency, snapshot_expires_at, cancel_window_ends_at FROM orders WHERE id = ? FOR UPDATE", [orderId]);
+  if (!row || !isOrderStatus(row.status) || (row.locale !== "nl" && row.locale !== "en") || row.currency !== "EUR") return null;
+  return {
+    id: Number(row.id),
+    reference: row.reference,
+    status: row.status,
+    holdReason: row.hold_reason,
+    locale: row.locale,
+    total: money(Number(row.total_cents)),
+    snapshotExpiresAt: fromDbTime(row.snapshot_expires_at),
+    cancelWindowEndsAt: row.cancel_window_ends_at ? fromDbTime(row.cancel_window_ends_at) : null,
+  };
+}
+
+/**
+ * Puts an order on hold (AMOUNT_MISMATCH, CHARGEBACK, LATE_PAYMENT): no way
+ * out of PAID until the owner resolves it. With an alert for the owner and an
+ * audit line. A hold already set stays as it is.
+ */
+export async function setHold(conn: Connection, orderId: number, reason: string, actor: string, now: Date): Promise<void> {
+  const [result] = await conn.query("UPDATE orders SET hold_reason = ? WHERE id = ? AND hold_reason IS NULL", [reason.slice(0, 40), orderId]);
+  if ((result as { affectedRows: number }).affectedRows !== 1) return;
+  await appendAudit(conn, { actor, action: "order.hold", objectType: "order", objectId: orderId, after: { holdReason: reason } }, now);
+  await enqueue(conn, "admin-alert", `order:${orderId}:hold:${reason}`, { orderId, reason }, now);
+}
+
+/**
+ * Unpaid orders whose snapshot has expired: to cancel once the provider
+ * confirms nothing was paid. Paged by id (`afterId`): an order that has to
+ * wait (a payment still open) never hides the ones after it.
+ */
+export async function ordersWithExpiredSnapshot(db: Queryable, now: Date, afterId = 0, limit = 50): Promise<number[]> {
+  const rows = await selectRows<{ id: number | string }>(
+    db,
+    "SELECT id FROM orders WHERE status IN ('PENDING_PAYMENT', 'PAYMENT_FAILED') AND snapshot_expires_at <= ? AND id > ? ORDER BY id LIMIT ?",
+    [toDbTime(now), afterId, limit],
+  );
+  return rows.map((r) => Number(r.id));
 }
 
 /** Paid orders whose cancel window has closed, without a hold: ready for purchasing (D-04). */

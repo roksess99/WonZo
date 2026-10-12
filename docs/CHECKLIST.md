@@ -40,7 +40,18 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 
 - [ ] Testbetaling met een echte methode in de live omgeving (eigenaar).
 - [ ] Webhook komt aan, handtekening wordt geverifieerd, en een tweede
-      bezorging levert geen dubbele mail.
+      bezorging levert geen dubbele mail. (Mollie ondertekent niet: de winkel
+      haalt de status zelf op — D-05. Controleren dat de webhook-URL van buiten
+      bereikbaar is en `200` geeft.)
+- [ ] Geplande taak `POST /api/cron/orders` (Bearer `JOB_TOKEN`) draait elke
+      paar minuten: venster sluiten, onbetaalde orders laten verlopen,
+      reconciliatie.
+- [ ] `CHECKOUT_ENABLED=true` pas als alles in deze lijst staat; daarvoor
+      blijft afrekenen uit.
+- [ ] De link naar de algemene voorwaarden staat bij de bestelknop
+      (`src/components/checkout/CheckoutView.tsx`; de pagina bestaat nog niet).
+- [ ] Gemeten: welk adres de rate limit achter de CDN van Hostinger ziet
+      (`X-Forwarded-For`, `src/lib/http.ts` — `AANNAME`).
 - [ ] Een afgebroken betaling zet de order op `PAYMENT_FAILED`, en die
       verloopt netjes naar `CANCELLED`.
 - [ ] Reconciliatie draait en vindt een bewust gemiste webhook terug.

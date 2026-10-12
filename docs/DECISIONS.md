@@ -341,8 +341,26 @@ Wat er nog beantwoord moet worden binnen die keuze:
 
 ## D-05 · Betaaldienst
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** D-00
+- **Decided:** 2026-10-10
+
+**Besloten (eigenaar, 2026-10-10): Mollie**, met de betaalpagina van Mollie
+(hosted checkout): de klant kiest daar, kaartgegevens komen nooit langs onze
+site. Methodes bij de start: **iDEAL, Apple Pay, Google Pay en creditcard**.
+Google Pay staat bij Mollie onder kaarten en is daar in bèta; het wordt in het
+dashboard aangezet (`GEDOCUMENTEERD`, docs.mollie.com, 2026-10-10). Kosten:
+iDEAL € 0,32, kaarten 1,80 % + € 0,25 (consumentenkaart in de EER) per
+geslaagde betaling. Met kaarten kan een terugboeking (`CHARGED_BACK`)
+voorkomen; die route staat in `docs/STATE_MACHINES.md`. Het account komt na
+de zakelijke rekening; de eigenaar zet de testsleutel zelf in `.env`.
+
+**Waarom dit en niet het alternatief.** Nederlands, iDEAL als kern, geen vaste
+kosten, en een webhook die alleen het id stuurt — de status komt altijd van
+de API, wat onze regel "betaalstatus van de betaaldienst" vanzelf afdwingt.
+Verworpen: een eigen betaalformulier met Mollie Components (meer werk, meer
+plichten rond kaartgegevens) en andere diensten (niet onderzocht; de voorkeur
+van de eigenaar was duidelijk). Achteraf betalen blijft later (D-35).
 
 **Eis (eigenaar, 2026-10-05): iDEAL** moet erbij — 58 % van de online
 betalingen in Nederland (`docs/ONDERZOEK.md`), en het bekende logo is zelf
@@ -357,6 +375,44 @@ zijn bestellingen van € 0 toegestaan. Architectuur: `docs/PAYMENTS.md`.
 **Voorkeur van de eigenaar (2026-10-10): Mollie**, nog niet beslist: eerst
 moet de zakelijke rekening er zijn. Vóór `DECIDED` de vragen hierboven voor
 Mollie uitzoeken en waar mogelijk meten (testmodus).
+
+GEDOCUMENTEERD (docs.mollie.com en mollie.com, geraadpleegd 2026-10-10) — de
+vragen hierboven voor Mollie:
+
+- **Methodes:** iDEAL (sinds 2025 iDEAL 2, geen bankkeuze meer bij ons),
+  kaarten, PayPal, Klarna/in3 (achteraf betalen is D-35: later).
+- **Webhook zonder handtekening:** Mollie stuurt alleen `id`; de status
+  haal je zelf op bij de API. Dat is precies de route "body alleen als
+  aanleiding" (`docs/PAYMENTS.md` § Webhooks). Antwoord `200`, ook voor een
+  onbekend id; anders tot 10 pogingen in ongeveer 26 uur; 15 s timeout. Een
+  webhook-URL moet van buiten bereikbaar zijn (niet `localhost`).
+- **Idempotentie:** header `Idempotency-Key` op elke POST (ook
+  terugbetalingen); de sleutel geldt één uur, zelfde sleutel met andere
+  inhoud geeft 400. Na dat uur beschermt alleen ons eigen intent-record plus
+  `metadata` (order-id, payment-id) en reconciliatie.
+- **Statussen:** `open`, `pending`, `authorized`, `paid`, `canceled`,
+  `expired`, `failed`; terugbetalingen `queued`, `pending`, `processing`,
+  `refunded`, `failed`, `canceled`. Mapping naar `docs/STATE_MACHINES.md`:
+  open/pending → `PENDING`, authorized → `AUTHORIZED`, paid → `PAID`,
+  canceled → `CANCELED`, expired → `EXPIRED`, failed → `FAILED`.
+- **Geldigheid van een betaalpoging:** iDEAL 15 minuten, kaart 30 minuten,
+  PayPal 6 uur (Mollie raadt aan niet te voorspellen maar op de webhook te
+  wachten). Past binnen de 60 minuten van onze snapshot: de klant kan binnen
+  die tijd opnieuw proberen.
+- **Bedrag:** als string met twee decimalen (`"22.77"`); één valuta per
+  betaling. Een betaling van € 0 gaat niet via Mollie: die slaan we over
+  (`.claude/rules/geld.md`).
+- **Reconciliatie:** lijst van betalingen, gepagineerd, zonder filter op
+  metadata of datum: per lokale betaling de payment ophalen op het
+  opgeslagen id is de route.
+- **Kosten:** iDEAL € 0,32 per geslaagde transactie, geen vaste kosten
+  (mollie.com; een bron van januari 2026 noemde € 0,29 — op de prijspagina
+  controleren).
+
+Nog te meten in testmodus (zodra er een account is): werkelijke vervaltijd,
+volgorde van webhooks, gedrag bij een dubbele sleutel. Nog uit te zoeken:
+de rol van Mollie onder de AVG (`docs/PRIVACY.md`) en de toegankelijkheid
+van de betaalpagina.
 
 ---
 
@@ -473,7 +529,7 @@ kortingscodes; "één keer per klant" op welke sleutel.
 
 ## D-09 · Retourneren
 
-- **Status:** BLOCKED
+- **Status:** OPEN
 - **Depends on:** D-05
 
 Wettelijke kaders en stroom: `docs/RETOUREN.md`.
@@ -1162,6 +1218,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-10 | D-05, D-09 | Beslist door de eigenaar: Mollie met hosted checkout; iDEAL, Apple Pay, Google Pay en creditcard (D-05). Onderzoek Mollie vastgelegd. D-09 van BLOCKED naar OPEN: D-05 is beslist, de informatie is nog niet compleet |
 | 2026-10-10 | D-04, D-05, D-07, D-21 | Antwoorden eigenaar op D-04 (na `PAID` en een eigen annuleervenster van 30 minuten, 24 uur opnieuw proberen, alleen moneybox met saldo in beheer, annuleren kan niet via de API, prijsverschil tot 10 %) en D-21 (altijd factuur, `2026-00001` en `C2026-00001`, PDF altijd opslaan, orderbevestiging bij betaling en factuur na het venster; bevestiging door de boekhouder volgt); retouren bij BigBuy uitgezocht en retouradres (D-09); voorkeur Mollie na de zakelijke rekening (D-05, open); beheer met 2FA (D-07, verder open) |
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |
 | 2026-10-01 | D-25 – D-28 | Vastgelegd op instructie van de eigenaar (herziening template) |
