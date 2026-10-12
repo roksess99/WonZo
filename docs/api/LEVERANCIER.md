@@ -515,6 +515,22 @@ GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04):
   zolang de bestelling niet in voorbereiding is (`AANNAME`, zoekresultaat;
   vraag 13).
 
+GEDOCUMENTEERD (BigBuy API, `doc.json`, geraadpleegd 2026-10-12) — **bestellen, zoals gebouwd** (`src/lib/catalog/bigbuy/ordering.ts`):
+- `CustomerOrder`: `internalReference`, `language`, `paymentMethod`
+  (`paypal`/`moneybox`/`bankwire`), `carriers[]` (`name`), `shippingAddress`
+  (verplicht: `firstName`, `lastName`, `country`, `postcode`, `town`,
+  `address`, `phone`, `email`), `products[]` (`reference` = sku, `quantity`).
+- `order/check` → `totalWithoutTaxesAndWithoutShippingCost`,
+  `totalWithoutTaxes`, `total`, als **getallen** (niet als string).
+- `order/create` → 201, id in de `Location`-header (of `order_id`); 400
+  validatie, 404 geen vervoerders/producten, 409 "constrain conflicts".
+- `order/reference/{ref}` → `id`, `totalPaidTaxIncl` (string); 404 als er
+  niets is.
+- `AANNAME`, te meten: `carriers` mag weg (BigBuy kiest); de postcode zonder
+  spatie; wat te weinig tegoed teruggeeft (de code behandelt elke andere 4xx
+  als weigering en probeert 24 uur opnieuw); een 409 op een dubbele referentie
+  (de code behandelt 409 als "onbekend" en zoekt op de referentie).
+
 GEDOCUMENTEERD (BigBuy, "Guarantee Terms and Conditions",
 `bigbuy.eu/en/guarantee.html`, geraadpleegd 2026-10-10) — **retouren en
 klachten.** Geen enkel deel hiervan gaat via de API; alles in het BigBuy-paneel.

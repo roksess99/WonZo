@@ -60,7 +60,7 @@ fout.
 | `<<ASSORTIMENT>>` | Wat je verkoopt, in één zin — ingevuld (2026-10-04) | eigenaar |
 | `<<LEVERANCIER>>` | Naam van de groothandel of API-partij — ingevuld: BigBuy (2026-10-04) | eigenaar (D-01) |
 | `<<BEDRIJFSNAAM>>` | Naam zoals in het handelsregister — ingevuld: R.M.A. Marketing (2026-10-04) | eigenaar |
-| `<<KVK>>`, `<<BTW>>` | Inschrijving en btw-nummer — KvK ingevuld: 42126738 (2026-10-04); btw-nummer nog open | eigenaar |
+| `<<KVK>>`, `<<BTW>>` | Inschrijving en btw-nummer — KvK ingevuld: 42126738 (2026-10-04); btw-nummer NL005516835B45 (2026-10-12) | eigenaar |
 | `<<SUPPORT_MAIL>>` | Het adres dat op de site staat — ingevuld: info@wonzo.nl (2026-10-04) | eigenaar |
 | `<<KLEUR_ACCENT>>`, `<<KLEUR_INK>>`, `<<KLEUR_GREY>>`, `<<KLEUR_ZINC>>`, `<<KLEUR_FOCUS>>` | Merkkleuren — ingevuld 2026-10-04; focuskleur 2026-10-05 | huisstijl (`docs/BRAND.md`) |
 | `<<TOKEN_BACKGROUND>>`, `<<TOKEN_FOREGROUND>>`, `<<TOKEN_SURFACE>>`, `<<TOKEN_MUTED>>`, `<<TOKEN_BORDER>>`, `<<TOKEN_DANGER>>`, `<<TOKEN_SUCCESS>>`, `<<TOKEN_WARNING>>` | Semantische kleuren — ingevuld 2026-10-04; statuskleuren 2026-10-05 | huisstijl, na contrastmeting |

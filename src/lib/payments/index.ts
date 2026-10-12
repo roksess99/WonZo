@@ -253,11 +253,21 @@ export async function handleWebhook(providerPaymentId: string, providerArg?: Pay
 export async function requestFullRefund(conn: Connection, orderId: number, reason: string, requestedBy: string, now: Date): Promise<string | null> {
   const paid = (await paymentsOfOrder(conn, orderId)).find((p) => p.status === "PAID");
   if (!paid) return null;
-  const amount = await refundable(conn, paid);
+  return requestPaymentRefund(conn, paid, reason, requestedBy, now);
+}
+
+/**
+ * Records a refund of what is left on one paid payment, in the caller's
+ * transaction (which holds the order row): a second payment, or one on an
+ * order that did not take it. Returns null when nothing is left.
+ */
+export async function requestPaymentRefund(conn: Connection, payment: PaymentRow, reason: string, requestedBy: string, now: Date): Promise<string | null> {
+  if (payment.status !== "PAID") return null;
+  const amount = await refundable(conn, payment);
   if (amount.amount === 0) return null;
   const id = randomUUID();
-  await insertRefund(conn, { id, orderId, paymentId: paid.id, amount, reason, requestedBy, now });
-  await appendAudit(conn, { actor: requestedBy, action: "refund.requested", objectType: "order", objectId: orderId, after: { refundId: id, amountCents: amount.amount, currency: amount.currency }, reason }, now);
+  await insertRefund(conn, { id, orderId: payment.orderId, paymentId: payment.id, amount, reason, requestedBy, now });
+  await appendAudit(conn, { actor: requestedBy, action: "refund.requested", objectType: "order", objectId: payment.orderId, after: { refundId: id, paymentId: payment.id, amountCents: amount.amount, currency: amount.currency }, reason }, now);
   return id;
 }
 

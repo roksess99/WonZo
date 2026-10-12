@@ -1,5 +1,6 @@
 // POST /api/cron/orders — the scheduled work on orders, every few minutes:
-// purchasing after the 30-minute window (D-04), cancelling unpaid orders
+// releasing orders after the 30-minute window and purchasing them at the
+// supplier (D-04, src/lib/orders/purchasing.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
 // (docs/PAYMENTS.md § Reconciliatie) and tidying the rate limit. Bearer
 // JOB_TOKEN; one run at a time (GET_LOCK), so two calls never work double
@@ -8,7 +9,9 @@
 import { getPool, hasDatabase } from "@/lib/db";
 import { pruneRateLimits } from "@/lib/db/rate-limit";
 import { json, refuseJob } from "@/lib/http";
+import { defaultOrdering } from "@/lib/catalog/ordering";
 import { releaseClosedWindows } from "@/lib/orders";
+import { runPurchasing } from "@/lib/orders/purchasing";
 import { expireUnpaidOrders, reconcile } from "@/lib/payments";
 import { defaultProvider } from "@/lib/payments/mollie";
 
@@ -27,10 +30,20 @@ export async function POST(request: Request): Promise<Response> {
       const now = new Date();
       const provider = defaultProvider();
       const released = await releaseClosedWindows(now);
+      // Purchasing at the supplier (D-04); with SUPPLIER_ORDERING off only the drafts.
+      const purchasing = await runPurchasing(defaultOrdering(), now);
       const expired = provider ? await expireUnpaidOrders(provider, now) : { cancelled: [] };
       const reconciled = provider ? await reconcile(provider, now) : { payments: 0, refunds: 0 };
       const pruned = await pruneRateLimits(now);
-      return json(200, { status: "done", released: released.released.length, cancelled: expired.cancelled.length, ...reconciled, pruned });
+      return json(200, {
+        status: "done",
+        released: released.released.length,
+        purchaseDrafts: purchasing.drafts,
+        purchased: purchasing.outcomes.filter((o) => o === "placed").length,
+        cancelled: expired.cancelled.length,
+        ...reconciled,
+        pruned,
+      });
     } finally {
       await lock.query("SELECT RELEASE_LOCK('wonzo_orders_job')");
     }

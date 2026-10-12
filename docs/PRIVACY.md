@@ -92,6 +92,8 @@ aanwijzen.
 | `payments`, `refunds` en hun events (fase 5) | geen direct: bedrag, status, betaalmethode, id bij Mollie | b, c (de betaling hoort bij de administratie) | als de bestelling | ja |
 | `provider_events` | geen: id bij Mollie en een status | b | D-24 | nee — eigen termijn |
 | `rate_limits` | een **hash** van het IP-adres, niet het adres | f (misbruik van afrekenen tegengaan) | één dag; de dagelijkse taak ruimt op | n.v.t. |
+| `supplier_orders`, `supplier_order_events` (fase 6) | geen direct: het ordernummer en het nummer bij BigBuy; naam en adres gaan bij het bestellen uit `orders` naar BigBuy (zie de dataflow hierboven) | b | als de bestelling | ja |
+| `service_checks` (fase 6) | geen: de stand van Mollie en BigBuy, en het tegoed | — | wordt overschreven bij elke meting | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
 

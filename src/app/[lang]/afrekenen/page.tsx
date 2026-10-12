@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { CheckoutView } from "@/components/checkout/CheckoutView";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
 import { checkoutAvailable } from "@/lib/checkout";
 import { isLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
+import { canTakePayments, paymentHealth } from "@/lib/payments/health";
 import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/afrekenen">) {
@@ -19,11 +21,17 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/afrekenen"
  * The checkout page (docs/SCHERMEN.md § Afrekenen). Heading and intro in the
  * first HTML; the cart lives in this browser, so the form renders on the
  * client. Off until launch (CHECKOUT_ENABLED): then an honest "not yet".
+ * On, but the payment provider cannot take a payment right now: the customer
+ * hears it here, before filling anything in (docs/BEHEER.md § Een werkende
+ * sleutel is geen werkende kassa).
  */
 export default async function CheckoutPage({ params }: PageProps<"/[lang]/afrekenen">) {
+  await connection();
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const m = getMessages(lang);
+  const available = checkoutAvailable();
+  const paymentsWork = available && canTakePayments(await paymentHealth());
   return (
     <Container className="flex flex-col gap-6 py-8">
       <Breadcrumb
@@ -34,7 +42,9 @@ export default async function CheckoutPage({ params }: PageProps<"/[lang]/afreke
         <h1 className="font-display text-h1 font-bold">{m.checkout.title}</h1>
         <p className="max-w-prose text-muted">{m.checkout.intro}</p>
       </div>
-      {checkoutAvailable() ? (
+      {available && !paymentsWork ? (
+        <StateMessage tone="warning" title={m.checkout.paymentDown} text={m.checkout.paymentDownText} action={{ href: localizePath(lang, "/winkelwagen"), label: m.checkout.backToCart }} />
+      ) : paymentsWork ? (
         <CheckoutView
           locale={lang}
           labels={{

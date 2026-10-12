@@ -120,6 +120,19 @@ idempotentiesleutel. Mollie heeft geen event-id: `provider_events` is uniek op
 (betaling, opgevraagde stand). Het terugbetaalde bedrag wordt afgeleid uit
 `refunds`, nooit los bijgehouden.
 
+**Gebouwd in fase 6** (`db/migrations/0004_service_checks.sql`):
+`service_checks`, de laatste uitkomst per controle van een externe dienst
+(werkt Mollie, wat is het tegoed bij BigBuy). Een cache, geen bedrijfsstaat;
+hij staat in de database omdat het tegoed maar één keer per uur opgevraagd
+mag worden en een herstart dat niet mag vergeten.
+
+Ook in fase 6 (`db/migrations/0005_supplier_orders.sql`): `supplier_orders`
+en `supplier_order_events`. Eén inkooporder per bestelling en bron; de regels
+zijn de bevroren bestelregels van die bron. `reference` (het ordernummer) gaat
+als eigen referentie mee naar de leverancier en is uniek per bron. Bewaard:
+de bevroren inkoopprijs, wat de leverancier bij de controle vroeg, wie een
+hogere prijs goedkeurde, en de pogingen (D-04).
+
 ### Payment, Refund, ProviderEvent
 
 | Entiteit | Kernvelden |

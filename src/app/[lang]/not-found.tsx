@@ -6,8 +6,9 @@ import { getMessages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
 
 export default async function NotFound() {
+  // undefined outside the shop's root layout (the admin panel has its own, without [lang]).
   const value = await lang();
-  const locale = isLocale(value) ? value : defaultLocale;
+  const locale = value && isLocale(value) ? value : defaultLocale;
   const m = getMessages(locale);
   return (
     <Container className="flex max-w-3xl flex-col gap-4 py-16">

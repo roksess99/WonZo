@@ -194,7 +194,7 @@ bestaan maar wordt niet gebruikt zolang D-04 automatisch is.
 | `SUBMITTING` | Intent vastgelegd, call loopt (alleen automatisch) | nee |
 | `UNKNOWN` | Call gaf geen uitsluitsel | nee |
 | `PLACED` | Leverancier bevestigde, met `supplierOrderRef` | nee |
-| `REJECTED` | Leverancier weigerde (voorraad, prijs, adres) | ja |
+| `REJECTED` | Leverancier weigerde (voorraad, prijs, adres, te weinig tegoed) | ja, na 24 uur opnieuw proberen (D-04) |
 | `PARTIALLY_SHIPPED` / `SHIPPED` / `DELIVERED` | Leverstatus | `DELIVERED` ja |
 | `CANCELLED` | Bij de leverancier geannuleerd | ja |
 
@@ -205,15 +205,29 @@ bestaan maar wordt niet gebruikt zolang D-04 automatisch is.
 | `DRAFT` | `SUBMITTING` | system (automatisch) | sleutel = supplierOrder.id, meegestuurd als eigen referentie bij de leverancier (`docs/api/LEVERANCIER.md` § 10) |
 | `SUBMITTING` | `PLACED` / `REJECTED` | system | antwoord leverancier |
 | `SUBMITTING` | `UNKNOWN` | system | timeout |
-| `UNKNOWN` | `PLACED` / `REJECTED` | admin / reconciliation | **eerst bij de leverancier opvragen op de eigen referentie**; nooit blind opnieuw versturen |
+| `UNKNOWN` | `PLACED` / `REJECTED` | admin / reconciliation | **eerst bij de leverancier opvragen op de eigen referentie**; nooit blind opnieuw versturen. Alleen een 404 bewijst dat er niets aankwam (`GEMETEN` 2026-10-05: de sandbox geeft 500) — dan `REJECTED` |
+| `REJECTED` | `SUBMITTING` | system (24 uur, elk half uur) / admin (daarna) | D-04: opnieuw met **dezelfde** eigen referentie. Veilig: een weigering of een 404 betekent dat er niets is aangemaakt |
 | `PLACED` | `PARTIALLY_SHIPPED` / `SHIPPED` | admin / provider | tracking |
 | `PARTIALLY_SHIPPED` | `SHIPPED` | admin / provider | — |
 | `SHIPPED` | `DELIVERED` | admin / provider / system | — |
-| `DRAFT`, `PLACED` | `CANCELLED` | admin | bij `PLACED` alleen na bevestiging van de leverancier |
+| `DRAFT`, `REJECTED` | `CANCELLED` | admin / system | de order wordt geannuleerd voordat er iets bij de leverancier is |
+| `PLACED` | `CANCELLED` | — | BigBuy heeft geen annuleerfunctie (D-04): alleen via een ticket bij BigBuy, niet vanuit de winkel |
 
 **Verboden:** `UNKNOWN → SUBMITTING` (een tweede verzending zonder te weten of
 de eerste aankwam is een tweede factureerbare bestelling); een inkooporder
 plaatsen voor een order die niet `FULFILLMENT_PENDING` is.
+
+**Gebouwd (fase 6, 2026-10-12):** `src/lib/orders/supplier-states.ts` en
+`src/lib/orders/purchasing.ts`. Afwijkingen van de tabel hierboven, gevolgd
+uit D-04 (hogere autoriteit) en gemeld aan de eigenaar: `REJECTED →
+SUBMITTING` bestaat (opnieuw proberen met dezelfde referentie), en de order
+blijft `FULFILLMENT_PENDING` zolang er nog niets bij de leverancier is — pas
+als een deel geplaatst is en een ander deel niet, is hij `PARTIALLY_FULFILLED`.
+Zo kan de eigenaar na 24 uur nog annuleren en terugbetalen. Een order waarvan
+een inkooporder (mogelijk) bij de leverancier is (`SUBMITTING`, `UNKNOWN`,
+`PLACED` …) annuleert het paneel niet. Is BigBuy meer dan 10 % duurder dan de
+bevroren inkoopprijs, dan blijft de inkooporder `DRAFT` met een reden en
+beslist de eigenaar (D-04).
 
 **Herstel bij `REJECTED`:** de order gaat naar `PARTIALLY_FULFILLED`; de
 beheerder kiest een andere aanbieding (nieuwe `DRAFT`, prijsverschil zichtbaar)

@@ -124,6 +124,11 @@ export const LIMITS: Record<string, { max: number; windowMs: number }> = {
   taxonomies: { max: 23, windowMs: HOUR },
   productcompliance: { max: 1, windowMs: 6_000 },
   "lowest-shipping-costs": { max: 35, windowMs: 6 * HOUR },
+  // The balance (user/purse), for the admin dashboard: 1 an hour for user/*
+  // (GEMETEN 2026-10-05). The number itself, not one below: that would be none.
+  user: { max: 1, windowMs: HOUR },
+  // Ordering (order/check, create, reference): 1 a second (GEDOCUMENTEERD), with a margin on the window.
+  order: { max: 1, windowMs: 1_100 },
 };
 
 export function withinLimit(endpoint: keyof typeof LIMITS | string, callsInWindow: number): boolean {

@@ -5,7 +5,13 @@ soort scherm: het wordt niet gelezen maar **bediend**, elke dag, vaak haastig
 en vaak op een telefoon.
 
 Inloggen, rechten en het logboek staan in `.claude/rules/beveiliging.md`. Dit
-bestand gaat over wat er op de schermen hoort.
+bestand gaat over wat er op de schermen hoort. Rollen, pad en wat er gebouwd
+wordt: D-07.
+
+**Gebouwd (fase 6, 2026-10-12):** `/beheer` met het dashboard, de
+bestellijst, het scherm per bestelling en de knoppen bij een bestelling die
+aandacht vraagt (`src/app/beheer/`, `src/lib/admin/`). Inloggen komt als
+laatste (D-07); tot dan opent het paneel alleen lokaal.
 
 ---
 
@@ -29,7 +35,7 @@ een deur naar werk dat openstaat.
 
 | Tegel | Waarom het werk is |
 |---|---|
-| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte. Wat er dan moet gebeuren is nog open in D-04 |
+| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte: meer dan 10 % duurder (de eigenaar besluit), geweigerd (wordt 24 uur opnieuw geprobeerd), na 24 uur opgegeven (opnieuw proberen of annuleren en terugbetalen), of antwoord onbekend (wordt nagevraagd op het ordernummer) |
 | Tegoed bij de leverancier | te weinig tegoed laat de volgende inkoop mislukken; opwaarderen vóór het zover is |
 | **Vraagt aandacht**: order on hold, betaald na verloop, bedrag wijkt af, terugbetaling of inkooporder `UNKNOWN`/`FAILED`/`REJECTED`, mail die niet weg kan | hier is iets mis dat een mens moet beslissen (`docs/PAYMENTS.md`) |
 | Omzet deze maand | de enige die puur informatief mag zijn |
@@ -211,6 +217,49 @@ onbruikbaar — laat kolommen vallen in plaats van horizontaal te scrollen.
 
 ---
 
+## Lessen uit een ander paneel
+
+Uit een bouwbeschrijving van een paneel dat al draait (aangeleverd door de
+eigenaar, 2026-10-12). Elk punt is daar één keer misgegaan.
+
+- **Een werkende sleutel is geen werkende kassa.** Toets of een dienst echt
+  werkt, niet of er een sleutel staat: Mollie zette daar na een wijziging bij
+  de KvK elke methode op "wordt geverifieerd", en twee weken lang stond er een
+  betaalknop die niets deed. Hier: `src/lib/payments/health.ts` vraagt Mollie
+  welke methodes werken (vijf minuten bewaard), `src/lib/catalog/bigbuy/health.ts`
+  leest de stand van de sleutel uit de calls die de catalogus toch al doet.
+  Onderscheid: geen sleutel / geweigerd / onbereikbaar / werkt maar doet
+  niets. Een rode melding voor iedereen, ongeacht rol, en de klant hoort het
+  op de afrekenpagina vóórdat er iets is ingevuld. **Een afgevangen fout ziet
+  eruit als een lege toestand.**
+- **Een losse route erft geen beveiliging van een layout.** Een factuur-PDF
+  die alleen toetste "is er iemand ingelogd" liet iedereen met een account
+  facturen ophalen door te tellen. Elke pagina, server action en route
+  handler roept zelf `requirePage` of `requireAction` aan
+  (`src/lib/admin/access.ts`).
+- **Niet ophalen is iets anders dan verbergen.** Wat iemand niet mag zien,
+  haalt de server niet op; anders zit het toch in de pagina-data.
+- **Een cast is geen validatie.** `selectRows<AdminRow>` belooft een vorm die
+  niemand controleert: een SELECT die een nieuwe rechtenkolom niet noemde,
+  maakte daar iedereen stil tot de minst bevoorrechte rol. Rijen die over
+  rechten gaan: valideren, en luid falen.
+- **De laatste actieve eigenaar kan zichzelf niet degraderen of
+  uitschakelen.** Bouw dat als eerste, niet als laatste (fase 6a).
+- **De rechtenlijst raakt de database niet** (`src/lib/admin/permissions.ts`):
+  een knop in de browser mag hem importeren zonder een databasedriver mee te
+  trekken. Typecheck en lint zien dat niet; alleen de pagina openen of bouwen.
+
+Waar die beschrijving afweek van de regels van WonZo, gelden de regels van
+WonZo (gemeld aan de eigenaar, 2026-10-12): terugbetalen legt eerst de
+intentie vast en dan pas Mollie (`docs/PAYMENTS.md`), niet "eerst de
+betaaldienst"; de limiet op inloggen staat in de database, niet in het
+geheugen van één proces; een gebruikte 2FA-code wordt geweigerd; zoeken op
+mailadres gaat met POST, zodat het adres niet in een URL en een log komt; en
+een bezoekerstrechter blijft weg zolang D-10 er niet over beslist heeft (zie
+hieronder).
+
+---
+
 ## Wat er bewust niet in hoort
 
 - **Analyses die niemand gebruikt.** Bezoekersaantallen, conversiegrafieken,
@@ -219,7 +268,8 @@ onbruikbaar — laat kolommen vallen in plaats van horizontaal te scrollen.
 - **Rechtstreeks in de database kunnen.** Een paneel dat willekeurige
   wijzigingen toestaat omzeilt elke regel die je in code hebt gezet.
 - **Een knop die opnieuw bestelt bij de leverancier.** Inkopen gebeurt
-  automatisch, één keer per betaalde bestelling. Wat er na een mislukte inkoop
-  mag (opnieuw na opwaarderen, of terugbetalen) is nog open in D-04; tot dat
-  beslist is, komt er geen knop. Een knop die er staat wordt een keer per
-  ongeluk geraakt.
+  automatisch, één keer per betaalde bestelling. Na 24 uur weigeringen kiest de
+  eigenaar "opnieuw proberen" (D-04): dat is dezelfde inkooporder met
+  hetzelfde ordernummer bij BigBuy, nooit een tweede bestelling. Een knop
+  "nieuwe bestelling bij BigBuy" komt er niet: die wordt een keer per ongeluk
+  geraakt.

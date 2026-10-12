@@ -181,7 +181,9 @@ describe("the 30-minute window (D-04): the customer cancels", () => {
     mollie.settleRefunds();
     await reconcile(mollie, new Date(now.getTime() + 5 * 60_000));
     expect(await refundsOf(orderId)).toEqual([{ status: "SUCCEEDED", amount_cents: 2445 }]);
-    expect(mollie.calls.filter((c) => c.op === "createRefund")).toHaveLength(1);
+    // Only this order's refund: reconciliation also sends refunds other tests left REQUESTED on purpose.
+    const { id } = (await selectRows<{ id: string }>(getPool(), "SELECT id FROM refunds WHERE order_id = ?", [orderId]))[0]!;
+    expect(mollie.calls.filter((c) => c.op === "createRefund" && c.key === id)).toHaveLength(1);
   });
 });
 
