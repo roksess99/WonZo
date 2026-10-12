@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
-import { acceptPriceAction, cancelAndRefundAction, refundPaymentAction, releaseHoldAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
+import { acceptPriceAction, cancelAndRefundAction, refundPaymentAction, releaseHoldAction, resendMailAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
 import type { AdminMessages } from "@/lib/admin/messages";
 import type { AdminOptions } from "@/lib/admin/order-actions";
 import { formatMoney } from "@/lib/money";
@@ -134,6 +134,7 @@ export function OrderActionsPanel({
   options,
   canManage,
   canRefund,
+  mailKinds,
   m,
 }: {
   orderId: number;
@@ -141,6 +142,7 @@ export function OrderActionsPanel({
   options: AdminOptions;
   canManage: boolean;
   canRefund: boolean;
+  mailKinds: Record<string, string>;
   m: Labels;
 }) {
   const base = { orderId: String(orderId) };
@@ -175,6 +177,20 @@ export function OrderActionsPanel({
             money={false}
           />
         ) : null}
+        {canManage
+          ? options.resendMails.map((x) => (
+              <ConfirmAction
+                key={x.outboxId}
+                label={`${m.resendMail} (${mailKinds[x.kind] ?? x.kind})`}
+                text={m.resendMailText}
+                confirmLabel={m.resendMailConfirm}
+                action={resendMailAction}
+                fields={{ ...base, outboxId: String(x.outboxId) }}
+                m={m}
+                money={false}
+              />
+            ))
+          : null}
         {canRefund && cancel ? (
           <ConfirmAction
             label={cancel.refund.amount > 0 ? m.cancel : m.cancelNoRefund}

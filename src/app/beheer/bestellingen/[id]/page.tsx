@@ -47,7 +47,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
   const options = adminOptions(order);
   const hold = order.holdReason ? holdText(m, order.holdReason) : null;
   // Cancelling a paid order before purchasing is always offered; the block only turns red when something is wrong.
-  const needsAttention = order.holdReason !== null || options.refundPayments.length > 0 || options.heldUnpaid || options.paidLate || options.acceptPrice !== null || options.retryPurchase !== null;
+  const needsAttention = order.holdReason !== null || options.refundPayments.length > 0 || options.heldUnpaid || options.paidLate || options.acceptPrice !== null || options.retryPurchase !== null || options.resendMails.length > 0;
   const hasActions = needsAttention || options.cancel !== null;
 
   return (
@@ -89,6 +89,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
             options={options}
             canManage={can(admin.role, "bestellingen")}
             canRefund={can(admin.role, "terugbetalen")}
+            mailKinds={m.attention.mailKinds}
             m={m.actions}
           />
         </section>

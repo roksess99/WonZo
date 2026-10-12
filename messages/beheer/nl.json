@@ -9,7 +9,8 @@
     "orders": "Bestellingen",
     "toShop": "Naar de winkel",
     "signedInAs": "Ingelogd als {name}",
-    "localOnly": "Lokale toegang zonder inloggen — alleen op deze computer."
+    "localOnly": "Lokale toegang zonder inloggen — alleen op deze computer.",
+    "mail": "Mail"
   },
   "notFound": {
     "title": "Niet gevonden",
@@ -55,7 +56,14 @@
     "orderingOffText": "Zo hoort het tot de livegang: er gaat niets naar BigBuy. Live zet je SUPPLIER_ORDERING=live.",
     "orderingSandbox": "Inkopen gaat naar de sandbox van BigBuy: er wordt niet echt besteld.",
     "orderingBadConfig": "Inkopen kan niet: SUPPLIER_ORDERING klopt niet met het adres van BigBuy.",
-    "orderingBadConfigText": "\"sandbox\" werkt alleen met de sandbox van BigBuy, \"live\" alleen in productie met het echte adres. Er wordt niets besteld tot dit klopt."
+    "orderingBadConfigText": "\"sandbox\" werkt alleen met de sandbox van BigBuy, \"live\" alleen in productie met het echte adres. Er wordt niets besteld tot dit klopt.",
+    "mailNotConfigured": "Mail is niet ingesteld (SMTP_HOST): bevestigingen en meldingen wachten in de wachtrij.",
+    "mailBadConfig": "Mail kan niet weg: de instellingen kloppen niet (SMTP_*, MAIL_FROM of MAIL_ORDERS_TO).",
+    "mailBadConfigText": "MAIL_FROM moet een adres op wonzo.nl zijn; MAIL_ORDERS_TO is waar de meldingen naartoe gaan.",
+    "mailHeld": "Mail wordt op deze computer niet verstuurd: zet MAIL_REDIRECT_TO om alles naar een testadres te sturen.",
+    "mailRedirect": "Mail gaat op deze computer naar {to}, niet naar de klant.",
+    "mailLoginFailed": "De mailserver laat ons niet inloggen: bevestigingen gaan niet weg.",
+    "mailLoginFailedText": "Controleer SMTP_USER en SMTP_PASSWORD (het wachtwoord van de mailbox bij Hostinger). De mails wachten en worden later alsnog verstuurd."
   },
   "dashboard": {
     "title": "Overzicht",
@@ -74,7 +82,8 @@
     "balanceEmpty": "Het tegoed is op: automatisch inkopen mislukt tot er geld op staat.",
     "latestTitle": "Laatste bestellingen",
     "allOrders": "Alle bestellingen",
-    "loadError": "Dit blok kon niet geladen worden. Ververs de pagina; blijft het zo, kijk dan in het serverlog (draait de laatste migratie?)."
+    "loadError": "Dit blok kon niet geladen worden. Ververs de pagina; blijft het zo, kijk dan in het serverlog (draait de laatste migratie?).",
+    "mailFailedTitle": "Mail die niet weg kan"
   },
   "attention": {
     "hold": "{reference} staat stil: {reason}.",
@@ -94,7 +103,15 @@
     "purchaseGaveUp": "{reference}: inkoop bij BigBuy lukt al 24 uur niet: {error}",
     "purchaseGaveUpAction": "Kies: opnieuw proberen (na opwaarderen), of annuleren en terugbetalen.",
     "purchaseUnknown": "{reference}: bij BigBuy besteld, maar het antwoord kwam niet aan.",
-    "purchaseUnknownAction": "Wordt vanzelf nagevraagd op het ordernummer. Nooit zelf opnieuw bestellen: dat kan een tweede bestelling worden."
+    "purchaseUnknownAction": "Wordt vanzelf nagevraagd op het ordernummer. Nooit zelf opnieuw bestellen: dat kan een tweede bestelling worden.",
+    "mailFailed": "{reference}: een mail kon niet weg ({kind}): {error}",
+    "mailFailedAction": "Controleer het adres en de mailinstellingen. Na het oplossen kun je de mail opnieuw laten versturen.",
+    "mailKinds": {
+      "order-confirmation": "bevestiging aan de klant",
+      "order-cancelled": "annulering aan de klant",
+      "admin-new-order": "melding nieuwe bestelling",
+      "admin-alert": "melding aan de beheerder"
+    }
   },
   "holds": {
     "AMOUNT_MISMATCH": "het betaalde bedrag wijkt af van de bestelling",
@@ -246,7 +263,10 @@
     "acceptPriceConfirm": "Ja, bestel voor {checked}",
     "retryPurchase": "Opnieuw proberen",
     "retryPurchaseText": "De inkoop wordt meteen opnieuw geprobeerd, en daarna weer 24 uur elk half uur. Waardeer eerst op als het tegoed te laag was.",
-    "retryPurchaseConfirm": "Ja, probeer opnieuw"
+    "retryPurchaseConfirm": "Ja, probeer opnieuw",
+    "resendMail": "Mail opnieuw versturen",
+    "resendMailText": "De mail gaat bij de volgende ronde (binnen een paar minuten) opnieuw weg.",
+    "resendMailConfirm": "Ja, opnieuw versturen"
   },
   "purchaseStatus": {
     "DRAFT": "Klaar om te bestellen",
@@ -258,5 +278,43 @@
     "SHIPPED": "Verzonden",
     "DELIVERED": "Afgeleverd",
     "CANCELLED": "Geannuleerd"
+  },
+  "mail": {
+    "why": "Deze melding komt van de winkel, omdat dit adres in MAIL_ORDERS_TO staat.",
+    "kvk": "KvK {kvk}",
+    "vat": "Btw {vat}",
+    "open": "Open de bestelling in het beheerpaneel",
+    "newOrderSubject": "Nieuwe bestelling {reference} — {total}",
+    "newOrderPreheader": "{count} artikelen, {total}, betaald.",
+    "newOrderTitle": "Nieuwe bestelling {reference}",
+    "newOrderIntro": "Betaald, {total}. Na het annuleervenster van 30 minuten wordt hij vanzelf bij BigBuy ingekocht; je hoeft niets te doen.",
+    "newOrderLine": "{quantity} × {sku}",
+    "newOrderLineSub": "{name}",
+    "alertSubject": "Let op: {reference} — {what}",
+    "alertTitle": "Er vraagt iets aandacht",
+    "alertIntro": "Bij bestelling {reference}: {what}.",
+    "alertPaid": "De klant heeft betaald.",
+    "alertNotPaid": "De bestelling is niet (meer) betaald.",
+    "alertWhat": {
+      "hold": "de bestelling staat stil ({reason})",
+      "payment": "een betaling die de bestelling niet heeft aangenomen",
+      "refundFailed": "een terugbetaling is mislukt",
+      "supplierFailed": "inkoop bij BigBuy lukt niet ({error})",
+      "supplierGaveUp": "inkoop bij BigBuy lukt al 24 uur niet",
+      "supplierPrice": "BigBuy is meer dan 10% duurder",
+      "supplierUnknown": "het antwoord van BigBuy bleef uit",
+      "other": "iets dat een mens moet bekijken"
+    }
+  },
+  "mailPreview": {
+    "title": "Mail bekijken",
+    "intro": "Zo zien de mails eruit, met een voorbeeldbestelling. Hier wordt niets verstuurd. Bekijk ook de tekstversie: niet elke mailclient toont HTML.",
+    "examples": "Voorbeeld",
+    "confirmation": "Bevestiging aan de klant",
+    "cancelled": "Annulering aan de klant",
+    "newOrder": "Melding nieuwe bestelling",
+    "alert": "Melding: er vraagt iets aandacht",
+    "subject": "Onderwerp",
+    "textVersion": "Tekstversie"
   }
 }

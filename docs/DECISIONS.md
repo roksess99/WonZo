@@ -924,6 +924,12 @@ of de server een message-id teruggeeft, en waar Hostinger de mail verwerkt
 (`docs/PRIVACY.md`). Voor SMTP is een bibliotheek nodig: die wordt eerst
 gevraagd.
 
+**Gebouwd (2026-10-12):** nodemailer 10.0.11 (toestemming eigenaar
+2026-10-12; zonder native onderdelen, eigen types; bewust niet de twee dagen
+oude 10.1.0). Verzending via de outbox, minstens één keer; het kenmerk van de
+server wordt bewaard (`outbox.message_id`). Buiten productie gaat mail alleen
+naar `MAIL_REDIRECT_TO`.
+
 Er was geen beslissing over de dienst die bevestigingen, verzendberichten en
 beheerdersmeldingen verstuurt; `.env.example` ging stil uit van SMTP. Eisen:
 `docs/MAIL.md` (SPF/DKIM/DMARC, afzender op het eigen domein, outbox).
@@ -1262,6 +1268,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-12 | D-29 | Mail gebouwd met nodemailer (toestemming eigenaar): bevestiging, annulering, meldingen aan de beheerder, via de outbox met backoff; voorvertoning in het paneel en een los testscript. Btw-bedrag in de bevestiging wacht op D-15 |
 | 2026-10-12 | D-04 | Automatisch inkopen gebouwd: na het venster een inkooporder, controle bij BigBuy (tot 10 % duurder), dan pas bestellen; geen antwoord → opzoeken op het ordernummer; weigering → meteen een melding en 24 uur elk half uur opnieuw, daarna kiest de eigenaar. `REJECTED → SUBMITTING` toegevoegd aan de statusregeling (volgt uit D-04). Staat uit tot `SUPPLIER_ORDERING=live` |
 | 2026-10-12 | D-07, D-09, D-21, D-29 | Eigenaar: beheerpaneel op `/beheer` met drie vaste rollen, terugbetalen alleen eigenaar, inloggen als laatste met lokale doorgang tot dan, beheerder kiest bij een hold (D-07); retour pas terugbetalen na akkoord van de beheerder (D-09); btw-nummer en toestemming voor een PDF-bibliotheek (D-21); mail via Hostinger, beslist (D-29) |
 | 2026-10-10 | D-05, D-09 | Beslist door de eigenaar: Mollie met hosted checkout; iDEAL, Apple Pay, Google Pay en creditcard (D-05). Onderzoek Mollie vastgelegd. D-09 van BLOCKED naar OPEN: D-05 is beslist, de informatie is nog niet compleet |

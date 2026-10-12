@@ -133,6 +133,11 @@ als eigen referentie mee naar de leverancier en is uniek per bron. Bewaard:
 de bevroren inkoopprijs, wat de leverancier bij de controle vroeg, wie een
 hogere prijs goedkeurde, en de pogingen (D-04).
 
+En (`db/migrations/0006_outbox_message_id.sql`): `outbox.message_id`, het
+kenmerk dat de mailserver teruggeeft. De outbox kent nu de standen `PENDING`,
+`SENT` (mail weg), `DONE` (afgehandeld zonder mail, of inkooporder gemaakt) en
+`FAILED` (mail kon niet weg; in "vraagt aandacht", opnieuw te versturen).
+
 ### Payment, Refund, ProviderEvent
 
 | Entiteit | Kernvelden |

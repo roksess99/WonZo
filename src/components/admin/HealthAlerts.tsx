@@ -1,5 +1,6 @@
 import type { AdminMessages } from "@/lib/admin/messages";
 import type { SupplierHealth } from "@/lib/catalog/supplier-status";
+import type { MailHealth } from "@/lib/mail";
 import type { PaymentHealth } from "@/lib/payments/health";
 import { interpolate } from "@/lib/text";
 import { AlertIcon, InfoIcon } from "../icons";
@@ -9,6 +10,23 @@ type Notice = { tone: "danger" | "info"; title: string; text?: string };
 
 /** How purchasing at the supplier stands (SUPPLIER_ORDERING), with the purchase orders that wait. */
 export type OrderingStatus = { mode: "off" | "sandbox" | "live" | "bad-config"; waiting: number };
+
+function mailNotices(h: MailHealth, m: AdminMessages["health"]): Notice[] {
+  switch (h.state) {
+    case "not-configured":
+      return [{ tone: "danger", title: m.mailNotConfigured }];
+    case "bad-config":
+      return [{ tone: "danger", title: m.mailBadConfig, text: m.mailBadConfigText }];
+    case "held":
+      return [{ tone: "info", title: m.mailHeld }];
+    case "redirect":
+      return [{ tone: "info", title: interpolate(m.mailRedirect, { to: h.to }) }];
+    case "login-failed":
+      return [{ tone: "danger", title: m.mailLoginFailed, text: m.mailLoginFailedText }];
+    case "ok":
+      return [];
+  }
+}
 
 function orderingNotices(o: OrderingStatus, m: AdminMessages["health"]): Notice[] {
   switch (o.mode) {
@@ -63,9 +81,9 @@ function supplierNotices(h: SupplierHealth, m: AdminMessages["health"]): Notice[
  * pay is not a question of permissions (docs/BEHEER.md § Een werkende
  * sleutel is geen werkende kassa).
  */
-export function HealthAlerts({ payment, supplier, ordering, m }: { payment: PaymentHealth; supplier: SupplierHealth; ordering: OrderingStatus; m: AdminMessages["health"] }) {
+export function HealthAlerts({ payment, supplier, ordering, mail, m }: { payment: PaymentHealth; supplier: SupplierHealth; ordering: OrderingStatus; mail: MailHealth; m: AdminMessages["health"] }) {
   // Red first, whatever the order of the checks.
-  const notices = [...paymentNotices(payment, m), ...supplierNotices(supplier, m), ...orderingNotices(ordering, m)].sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "danger" ? -1 : 1));
+  const notices = [...paymentNotices(payment, m), ...supplierNotices(supplier, m), ...mailNotices(mail, m), ...orderingNotices(ordering, m)].sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "danger" ? -1 : 1));
   if (!notices.length) return null;
   return (
     <ul className="flex flex-col gap-3">

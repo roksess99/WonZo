@@ -312,5 +312,42 @@
     "text": "Dit ligt aan ons. Probeer het opnieuw; lukt het niet, mail ons dan.",
     "retry": "Opnieuw proberen"
   },
-  "loading": "Bezig met laden"
+  "loading": "Bezig met laden",
+  "mail": {
+    "why": "Je krijgt deze mail omdat je bij WonZo besteld hebt.",
+    "kvk": "KvK {kvk}",
+    "vat": "Btw {vat}",
+    "line": "{quantity} × {name}",
+    "lineSub": "{price} per stuk · artikelnummer {sku}",
+    "subtotal": "Subtotaal",
+    "shipping": "Verzendkosten",
+    "shippingFree": "Gratis",
+    "shippingLarge": "Verzending grote artikelen",
+    "total": "Totaal",
+    "inclVat": "Alle bedragen zijn inclusief btw.",
+    "statusLink": "Bekijk je bestelling",
+    "statusText": "Je bestelling bekijken: {url}",
+    "confirmation": {
+      "subject": "Bestelling {reference} ontvangen",
+      "preheader": "Bedankt! We hebben je betaling van {total} ontvangen.",
+      "title": "Bedankt, je bestelling is gelukt",
+      "intro": "We hebben je betaling ontvangen. Hieronder staat wat je besteld hebt.",
+      "orderLine": "Ordernummer {reference} · {date}",
+      "linesTitle": "Wat je besteld hebt",
+      "addressTitle": "Afleveradres",
+      "nextTitle": "Wat er nu gebeurt",
+      "next": "Tot {time} kun je je bestelling nog annuleren of je gegevens aanpassen. Daarna bestellen we hem voor je; je ontvangt hem naar verwachting binnen {min}–{max} werkdagen.",
+      "withdrawalTitle": "Bedenktijd: 14 dagen",
+      "withdrawal": "Je hebt 14 dagen bedenktijd vanaf de dag dat je het pakket ontvangt, zonder dat je een reden hoeft te geven. Wil je de bestelling terugsturen, laat het ons dan binnen die 14 dagen weten via {email}. Daarna heb je nog 14 dagen om het pakket terug te sturen. We betalen je binnen 14 dagen na je melding terug, bij een volledige retour ook de verzendkosten.",
+      "withdrawalMore": "Meer over terugsturen en contact: {url}"
+    },
+    "cancelled": {
+      "subject": "Bestelling {reference} geannuleerd",
+      "preheader": "Je bestelling is geannuleerd. Je krijgt {amount} terug.",
+      "title": "Je bestelling is geannuleerd",
+      "intro": "Je bestelling {reference} is geannuleerd.",
+      "refund": "Je krijgt {amount} terug op de rekening of kaart waarmee je betaalde. Dat duurt meestal een paar werkdagen.",
+      "questions": "Vragen? Mail ons op {email}."
+    }
+  }
 }

@@ -37,6 +37,11 @@ function describe(item: AttentionItem, m: AdminMessages): { title: string; todo?
       return { title: interpolate(m.attention.purchaseGaveUp, { reference: item.reference, error: item.error }), todo: m.attention.purchaseGaveUpAction };
     case "purchase-unknown":
       return { title: interpolate(m.attention.purchaseUnknown, { reference: item.reference }), todo: m.attention.purchaseUnknownAction };
+    case "mail-failed":
+      return {
+        title: interpolate(m.attention.mailFailed, { reference: item.reference, kind: (m.attention.mailKinds as Record<string, string>)[item.mailKind] ?? item.mailKind, error: item.error }),
+        todo: m.attention.mailFailedAction,
+      };
     case "refund-unknown":
       return { title: interpolate(m.attention.refundUnknown, { reference: item.reference, amount: formatMoney(item.amount) }), todo: m.attention.refundUnknownAction };
   }

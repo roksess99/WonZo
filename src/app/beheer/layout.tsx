@@ -46,6 +46,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/beheer">) 
                     {m.nav.orders}
                   </Link>
                 ) : null}
+                {can(admin.role, "bestellingen") ? (
+                  <Link href="/beheer/mail" className="underline-offset-4 hover:underline">
+                    {m.nav.mail}
+                  </Link>
+                ) : null}
               </nav>
               <p className="ms-auto text-body-sm text-muted">{interpolate(m.nav.signedInAs, { name: admin.name })}</p>
             </div>

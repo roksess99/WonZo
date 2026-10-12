@@ -163,8 +163,8 @@ describe("searching and counting", () => {
 describe("which buttons an order gets", () => {
   const pay = (id: string, status: AdminOrder["payments"][number]["status"], cents: number, paidLate = false) => ({ id, status, amount: money(cents), method: null, providerPaymentId: null, createdAt: new Date(), paidLate });
   const order = (o: Partial<AdminOrder>): AdminOrder =>
-    ({ status: "PAID", holdReason: null, payments: [pay("p1", "PAID", 2445)], refunds: [], purchases: [], ...o }) as AdminOrder;
-  const none = { acceptPrice: null, retryPurchase: null };
+    ({ status: "PAID", holdReason: null, payments: [pay("p1", "PAID", 2445)], refunds: [], purchases: [], failedMails: [], ...o }) as AdminOrder;
+  const none = { acceptPrice: null, retryPurchase: null, resendMails: [] };
 
   it("a reason has at least 3 characters, at most 200", () => {
     expect(cleanReason("  ok  ")).toBeNull();

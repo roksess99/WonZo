@@ -312,5 +312,42 @@
     "text": "This is our fault. Please try again; if it still doesn't work, email us.",
     "retry": "Try again"
   },
-  "loading": "Loading"
+  "loading": "Loading",
+  "mail": {
+    "why": "You are receiving this email because you placed an order with WonZo.",
+    "kvk": "Chamber of Commerce {kvk}",
+    "vat": "VAT {vat}",
+    "line": "{quantity} × {name}",
+    "lineSub": "{price} each · item number {sku}",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "shippingFree": "Free",
+    "shippingLarge": "Shipping for large items",
+    "total": "Total",
+    "inclVat": "All amounts include VAT.",
+    "statusLink": "View your order",
+    "statusText": "View your order: {url}",
+    "confirmation": {
+      "subject": "Order {reference} received",
+      "preheader": "Thank you! We have received your payment of {total}.",
+      "title": "Thank you, your order is placed",
+      "intro": "We have received your payment. Below is what you ordered.",
+      "orderLine": "Order number {reference} · {date}",
+      "linesTitle": "What you ordered",
+      "addressTitle": "Delivery address",
+      "nextTitle": "What happens next",
+      "next": "Until {time} you can still cancel your order or change your details. After that we order it for you; you can expect it within {min}–{max} working days.",
+      "withdrawalTitle": "Cooling-off period: 14 days",
+      "withdrawal": "You have 14 days from the day you receive the parcel to change your mind, without giving a reason. If you want to send the order back, let us know within those 14 days at {email}. You then have another 14 days to send the parcel back. We refund you within 14 days of your notice, including the shipping costs for a full return.",
+      "withdrawalMore": "More about returns and contact: {url}"
+    },
+    "cancelled": {
+      "subject": "Order {reference} cancelled",
+      "preheader": "Your order has been cancelled. You will get {amount} back.",
+      "title": "Your order has been cancelled",
+      "intro": "Your order {reference} has been cancelled.",
+      "refund": "You will get {amount} back on the account or card you paid with. This usually takes a few working days.",
+      "questions": "Questions? Email us at {email}."
+    }
+  }
 }

@@ -7,7 +7,7 @@
 // The caller has already checked the permission (./access.ts). Server-side only.
 
 import { appendAudit } from "@/lib/admin/audit";
-import { withTransaction, type Connection } from "@/lib/db";
+import { toDbTime, withTransaction, type Connection } from "@/lib/db";
 import { compare, money, subtract, type Money } from "@/lib/money";
 import { canTransition, type OrderStatus } from "@/lib/orders/states";
 import { acceptPrice, cancelOpenPurchases, retryPurchase, supplierOrdersOf } from "@/lib/orders/purchasing";
@@ -64,6 +64,8 @@ export type AdminOptions = {
   acceptPrice: { supplierOrderId: string; expected: Money; checked: Money } | null;
   /** 24 hours of refusals (D-04): try again for another 24 hours. */
   retryPurchase: { supplierOrderId: string; error: string } | null;
+  /** Mail that could not go out: send again once the cause is solved. */
+  resendMails: { outboxId: number; kind: string }[];
 };
 
 /**
@@ -90,6 +92,7 @@ export function adminOptions(order: AdminOrder): AdminOptions {
     paidLate: order.payments.some((p) => p.paidLate),
     acceptPrice: blocked && blocked.checkedProducts ? { supplierOrderId: blocked.id, expected: blocked.expectedCost, checked: blocked.checkedProducts } : null,
     retryPurchase: gaveUp ? { supplierOrderId: gaveUp.id, error: gaveUp.lastError ?? "" } : null,
+    resendMails: order.failedMails.map((x) => ({ outboxId: x.id, kind: x.kind })),
   };
 }
 
@@ -184,6 +187,22 @@ export async function retryPurchaseAction(input: { orderId: number; supplierOrde
     if (order.status !== "FULFILLMENT_PENDING" || !(await supplierOrdersOf(conn, order.id)).some((p) => p.id === input.supplierOrderId)) return { ok: false, error: "not-allowed" };
     const r = await retryPurchase(conn, { supplierOrderId: input.supplierOrderId, actor: input.actor, reason, now });
     return r === "ok" ? { ok: true, refund: "none" } : { ok: false, error: "changed" };
+  });
+}
+
+/** A FAILED mail of this order back in the queue, tried as if new (at least once: the customer may get it twice if it did arrive). */
+export async function resendMail(input: { orderId: number; outboxId: number; reason: unknown; actor: string; now?: Date }): Promise<ActionResult> {
+  const reason = cleanReason(input.reason);
+  if (!reason) return { ok: false, error: "reason-required" };
+  const now = input.now ?? new Date();
+  return withTransaction(async (conn): Promise<ActionResult> => {
+    const [r] = await conn.query(
+      "UPDATE outbox SET status = 'PENDING', attempts = 0, next_attempt_at = ? WHERE id = ? AND status = 'FAILED' AND JSON_VALUE(payload, '$.orderId') = ?",
+      [toDbTime(now), input.outboxId, input.orderId],
+    );
+    if ((r as { affectedRows: number }).affectedRows !== 1) return { ok: false, error: "changed" };
+    await appendAudit(conn, { actor: input.actor, action: "mail.resend", objectType: "order", objectId: input.orderId, after: { outboxId: input.outboxId }, reason }, now);
+    return { ok: true, refund: "none" };
   });
 }
 

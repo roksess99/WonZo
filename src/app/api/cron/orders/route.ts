@@ -2,7 +2,8 @@
 // releasing orders after the 30-minute window and purchasing them at the
 // supplier (D-04, src/lib/orders/purchasing.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
-// (docs/PAYMENTS.md § Reconciliatie) and tidying the rate limit. Bearer
+// (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
+// (src/lib/mail/worker.ts) and tidying the rate limit. Bearer
 // JOB_TOKEN; one run at a time (GET_LOCK), so two calls never work double
 // (.claude/rules/beveiliging.md § Geplande taken).
 
@@ -12,6 +13,8 @@ import { json, refuseJob } from "@/lib/http";
 import { defaultOrdering } from "@/lib/catalog/ordering";
 import { releaseClosedWindows } from "@/lib/orders";
 import { runPurchasing } from "@/lib/orders/purchasing";
+import { defaultMail } from "@/lib/mail";
+import { sendDueMail } from "@/lib/mail/worker";
 import { expireUnpaidOrders, reconcile } from "@/lib/payments";
 import { defaultProvider } from "@/lib/payments/mollie";
 
@@ -34,6 +37,15 @@ export async function POST(request: Request): Promise<Response> {
       const purchasing = await runPurchasing(defaultOrdering(), now);
       const expired = provider ? await expireUnpaidOrders(provider, now) : { cancelled: [] };
       const reconciled = provider ? await reconcile(provider, now) : { payments: 0, refunds: 0 };
+      // Last: the mail of everything above (confirmations, alerts) goes out in the same run.
+      // A wrong mail setting must not stop purchasing and reconciliation: the dashboard shows it.
+      let mail: ReturnType<typeof defaultMail> = null;
+      try {
+        mail = defaultMail();
+      } catch {
+        console.error("[cron/orders] mail: bad config");
+      }
+      const mailed = await sendDueMail(mail?.sender ?? null, mail?.config ?? null, now);
       const pruned = await pruneRateLimits(now);
       return json(200, {
         status: "done",
@@ -42,6 +54,8 @@ export async function POST(request: Request): Promise<Response> {
         purchased: purchasing.outcomes.filter((o) => o === "placed").length,
         cancelled: expired.cancelled.length,
         ...reconciled,
+        mailSent: mailed.sent,
+        mailFailed: mailed.failed,
         pruned,
       });
     } finally {

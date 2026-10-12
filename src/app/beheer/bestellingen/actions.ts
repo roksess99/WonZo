@@ -8,7 +8,7 @@
 
 import { revalidatePath } from "next/cache";
 import { AdminAccessDenied, requireAction } from "@/lib/admin/access";
-import { acceptPurchasePrice, cancelAndRefund, refundPayment, releaseHold, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
+import { acceptPurchasePrice, cancelAndRefund, refundPayment, releaseHold, resendMail, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
 import { searchOrders, type OrderListRow } from "@/lib/admin/orders";
 import { getPool } from "@/lib/db";
 
@@ -87,6 +87,13 @@ export async function retryPurchaseFormAction(_: OrderActionState, form: FormDat
   const supplierOrderId = uuid(form.get("supplierOrderId"));
   return run("bestellingen", id(form.get("orderId")), (actor, orderId) =>
     !supplierOrderId ? Promise.resolve({ ok: false, error: "changed" }) : retryPurchase({ orderId, supplierOrderId, reason: form.get("reason"), actor }),
+  );
+}
+
+export async function resendMailAction(_: OrderActionState, form: FormData): Promise<OrderActionState> {
+  const outboxId = id(form.get("outboxId"));
+  return run("bestellingen", id(form.get("orderId")), (actor, orderId) =>
+    !outboxId ? Promise.resolve({ ok: false, error: "changed" }) : resendMail({ orderId, outboxId, reason: form.get("reason"), actor }),
   );
 }
 

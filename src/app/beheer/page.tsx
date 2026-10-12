@@ -11,6 +11,7 @@ import { can, PERMISSIONS, type Permission } from "@/lib/admin/permissions";
 import { supplierBalance, supplierHealth } from "@/lib/catalog/supplier-status";
 import { getPool, hasDatabase } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { mailHealth } from "@/lib/mail";
 import { paymentHealth } from "@/lib/payments/health";
 import { interpolate } from "@/lib/text";
 
@@ -63,7 +64,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
   const orders = can(admin.role, "bestellingen") && hasDatabase;
 
   // Independent of each other: in parallel. A block whose source fails is left out, the rest stays.
-  const [payment, supplier, balance, summary, attention, latest, waiting] = await Promise.all([
+  const [payment, supplier, balance, summary, attention, latest, waiting, mail] = await Promise.all([
     paymentHealth(now),
     supplierHealth(now),
     orders ? supplierBalance(now).catch(logged("balance", null)) : null,
@@ -71,6 +72,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
     orders ? attentionItems(getPool(), now).catch(logged("attention", null)) : null,
     orders ? latestOrders(getPool()).catch(logged("latest", null)) : null,
     hasDatabase ? waitingPurchases(getPool()).catch(logged("waiting", 0)) : 0,
+    mailHealth(now),
   ]);
   const ordering: OrderingStatus = { mode: orderingModeOrBad(), waiting };
 
@@ -83,7 +85,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
           <p className="text-body-sm">{interpolate(m.noAccess.text, { permission: m.permissions[denied] })}</p>
         </div>
       ) : null}
-      <HealthAlerts payment={payment} supplier={supplier} ordering={ordering} m={m.health} />
+      <HealthAlerts payment={payment} supplier={supplier} ordering={ordering} mail={mail} m={m.health} />
 
       {orders ? (
         <>

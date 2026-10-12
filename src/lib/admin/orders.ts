@@ -87,6 +87,8 @@ export type AttentionItem =
   | { kind: "purchase-gave-up"; orderId: number; reference: string; error: string }
   /** Sent, but no answer that settles it; the code keeps asking by the reference. */
   | { kind: "purchase-unknown"; orderId: number; reference: string }
+  /** A mail that could not go out: refused for good, or too many tries (src/lib/mail/worker.ts). */
+  | { kind: "mail-failed"; orderId: number; reference: string; outboxId: number; mailKind: string; error: string }
   /** Asked, but Mollie's answer never came; reconciliation keeps asking. */
   | { kind: "refund-unknown"; orderId: number; reference: string; refundId: string; amount: Money };
 
@@ -146,6 +148,14 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
     else if (p.first_failed_at) items.push({ kind: "purchase-failing", ...base, error: p.last_error ?? "", until: new Date(fromDbTime(p.first_failed_at).getTime() + 24 * 3_600_000) });
     else if (p.status === "UNKNOWN") items.push({ kind: "purchase-unknown", ...base });
   }
+
+  const mails = await selectRows<{ id: number | string; kind: string; last_error: string | null; order_id: number | string; reference: string }>(
+    db,
+    `SELECT x.id, x.kind, x.last_error, o.id AS order_id, o.reference
+       FROM outbox x JOIN orders o ON o.id = CAST(JSON_VALUE(x.payload, '$.orderId') AS UNSIGNED)
+      WHERE x.status = 'FAILED' ORDER BY x.id LIMIT 100`,
+  );
+  for (const x of mails) items.push({ kind: "mail-failed", orderId: Number(x.order_id), reference: x.reference, outboxId: Number(x.id), mailKind: x.kind, error: x.last_error ?? "" });
 
   // A failed refund stays work until a newer refund on the same payment replaces it.
   const refunds = await selectRows<{ id: string; order_id: number | string; reference: string; status: string; amount_cents: number | string }>(
@@ -253,6 +263,8 @@ export type AdminOrder = {
   refunds: { id: string; paymentId: string; status: RefundStatus; amount: Money; reason: string; requestedBy: string; providerRefundId: string | null; createdAt: Date }[];
   events: { from: string | null; to: string; actor: string; reason: string | null; at: Date }[];
   purchases: (SupplierOrderRow & { events: { to: string; actor: string; reason: string | null; at: Date }[] })[];
+  /** Mail for this order that could not go out (src/lib/mail/worker.ts). */
+  failedMails: { id: number; kind: string; error: string }[];
   audit: { actor: string; action: string; reason: string | null; at: Date }[];
 };
 
@@ -271,7 +283,7 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     [orderId],
   );
   if (!o || !isOrderStatus(s(o, "status")) || o.currency !== "EUR") return null;
-  const [lines, payments, refunds, events, audit, purchases, purchaseEvents] = await Promise.all([
+  const [lines, payments, refunds, events, audit, purchases, purchaseEvents, failedMails] = await Promise.all([
     selectRows<Raw>(
       db,
       "SELECT line_no, name, brand, sku, source, product_id, offer_id, quantity, unit_price_cents, line_total_cents, vat_rate_bp, large_shipping_cents, supplier_cost_cents, supplier_cost_currency FROM order_lines WHERE order_id = ? ORDER BY line_no",
@@ -293,6 +305,7 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
       "SELECT e.supplier_order_id, e.to_status, e.actor, e.reason, e.at FROM supplier_order_events e JOIN supplier_orders s ON s.id = e.supplier_order_id WHERE s.order_id = ? ORDER BY e.id",
       [orderId],
     ),
+    selectRows<Raw>(db, "SELECT id, kind, last_error FROM outbox WHERE status = 'FAILED' AND JSON_VALUE(payload, '$.orderId') = ? ORDER BY id", [orderId]),
   ]);
   return {
     id: n(o, "id"),
@@ -333,6 +346,7 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     })),
     events: events.map((e) => ({ from: e.from_status === null ? null : s(e, "from_status"), to: s(e, "to_status"), actor: s(e, "actor"), reason: e.reason === null ? null : s(e, "reason"), at: d(e, "at")! })),
     audit: audit.map((a) => ({ actor: s(a, "actor"), action: s(a, "action"), reason: a.reason === null ? null : s(a, "reason"), at: d(a, "at")! })),
+    failedMails: failedMails.map((x) => ({ id: n(x, "id"), kind: s(x, "kind"), error: s(x, "last_error") })),
     purchases: purchases.map((p) => ({
       ...p,
       events: purchaseEvents.filter((e) => e.supplier_order_id === p.id).map((e) => ({ to: s(e, "to_status"), actor: s(e, "actor"), reason: e.reason === null ? null : s(e, "reason"), at: d(e, "at")! })),

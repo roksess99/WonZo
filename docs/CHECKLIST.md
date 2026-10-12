@@ -62,6 +62,15 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 
 ## Mail
 
+- [ ] De bevestiging noemt het **btw-bedrag apart** (`WETTELIJK`, BW 6:230v):
+      wacht op D-15; tot dan staat er "alle bedragen inclusief btw".
+- [ ] De bevestiging linkt naar het **modelformulier** voor herroeping (de
+      pagina bestaat nog niet; tot dan de contactpagina). Tekst over de
+      bedenktijd laten controleren.
+- [ ] `node --env-file=.env scripts/mail-test.mjs <adres>` komt aan, ook op
+      wonzo.nl zelf.
+- [ ] In productie: `MAIL_REDIRECT_TO` leeg, `MAIL_ORDERS_TO` het adres van de
+      eigenaar.
 - [ ] SPF, DKIM en DMARC ingesteld voor het domein.
 - [ ] Een echte mail ontvangen in Gmail én in Outlook, niet in de map
       ongewenst.

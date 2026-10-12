@@ -39,7 +39,7 @@ geen "nvt".
 | Applicatie → database | naam, adres, mail, telefoon, bestelling | levering, administratie | b; c (fiscale bewaarplicht) | `docs/DATAMODEL.md` § Bewaren | eigen (hosting = verwerker) | `<<HOSTING_LOCATIE>>` | TLS naar database; at rest: `<<DB_ENCRYPTIE>>` |
 | Applicatie → betaaldienst (Mollie, D-05) | bedrag, ordernummer, order-id en betaal-id (metadata), taal; de klant geeft zijn betaalgegevens rechtstreeks aan Mollie (hosted checkout) | betaling | b | volgens de betaaldienst | doorgaans zelfstandig verwerkingsverantwoordelijke voor de betaling — nog te bevestigen bij Mollie (D-05) | `<<BETAALDIENST_LOCATIE>>` | TLS |
 | Applicatie → leverancier (BigBuy) | naam, afleveradres, **mailadres en telefoonnummer** (verplichte velden bij bestellen — `docs/api/LEVERANCIER.md` § 10), artikelen | levering (dropship) | b | volgens de leverancier | verwerker of zelfstandig — vastleggen bij D-01 | `<<LEVERANCIER_LOCATIE>>` | TLS |
-| Applicatie → mailprovider | mailadres, naam, inhoud bericht | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS |
+| Applicatie → mailprovider (Hostinger, D-29) | mailadres, naam, afleveradres en de bestelling (in de bevestiging) | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS (465) of STARTTLS (587), verplicht |
 | Applicatie → error tracking | technische context, **geen** persoonsgegevens (`docs/OBSERVABILITY.md`) | stabiliteit | f | `<<ERROR_RETENTIE>>` | verwerker | `<<ERROR_LOCATIE>>` | TLS |
 | Browser → analytics | alleen met toestemming of een privacyvriendelijke opzet zonder tracking — D-10 | | a of f | | | | |
 
