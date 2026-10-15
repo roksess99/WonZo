@@ -6,7 +6,7 @@
 
 import { selectRows, getPool } from "@/lib/db";
 import { money, type Money } from "@/lib/money";
-import type { CheckAnswer, LookupAnswer, PlaceAnswer, SupplierOrdering, SupplierOrderRequest } from "@/lib/catalog/ordering";
+import type { CheckAnswer, LookupAnswer, Parcel, PlaceAnswer, SupplierOrdering, SupplierOrderRequest, TrackingAnswer } from "@/lib/catalog/ordering";
 
 type Next<T> = (T | "refuse" | "lost-after-create" | "lost-before-create" | "unknown")[];
 
@@ -75,5 +75,16 @@ export class FakeBigBuy implements SupplierOrdering {
 
   callsFor(reference: string, op: "check" | "place" | "lookup") {
     return this.calls.filter((c) => c.reference === reference && c.op === op).length;
+  }
+
+  /** What the supplier says about the parcels, by its own order number; a test sets it. */
+  parcels = new Map<string, Parcel[]>();
+  trackingUnknown = false;
+  trackingAsked: string[][] = [];
+
+  async tracking(refs: string[]): Promise<TrackingAnswer> {
+    this.trackingAsked.push(refs);
+    if (this.trackingUnknown) return { kind: "unknown" };
+    return { kind: "ok", orders: refs.filter((r) => this.parcels.has(r)).map((r) => ({ supplierOrderRef: r, parcels: this.parcels.get(r)! })) };
   }
 }

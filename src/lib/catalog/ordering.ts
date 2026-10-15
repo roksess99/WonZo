@@ -33,12 +33,30 @@ export type PlaceAnswer =
 
 export type LookupAnswer = { kind: "found"; supplierOrderRef: string } | { kind: "absent" } | { kind: "unknown" };
 
+/** One parcel the supplier reports for an order. */
+export type Parcel = {
+  trackingNumber: string;
+  carrier: string | null;
+  /** The supplier's own words for where it is, for the panel. */
+  statusText: string | null;
+  statusAt: Date | null;
+  delivered: boolean;
+};
+
+export type TrackingAnswer =
+  /** Per order the supplier knows (by its own order number); an order without parcels yet is simply absent or empty. */
+  | { kind: "ok"; orders: { supplierOrderRef: string; parcels: Parcel[] }[] }
+  /** No answer, or one we cannot read: ask again later. */
+  | { kind: "unknown" };
+
 export interface SupplierOrdering {
   readonly source: "bigbuy";
   readonly mode: "sandbox" | "live";
   check(req: SupplierOrderRequest): Promise<CheckAnswer>;
   place(req: SupplierOrderRequest): Promise<PlaceAnswer>;
   lookup(reference: string): Promise<LookupAnswer>;
+  /** Where the parcels of these orders are (read only: never changes anything at the supplier). */
+  tracking(supplierOrderRefs: string[]): Promise<TrackingAnswer>;
 }
 
 export type OrderingMode = "off" | "sandbox" | "live";

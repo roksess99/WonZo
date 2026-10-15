@@ -59,11 +59,23 @@ describe("what asks for attention", () => {
     mollie.setStatus(tr, "paid");
     await handleWebhook(tr, mollie);
     expect(await attentionFor(o.orderId)).toEqual([{ kind: "hold", orderId: o.orderId, reference: o.reference, status: "PENDING_PAYMENT", holdReason: "AMOUNT_MISMATCH" }]);
-    // No button yet for this one (a question for the owner): the page says so.
-    expect(adminOptions((await readAdminOrder(getPool(), o.orderId))!)).toMatchObject({ heldUnpaid: true, cancel: null, releaseHold: false, refundPayments: [] });
+    // The admin cancels and pays back the € 1,00 that came in (owner 2026-10-13).
+    expect(adminOptions((await readAdminOrder(getPool(), o.orderId))!)).toMatchObject({ heldUnpaid: true, cancel: { refund: money(100) }, releaseHold: false, refundPayments: [] });
+    expect(await cancelAndRefund({ orderId: o.orderId, expectedRefundCents: 2445, reason: "ander bedrag betaald", actor }, mollie)).toEqual({ ok: false, error: "amount-changed" });
+    expect(await cancelAndRefund({ orderId: o.orderId, expectedRefundCents: 100, reason: "ander bedrag betaald", actor }, mollie)).toEqual({ ok: true, refund: "sent" });
+    expect(await orderRow(o.orderId)).toEqual({ status: "CANCELLED", hold_reason: null });
+    expect(await refundsOf(o.orderId)).toEqual([{ status: "SUBMITTED", amount_cents: 100, requested_by: actor }]);
+    expect(await auditOf(o.orderId)).toEqual(["order.hold-released", "order.cancelled", "refund.requested"]);
+    expect(await attentionFor(o.orderId)).toEqual([]);
   });
 
-  it("paid at Mollie after the order expired here: on the list, with what Mollie said — no button yet", async () => {
+  it("an unpaid order without a hold cannot be cancelled by hand, and nothing changes", async () => {
+    const o = await newOrder();
+    expect(await cancelAndRefund({ orderId: o.orderId, expectedRefundCents: 0, reason: "probeer", actor }, mollie)).toEqual({ ok: false, error: "not-allowed" });
+    expect(await orderRow(o.orderId)).toEqual({ status: "PENDING_PAYMENT", hold_reason: null });
+  });
+
+  it("paid at Mollie after the order expired here: recorded as paid, and paid back by the admin (owner 2026-10-13)", async () => {
     const now = new Date();
     const o = await newOrder(now);
     await startPayment({ orderId: o.orderId, ...urls, now }, mollie);
@@ -72,11 +84,30 @@ describe("what asks for attention", () => {
     await expireUnpaidOrders(mollie, new Date(now.getTime() + SNAPSHOT_VALID_MS + 60_000));
     mollie.setStatus(tr, "paid"); // a bank that is very late
     await handleWebhook(tr, mollie);
-    // The payment machine has no EXPIRED → PAID (docs/STATE_MACHINES.md): it stays EXPIRED here.
-    expect(await attentionFor(o.orderId)).toEqual([
-      { kind: "paid-late", orderId: o.orderId, reference: o.reference, status: "CANCELLED", paymentId: expect.any(String), recordedAs: "EXPIRED", amount: money(2445) },
-    ]);
-    expect(adminOptions((await readAdminOrder(getPool(), o.orderId))!)).toMatchObject({ paidLate: true, cancel: null, refundPayments: [] });
+    // Mollie's answer, asked by us: EXPIRED → PAID. The order stays cancelled; never reopened by itself.
+    const payment = (await readAdminOrder(getPool(), o.orderId))!.payments[0]!;
+    expect(payment.status).toBe("PAID");
+    expect(await attentionFor(o.orderId)).toEqual([{ kind: "paid-not-accepted", orderId: o.orderId, reference: o.reference, status: "CANCELLED", paymentId: payment.id, open: money(2445) }]);
+    expect(adminOptions((await readAdminOrder(getPool(), o.orderId))!)).toMatchObject({ cancel: null, refundPayments: [{ paymentId: payment.id, open: money(2445) }] });
+    expect(await refundPayment({ orderId: o.orderId, paymentId: payment.id, expectedRefundCents: 2445, reason: "te laat betaald", actor }, mollie)).toEqual({ ok: true, refund: "sent" });
+    expect(await attentionFor(o.orderId)).toEqual([]);
+  });
+
+  it("paid late on a failed order: the expiry waits until it is paid back, then cancels", async () => {
+    const now = new Date();
+    const o = await newOrder(now);
+    await startPayment({ orderId: o.orderId, ...urls, now }, mollie);
+    const tr = mollie.idOfOrder(o.orderId);
+    mollie.setStatus(tr, "failed");
+    await handleWebhook(tr, mollie, now);
+    expect((await orderRow(o.orderId)).status).toBe("PAYMENT_FAILED");
+    mollie.setStatus(tr, "paid");
+    await handleWebhook(tr, mollie, now);
+    const later = new Date(now.getTime() + SNAPSHOT_VALID_MS + 60_000);
+    expect((await expireUnpaidOrders(mollie, later)).cancelled).not.toContain(o.orderId);
+    const paymentId = (await readAdminOrder(getPool(), o.orderId))!.payments[0]!.id;
+    expect(await refundPayment({ orderId: o.orderId, paymentId, expectedRefundCents: 2445, reason: "te laat betaald", actor }, mollie)).toEqual({ ok: true, refund: "sent" });
+    expect((await expireUnpaidOrders(mollie, later)).cancelled).toContain(o.orderId);
   });
 
   it("a second payment on a paid order: paid back on its own, once — and then the line is gone", async () => {

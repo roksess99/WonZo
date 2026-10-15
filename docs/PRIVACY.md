@@ -93,6 +93,10 @@ aanwijzen.
 | `provider_events` | geen: id bij Mollie en een status | b | D-24 | nee — eigen termijn |
 | `rate_limits` | een **hash** van het IP-adres, niet het adres | f (misbruik van afrekenen tegengaan) | één dag; de dagelijkse taak ruimt op | n.v.t. |
 | `supplier_orders`, `supplier_order_events` (fase 6) | geen direct: het ordernummer en het nummer bij BigBuy; naam en adres gaan bij het bestellen uit `orders` naar BigBuy (zie de dataflow hierboven) | b | als de bestelling | ja |
+| `invoices` (fase 6) | naam, adres, mailadres en telefoon van de klant — in `snapshot` én in de opgeslagen PDF | c (fiscale bewaarplicht: de factuur) | 7 jaar (`WETTELIJK`, art. 52 AWR, te bevestigen); daarna verwijderen | nee — eigen termijn, langer dan de bestelling |
+| `invoice_vat` (fase 6) | geen | c | als de factuur | met de factuur |
+| `returns`, `return_lines`, `return_events` (fase 6, D-09) | geen direct, behalve `customer_note`: vrije tekst van de klant, kan van alles bevatten | b (de koop afwikkelen), c (de creditnota volgt eruit) | als de bestelling | ja |
+| `shipments` (fase 6) | het trackingnummer: daarmee is bij de vervoerder het adres te vinden | b (de klant laten volgen waar het pakket is) | als de bestelling | ja |
 | `service_checks` (fase 6) | geen: de stand van Mollie en BigBuy, en het tegoed | — | wordt overschreven bij elke meting | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):

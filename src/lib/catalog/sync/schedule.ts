@@ -129,6 +129,8 @@ export const LIMITS: Record<string, { max: number; windowMs: number }> = {
   user: { max: 1, windowMs: HOUR },
   // Ordering (order/check, create, reference): 1 a second (GEDOCUMENTEERD), with a margin on the window.
   order: { max: 1, windowMs: 1_100 },
+  // Where the parcels are (tracking/orders, tracking/carriers): 1 a second (GEDOCUMENTEERD).
+  tracking: { max: 1, windowMs: 1_100 },
 };
 
 export function withinLimit(endpoint: keyof typeof LIMITS | string, callsInWindow: number): boolean {

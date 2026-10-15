@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 let host = "localhost:3000";
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ host }) }));
 
-import { cancelAndRefundAction, refundPaymentAction, releaseHoldAction, searchAction } from "@/app/beheer/bestellingen/actions";
+import { cancelAndRefundAction, markDeliveredAction, refundPaymentAction, releaseHoldAction, searchAction } from "@/app/beheer/bestellingen/actions";
 import { AdminAccessDenied, authorize, currentAdmin, devLoginAllowed, isLocalHost, requireAction, requirePage, type Admin } from "@/lib/admin/access";
 import { adminOptions, cleanReason, openOnPayment } from "@/lib/admin/order-actions";
 import { amsterdamMonthStart, parseOrderSearch, type AdminOrder } from "@/lib/admin/orders";
@@ -85,7 +85,7 @@ describe("the panel without logging in (only local, until 6a)", () => {
     form.set("reason", "test");
     form.set("zoek", "WZ-2026-00001");
     expect(await searchAction({ kind: "idle" }, form)).toEqual({ kind: "denied" });
-    for (const act of [releaseHoldAction, cancelAndRefundAction, refundPaymentAction]) expect(await act({ ok: null }, form)).toEqual({ ok: false, error: "access" });
+    for (const act of [releaseHoldAction, cancelAndRefundAction, refundPaymentAction, markDeliveredAction]) expect(await act({ ok: null }, form)).toEqual({ ok: false, error: "access" });
   });
 });
 
@@ -161,10 +161,10 @@ describe("searching and counting", () => {
 });
 
 describe("which buttons an order gets", () => {
-  const pay = (id: string, status: AdminOrder["payments"][number]["status"], cents: number, paidLate = false) => ({ id, status, amount: money(cents), method: null, providerPaymentId: null, createdAt: new Date(), paidLate });
+  const pay = (id: string, status: AdminOrder["payments"][number]["status"], cents: number) => ({ id, status, amount: money(cents), method: null, providerPaymentId: null, createdAt: new Date() });
   const order = (o: Partial<AdminOrder>): AdminOrder =>
-    ({ status: "PAID", holdReason: null, payments: [pay("p1", "PAID", 2445)], refunds: [], purchases: [], failedMails: [], ...o }) as AdminOrder;
-  const none = { acceptPrice: null, retryPurchase: null, resendMails: [] };
+    ({ status: "PAID", holdReason: null, payments: [pay("p1", "PAID", 2445)], refunds: [], purchases: [], failedMails: [], invoices: [], ...o }) as AdminOrder;
+  const none = { acceptPrice: null, retryPurchase: null, resendMails: [], markDelivered: false };
 
   it("a reason has at least 3 characters, at most 200", () => {
     expect(cleanReason("  ok  ")).toBeNull();
@@ -174,7 +174,7 @@ describe("which buttons an order gets", () => {
   });
 
   it("a paid order: cancel with the whole amount back — € 24,45", () => {
-    expect(adminOptions(order({}))).toEqual({ releaseHold: false, cancel: { refund: money(2445) }, refundPayments: [], heldUnpaid: false, paidLate: false, ...none });
+    expect(adminOptions(order({}))).toEqual({ releaseHold: false, cancel: { refund: money(2445) }, refundPayments: [], heldUnpaid: false, ...none });
   });
 
   it("what is left: paid minus every refund that did not fail — € 24,45 − € 10,00 = € 14,45", () => {
@@ -187,7 +187,7 @@ describe("which buttons an order gets", () => {
 
   it("a chargeback hold on a paid order: lift the hold, or cancel without a refund (the money is back already)", () => {
     const o = order({ holdReason: "CHARGEBACK", payments: [pay("p1", "CHARGED_BACK", 2445)] });
-    expect(adminOptions(o)).toEqual({ releaseHold: true, cancel: { refund: money(0) }, refundPayments: [], heldUnpaid: false, paidLate: false, ...none });
+    expect(adminOptions(o)).toEqual({ releaseHold: true, cancel: { refund: money(0) }, refundPayments: [], heldUnpaid: false, ...none });
   });
 
   it("a second payment on a paid order: that one can be paid back on its own", () => {
@@ -197,16 +197,17 @@ describe("which buttons an order gets", () => {
 
   it("paid after the order was cancelled: pay it back; no cancel, no hold to lift", () => {
     const o = order({ status: "CANCELLED", payments: [pay("p1", "PAID", 2445)] });
-    expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: null, refundPayments: [{ paymentId: "p1", open: money(2445) }], heldUnpaid: false, paidLate: false, ...none });
+    expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: null, refundPayments: [{ paymentId: "p1", open: money(2445) }], heldUnpaid: false, ...none });
   });
 
-  it("a different amount before the order was paid: no button yet (a question for the owner)", () => {
-    const o = order({ status: "PENDING_PAYMENT", holdReason: "AMOUNT_MISMATCH", payments: [pay("p1", "PAID", 100)] });
-    expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: null, refundPayments: [], heldUnpaid: true, paidLate: false, ...none });
+  it("a different amount before the order was paid: cancel, with everything that came in back (owner 2026-10-13)", () => {
+    // € 1,00 and € 23,45 paid on a € 24,45 order: € 24,45 back in two refunds.
+    const o = order({ status: "PENDING_PAYMENT", holdReason: "AMOUNT_MISMATCH", payments: [pay("p1", "PAID", 100), pay("p2", "PAID", 2345)] });
+    expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: { refund: money(2445) }, refundPayments: [], heldUnpaid: true, ...none });
   });
 
-  it("paid at Mollie after it expired here: said on the page, no button yet (a question for the owner)", () => {
-    const o = order({ status: "CANCELLED", payments: [pay("p1", "EXPIRED", 2445, true)] });
-    expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: null, refundPayments: [], heldUnpaid: false, paidLate: true, ...none });
+  it("an unpaid order without a hold is not cancelled by hand: the expiry does that", () => {
+    const o = order({ status: "PENDING_PAYMENT", payments: [pay("p1", "PENDING", 2445)] });
+    expect(adminOptions(o).cancel).toBeNull();
   });
 });

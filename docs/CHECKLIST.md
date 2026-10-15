@@ -62,8 +62,8 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 
 ## Mail
 
-- [ ] De bevestiging noemt het **btw-bedrag apart** (`WETTELIJK`, BW 6:230v):
-      wacht op D-15; tot dan staat er "alle bedragen inclusief btw".
+- [ ] De boekhouder bevestigt de btw-berekening van D-15 (per product, half
+      naar boven); bevestiging en factuur gebruiken al dezelfde functie.
 - [ ] De bevestiging linkt naar het **modelformulier** voor herroeping (de
       pagina bestaat nog niet; tot dan de contactpagina). Tekst over de
       bedenktijd laten controleren.
@@ -85,6 +85,13 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Een naam met accenten en een bedrag met een euroteken komen goed door
 - [ ] De btw op de factuur is gelijk aan die in de bevestigingsmail
 - [ ] De link naar de PDF is niet te raden
+- [ ] BigBuy bevestigt dat ons retourlabel in het pakket gaat (vraag 24); tot dan klopt "in je pakket zit een retourlabel" op de retourpagina niet
+- [ ] De statuswoorden van BigBuy-tracking gemeten bij de eerste echte zending (vraag 25); tot dan "als afgeleverd markeren" in het paneel
+- [ ] Een modelformulier voor herroeping (pagina of PDF), en de retourteksten door een adviseur bekeken
+- [ ] De uitwerking van het maximum bij een retour (verzendkosten, D-09) bevestigd door de eigenaar
+- [ ] Het IBAN van de zakelijke rekening op de factuur (`src/lib/invoices/index.ts`, nu leeg)
+- [ ] De voorbeeldfactuur (`/beheer/facturen/voorbeeld`) is door de boekhouder bekeken
+- [ ] De opgeslagen PDF's zitten in de backup (`docs/DISASTER_RECOVERY.md`)
 
 ## Beveiliging
 

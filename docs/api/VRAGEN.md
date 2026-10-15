@@ -140,7 +140,7 @@ Subject: Re: API questions before going live – WonZo (the Netherlands) – cus
 
 Hello BigBuy team,
 
-Two additions to our earlier questions, and two new ones.
+Two additions to our earlier questions, and four new ones.
 
 13 (addition). The API has no endpoint to cancel an order. Is cancelling only
     possible through a ticket in the Contact area while the order is not yet
@@ -159,6 +159,14 @@ Two additions to our earlier questions, and two new ones.
 23. /rest/user/purse gives the wallet balance. Is there a way (API or an
     export in the panel) to see the wallet movements, so we can match
     refunds of returns and refused parcels?
+24. We want every parcel to contain a prepaid return label to our own
+    return address in the Netherlands (Thaliastraat 267, 6846 XX Arnhem).
+    Can you put a label we supply (PDF per order, or one fixed label) in
+    the parcel, and how do we pass it with an order placed through the API?
+25. /rest/tracking/orders returns trackings with a "statusDescription"
+    (the documentation shows "delivered"). Which values can it have, in
+    which language (we send isoCode=en), and does an order with more than
+    one parcel get one tracking per parcel?
 
 Thank you.
 

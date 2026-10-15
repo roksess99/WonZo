@@ -61,7 +61,7 @@ describe("what an SMTP error means", () => {
 });
 
 describe("the messages", () => {
-  const links = { statusUrl: "https://wonzo.nl/bestelling/abc", contactUrl: "https://wonzo.nl/contact", logoUrl: "https://wonzo.nl/brand/png/x.png", email: "info@wonzo.nl" };
+  const links = { statusUrl: "https://wonzo.nl/bestelling/abc", contactUrl: "https://wonzo.nl/contact", logoUrl: "https://wonzo.nl/brand/png/x.png", email: "info@wonzo.nl", returnUrl: "https://wonzo.nl/retour" };
   const [plain, odd, english] = EXAMPLES;
 
   it("the confirmation carries what the law asks, in HTML and in text (BW 6:230v)", () => {

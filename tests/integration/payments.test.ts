@@ -124,6 +124,9 @@ describe("the webhook", () => {
     await handleWebhook(tr, mollie);
     expect(await orderRow(orderId)).toEqual({ status: "PENDING_PAYMENT", hold_reason: "AMOUNT_MISMATCH" });
     expect(await outboxKinds(orderId)).toContain("admin-alert");
+    // What came in, not what was asked: a refund can give back only the € 1,00.
+    const [p] = await selectRows<{ amount_cents: number | string }>(getPool(), "SELECT amount_cents FROM payments WHERE order_id = ?", [orderId]);
+    expect(Number(p!.amount_cents)).toBe(100);
   });
 
   it("expired at the provider: order PAYMENT_FAILED; the customer pays again and the order is paid", async () => {

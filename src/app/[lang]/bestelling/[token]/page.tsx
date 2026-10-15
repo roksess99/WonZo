@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ClearCartWhenPaid, OrderActions, RefreshWhilePending } from "@/components/checkout/OrderActions";
@@ -8,7 +9,10 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages, type Messages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
 import { add, formatMoney, money } from "@/lib/money";
+import { invoicesOfOrder } from "@/lib/invoices";
 import { findOrderIdByToken } from "@/lib/orders/store";
+import { parcelsOfOrder } from "@/lib/orders/tracking";
+import { RETURNABLE_ORDER_STATUSES } from "@/lib/returns/states";
 import { readOrderView, type OrderView } from "@/lib/orders/view";
 import { PAYMENT_OPEN } from "@/lib/payments/states";
 import { interpolate } from "@/lib/text";
@@ -75,9 +79,21 @@ export default async function OrderPage({ params }: PageProps<"/[lang]/bestellin
     );
   }
   await refreshPaymentStatus(orderId);
-  const o = await readOrderView(getPool(), orderId);
+  const [o, invoices, parcels] = await Promise.all([
+    readOrderView(getPool(), orderId),
+    // Without its invoice links or parcels the page still tells the customer where the order is.
+    invoicesOfOrder(getPool(), orderId).catch((err: unknown) => {
+      console.error("[bestelling] invoices", (err as { code?: unknown }).code ?? "unknown");
+      return [];
+    }),
+    parcelsOfOrder(getPool(), orderId).catch((err: unknown) => {
+      console.error("[bestelling] parcels", (err as { code?: unknown }).code ?? "unknown");
+      return [];
+    }),
+  ]);
   if (!o) notFound();
   const s = statusText(o, m.order, lang);
+  const invoice = invoices.find((i) => i.kind === "invoice");
   const c = o.customer;
   const itemCount = o.lines.reduce((n, l) => n + l.quantity, 0);
 
@@ -102,6 +118,32 @@ export default async function OrderPage({ params }: PageProps<"/[lang]/bestellin
           labels={{ ...m.order, ...m.checkout }}
         />
       </StateMessage>
+      {parcels.length && (o.status === "SHIPPED" || o.status === "DELIVERED") ? (
+        <ul className="flex flex-col gap-1 tabular-nums">
+          {parcels.map((p) => (
+            <li key={p.trackingNumber}>{p.carrier ? interpolate(m.order.tracking, { carrier: p.carrier, number: p.trackingNumber }) : interpolate(m.order.trackingNoCarrier, { number: p.trackingNumber })}</li>
+          ))}
+        </ul>
+      ) : null}
+      {invoice && (RETURNABLE_ORDER_STATUSES as readonly string[]).includes(o.status) ? (
+        <p>
+          <Link href={localizePath(lang, "/retour")} className="font-medium underline decoration-2 underline-offset-4">
+            {m.order.returnLink}
+          </Link>
+          <span className="block text-body-sm text-muted tabular-nums">{interpolate(m.order.returnLinkText, { number: invoice.number })}</span>
+        </p>
+      ) : null}
+      {invoices.length ? (
+        <ul className="flex flex-col gap-1">
+          {invoices.map((inv) => (
+            <li key={inv.id}>
+              <a href={`/api/orders/invoice?token=${encodeURIComponent(token)}&id=${inv.id}`} rel="noreferrer" className="font-medium underline decoration-2 underline-offset-4">
+                {interpolate(inv.kind === "credit" ? m.order.credit : m.order.invoice, { number: inv.number })}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p className="text-body-sm text-muted">{m.order.keepLink}</p>
 
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">

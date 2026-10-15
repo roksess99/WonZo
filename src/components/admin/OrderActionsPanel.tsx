@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
-import { acceptPriceAction, cancelAndRefundAction, refundPaymentAction, releaseHoldAction, resendMailAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
+import { acceptPriceAction, cancelAndRefundAction, markDeliveredAction, refundPaymentAction, releaseHoldAction, resendMailAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
 import type { AdminMessages } from "@/lib/admin/messages";
 import type { AdminOptions } from "@/lib/admin/order-actions";
 import { formatMoney } from "@/lib/money";
@@ -150,7 +150,6 @@ export function OrderActionsPanel({
   return (
     <div className="flex flex-col gap-3">
       {options.heldUnpaid ? <p className="max-w-prose">{m.heldUnpaid}</p> : null}
-      {options.paidLate ? <p className="max-w-prose">{m.paidLate}</p> : null}
       <div className="flex flex-col items-start gap-3">
         {canManage && options.releaseHold && holdReason ? (
           <ConfirmAction label={m.release} text={m.releaseText} confirmLabel={m.releaseConfirm} action={releaseHoldAction} fields={{ ...base, expectedHold: holdReason }} m={m} money={false} />
@@ -191,6 +190,9 @@ export function OrderActionsPanel({
               />
             ))
           : null}
+        {canManage && options.markDelivered ? (
+          <ConfirmAction label={m.markDelivered} text={m.markDeliveredText} confirmLabel={m.markDeliveredConfirm} action={markDeliveredAction} fields={base} m={m} money={false} />
+        ) : null}
         {canRefund && cancel ? (
           <ConfirmAction
             label={cancel.refund.amount > 0 ? m.cancel : m.cancelNoRefund}

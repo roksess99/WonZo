@@ -19,6 +19,8 @@ export const PERMISSIONS = [
   /** Handing out permissions — and with that, every other permission. */
   "beheerders",
   "statistieken",
+  /** The audit log: who did what to which object (docs/BEHEER.md § Beheerders). Only the owner's role has it (D-07). */
+  "logboek",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 

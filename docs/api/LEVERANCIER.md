@@ -509,7 +509,14 @@ GEDOCUMENTEERD (BigBuy API, OpenAPI 3.0.0 `doc.json`, geraadpleegd 2026-10-04):
 - Meerdere verzendadressen: `/order/create/multishipping`. Vervoerder kiezen
   per bestelling (`carriers`).
 - Tracking via polling (`/rest/tracking/order/{id}`, `/rest/tracking/orders`);
-  **webhooks komen in de documentatie niet voor**.
+  **webhooks komen in de documentatie niet voor**. `GEDOCUMENTEERD`
+  (doc.json, 2026-10-13): `POST /rest/tracking/orders` met
+  `{ track: { orders: [{ id }] } }` geeft per order `trackings` met
+  `trackingNumber`, `statusDescription` (voorbeeld "delivered"), `statusDate`
+  en `carrier.id`; 404 als er nog niets is; de namen van vervoerders uit
+  `GET /rest/tracking/carriers`. Welke statuswoorden er zijn: niet gemeten
+  (vraag 25). Gebouwd in `src/lib/catalog/bigbuy/ordering.ts`; alleen
+  "delivered" telt als afgeleverd (`AANNAME`).
 - **Annuleren:** geen endpoint; het woord komt in `doc.json` niet voor
   (geraadpleegd 2026-10-10). Volgens de BigBuy Academy alleen via een ticket
   zolang de bestelling niet in voorbereiding is (`AANNAME`, zoekresultaat;

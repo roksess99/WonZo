@@ -138,6 +138,22 @@ kenmerk dat de mailserver teruggeeft. De outbox kent nu de standen `PENDING`,
 `SENT` (mail weg), `DONE` (afgehandeld zonder mail, of inkooporder gemaakt) en
 `FAILED` (mail kon niet weg; in "vraagt aandacht", opnieuw te versturen).
 
+En (`db/migrations/0008_returns_tracking.sql`): `returns` met `return_lines`
+en `return_events` (een aanvraag met per bestelregel aantal en reden, het
+maximum dat terug kan, en wat de beheerder terugbetaalde; één open retour per
+bestelling via een unieke sleutel op `open_order_id`), `shipments` (de
+pakketten die de leverancier meldt, met trackingnummer), `shipped_at` en
+`delivered_at` op bestelling en inkooporder (de herroepingstermijn loopt vanaf
+de aflevering), `refunds.return_id`, en op `invoices` een `doc_key`
+(`invoice`, `cancel` of `return:<id>`) en `return_id`: één creditnota per
+retour.
+
+En (`db/migrations/0007_invoices.sql`): `invoices` (factuur of creditnota,
+nummer, totalen, het document als `snapshot` en de PDF zelf) en `invoice_vat`
+(per tarief de grondslag en de btw, voor het maandoverzicht). Eén factuur en
+hoogstens één creditnota per bestelling. Een uitgereikt document wordt nooit
+gewijzigd.
+
 ### Payment, Refund, ProviderEvent
 
 | Entiteit | Kernvelden |

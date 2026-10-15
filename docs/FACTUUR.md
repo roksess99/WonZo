@@ -3,6 +3,25 @@
 Een factuur is geen opgemaakte bestelbevestiging. Het is een boekstuk, en het
 is het enige document uit de winkel dat jaren later nog moet kloppen.
 
+**Gebouwd (fase 6, 2026-10-12):** `src/lib/invoices/` en `src/lib/pricing/vat.ts`,
+met pdfkit 0.20.2 en DM Sans (OFL, `assets/fonts/`). Opbouw naar het voorbeeld
+van de eigenaar (2026-10-12): per regel stuk en totaal excl. en incl. btw, dan
+subtotaal, verzending, btw per tarief en het totaal excl. en incl. Btw per
+product uit het regeltotaal incl. btw, half naar boven afgerond (D-15).
+Nummer `2026-00001`, creditnota `C2026-00001`, uit de teller in dezelfde
+transactie; de PDF opgeslagen in de database (`invoices.pdf`). Te zien in het
+paneel (`/beheer/facturen`, met het btw-overzicht per maand en een
+voorbeeldfactuur) en voor de klant via de statuslink.
+
+`GEMETEN` 2026-10-12: alle tekens van de testregel hieronder staan in DM Sans;
+de PDF is getagd (structuurboom, taal, titel); dezelfde invoer geeft dezelfde
+bytes, ook in twee processen, zodra de datums in de metadata vastliggen.
+
+Nog open: btw op verzendkosten bij twee tarieven (D-15; zo'n factuur wordt
+niet gemaakt maar staat in "vraagt aandacht"), het IBAN (de zakelijke rekening
+komt nog), en de leverdatum: op de factuur staat de verwachte levertermijn na
+de besteldatum — laten bevestigen door de boekhouder.
+
 Dit bestand onderscheidt drie soorten regels. Laat de `WETTELIJK`-regels door
 de boekhouder of een adviseur bevestigen voor de markt van de winkel; het
 `BELEID` legt de eigenaar vast in D-21.
@@ -52,8 +71,10 @@ dan is de administratie compleet en hoef je nooit iets te reconstrueren.
   door na facturering, dan een creditnota — niet het nummer hergebruiken.
 - Een creditnota verwijst naar het nummer van de oorspronkelijke factuur. Een
   terugbetaling zonder creditnota klopt niet in de boeken.
-- Een factuur wordt gemaakt bij de transitie naar `PAID`
-  (`docs/STATE_MACHINES.md`), via de outbox, één per order (unieke sleutel).
+- Een factuur wordt gemaakt als het annuleervenster dicht is en de bestelling
+  naar inkoop gaat (`FULFILLMENT_PENDING`, D-21 — de eigenaar koos dat boven
+  "bij `PAID`": annuleren binnen het venster vraagt zo nooit een creditnota),
+  via de outbox, één per order (unieke sleutel).
 
 ---
 

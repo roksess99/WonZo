@@ -127,9 +127,12 @@ export async function recordProviderEvent(conn: Connection, resourceId: string, 
   return (result as { affectedRows: number }).affectedRows === 1;
 }
 
-export async function insertRefund(conn: Connection, r: { id: string; orderId: number; paymentId: string; amount: Money; reason: string; requestedBy: string; now: Date }): Promise<void> {
-  await conn.query("INSERT INTO refunds (id, order_id, payment_id, status, amount_cents, currency, reason, requested_by, created_at) VALUES (?, ?, ?, 'REQUESTED', ?, ?, ?, ?, ?)", [
-    r.id, r.orderId, r.paymentId, r.amount.amount, r.amount.currency, r.reason.slice(0, 200), r.requestedBy.slice(0, 60), toDbTime(r.now),
+export async function insertRefund(
+  conn: Connection,
+  r: { id: string; orderId: number; paymentId: string; amount: Money; reason: string; requestedBy: string; now: Date; returnId?: number | null },
+): Promise<void> {
+  await conn.query("INSERT INTO refunds (id, order_id, payment_id, status, amount_cents, currency, reason, requested_by, return_id, created_at) VALUES (?, ?, ?, 'REQUESTED', ?, ?, ?, ?, ?, ?)", [
+    r.id, r.orderId, r.paymentId, r.amount.amount, r.amount.currency, r.reason.slice(0, 200), r.requestedBy.slice(0, 60), r.returnId ?? null, toDbTime(r.now),
   ]);
   await conn.query("INSERT INTO refund_events (refund_id, from_status, to_status, actor, at) VALUES (?, NULL, 'REQUESTED', ?, ?)", [r.id, r.requestedBy.slice(0, 20), toDbTime(r.now)]);
 }

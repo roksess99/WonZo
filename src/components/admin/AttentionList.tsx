@@ -19,11 +19,13 @@ function describe(item: AttentionItem, m: AdminMessages): { title: string; todo?
     }
     case "paid-not-accepted":
       return { title: interpolate(m.attention.paidNotAccepted, { reference: item.reference, amount: formatMoney(item.open), status: m.status[item.status].toLowerCase() }), todo: m.attention.paidNotAcceptedAction };
-    case "paid-late":
+    case "return-waiting":
       return {
-        title: interpolate(m.attention.paidLate, { reference: item.reference, amount: formatMoney(item.amount), recorded: m.paymentStatus[item.recordedAs].toLowerCase(), status: m.status[item.status].toLowerCase() }),
-        todo: m.attention.paidLateAction,
+        title: interpolate(item.returnStatus === "REQUESTED" ? m.attention.returnRequested : m.attention.returnReceived, { number: item.returnNumber, reference: item.reference, amount: formatMoney(item.max) }),
+        todo: item.returnStatus === "REQUESTED" ? m.attention.returnRequestedAction : m.attention.returnReceivedAction,
       };
+    case "return-credit-missing":
+      return { title: interpolate(m.attention.returnCreditMissing, { number: item.returnNumber, reference: item.reference }), todo: m.attention.returnCreditMissingAction };
     case "refund-failed":
       return { title: interpolate(m.attention.refundFailed, { reference: item.reference, amount: formatMoney(item.amount) }), todo: m.attention.refundFailedAction };
     case "purchase-blocked":
@@ -42,6 +44,8 @@ function describe(item: AttentionItem, m: AdminMessages): { title: string; todo?
         title: interpolate(m.attention.mailFailed, { reference: item.reference, kind: (m.attention.mailKinds as Record<string, string>)[item.mailKind] ?? item.mailKind, error: item.error }),
         todo: m.attention.mailFailedAction,
       };
+    case "invoice-failed":
+      return { title: interpolate(m.attention.invoiceFailed, { reference: item.reference, error: item.error }), todo: m.attention.invoiceFailedAction };
     case "refund-unknown":
       return { title: interpolate(m.attention.refundUnknown, { reference: item.reference, amount: formatMoney(item.amount) }), todo: m.attention.refundUnknownAction };
   }

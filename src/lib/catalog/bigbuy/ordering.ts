@@ -3,22 +3,25 @@
 // POST /rest/order/check simulates and returns totals as numbers;
 // POST /rest/order/create places (201, the id in the Location header or as
 // `order_id`); GET /rest/order/reference/{ref} finds an order by our own
-// `internalReference`. 1 call per second for each. Still to measure: what a
+// `internalReference`; POST /rest/tracking/orders gives the parcels of orders
+// (read only). 1 call per second for each. Still to measure: what a
 // too-low balance returns, whether a second order with the same reference is
 // refused (409?), and whether `carriers` may be left out (AANNAME: yes, BigBuy
 // then picks one). Server-side only.
 
 import { getPool } from "@/lib/db";
 import { fromDecimal, type Money } from "@/lib/money";
-import type { CheckAnswer, LookupAnswer, OrderingMode, PlaceAnswer, SupplierOrdering, SupplierOrderRequest } from "../ordering";
+import type { CheckAnswer, LookupAnswer, OrderingMode, Parcel, PlaceAnswer, SupplierOrdering, SupplierOrderRequest, TrackingAnswer } from "../ordering";
 import { hasBudget, supplierConfig, type SupplierConfig } from "./client";
 
 if (typeof window !== "undefined") throw new Error("Ordering at the supplier must not run in the browser");
 
 const SANDBOX_HOST = "api.sandbox.bigbuy.eu";
 const LIVE_HOST = "api.bigbuy.eu";
-/** The calls of this file share one budget: 1 a second (GEDOCUMENTEERD), counted in catalog_api_calls. */
+/** The order calls share one budget: 1 a second (GEDOCUMENTEERD), counted in catalog_api_calls. */
 const ENDPOINT = "order";
+/** tracking/* has a limit of its own: also 1 a second (GEDOCUMENTEERD). */
+const TRACKING = "tracking";
 const TIMEOUT_MS = 30_000;
 
 /**
@@ -96,14 +99,14 @@ const messageOf = (x: unknown) => (isObj(x) && typeof x.message === "string" ? x
 
 type Raw = { status: number | "timeout" | "network"; json: unknown; location: string | null };
 
-async function call(config: SupplierConfig, method: "GET" | "POST", path: string, body?: unknown): Promise<Raw | "no-budget"> {
+async function call(config: SupplierConfig, method: "GET" | "POST", path: string, body?: unknown, endpoint = ENDPOINT): Promise<Raw | "no-budget"> {
   const pool = getPool();
   // 1 a second: wait for the slot a little, instead of failing the run.
-  for (let i = 0; !(await hasBudget(pool, ENDPOINT)); i++) {
+  for (let i = 0; !(await hasBudget(pool, endpoint)); i++) {
     if (i >= 3) return "no-budget";
     await new Promise((r) => setTimeout(r, 1_100));
   }
-  const [inserted] = await pool.execute("INSERT INTO catalog_api_calls (endpoint) VALUES (?)", [ENDPOINT]);
+  const [inserted] = await pool.execute("INSERT INTO catalog_api_calls (endpoint) VALUES (?)", [endpoint]);
   const callId = (inserted as { insertId: number }).insertId;
   let raw: Raw = { status: "network", json: null, location: null };
   try {
@@ -145,6 +148,70 @@ export function lookupAnswer(raw: Raw): LookupAnswer {
   return { kind: "unknown" };
 }
 
+/**
+ * BigBuy's "2016-05-13 11:35:40" (doc.json example). Which time zone is not
+ * documented: read as UTC (AANNAME). Spain is one or two hours ahead, so a
+ * delivery reads up to two hours later — the withdrawal window then ends a
+ * little later, never earlier.
+ */
+export function parseSupplierTime(x: unknown): Date | null {
+  if (typeof x !== "string") return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(x);
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6])));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Whether BigBuy's status says the parcel arrived. GEDOCUMENTEERD only as
+ * the example "delivered" (doc.json, TrackingDoc); which other values exist,
+ * and in which language, is not measured (docs/api/VRAGEN.md vraag 25). So
+ * only that word counts (AANNAME); anything else is "on the way", and the
+ * admin can mark an order delivered by hand.
+ */
+export const isDeliveredStatus = (s: string | null) => s !== null && s.trim().toLowerCase() === "delivered";
+
+/**
+ * The answer of POST /rest/tracking/orders (doc.json, OrderTrackingDoc):
+ * [{ id, reference, trackings: [{ trackingNumber, statusDescription,
+ * statusDate, carrier: { id } }] }]. A parcel without a tracking number is
+ * not a parcel we can tell anyone about: left out.
+ */
+export function parseTracking(x: unknown, carrierNames: ReadonlyMap<string, string>): TrackingAnswer {
+  if (!Array.isArray(x)) return { kind: "unknown" };
+  const orders: { supplierOrderRef: string; parcels: Parcel[] }[] = [];
+  for (const o of x) {
+    if (!isObj(o) || (typeof o.id !== "number" && typeof o.id !== "string")) continue;
+    const parcels: Parcel[] = [];
+    for (const t of Array.isArray(o.trackings) ? o.trackings : []) {
+      if (!isObj(t) || typeof t.trackingNumber !== "string" || !/^[A-Za-z0-9 ._/-]{3,64}$/.test(t.trackingNumber.trim())) continue;
+      const carrierId = isObj(t.carrier) && (typeof t.carrier.id === "string" || typeof t.carrier.id === "number") ? String(t.carrier.id) : null;
+      const statusText = typeof t.statusDescription === "string" ? t.statusDescription.trim().slice(0, 120) || null : null;
+      parcels.push({
+        trackingNumber: t.trackingNumber.trim(),
+        carrier: carrierId ? (carrierNames.get(carrierId) ?? null) : null,
+        statusText,
+        statusAt: parseSupplierTime(t.statusDate),
+        delivered: isDeliveredStatus(statusText),
+      });
+    }
+    orders.push({ supplierOrderRef: String(o.id), parcels });
+  }
+  return { kind: "ok", orders };
+}
+
+/** GET /rest/tracking/carriers (doc.json, CarrierTrackingDoc): [{ id, name }]. */
+export function parseCarriers(x: unknown): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const c of Array.isArray(x) ? x : []) {
+    if (isObj(c) && (typeof c.id === "string" || typeof c.id === "number") && typeof c.name === "string" && c.name.trim()) names.set(String(c.id), c.name.trim().slice(0, 60));
+  }
+  return names;
+}
+
+/** Carrier names change rarely: asked at most once a day per process — a cache, nothing that cannot be asked again. */
+let carriers: { names: Map<string, string>; at: number } | null = null;
+
 const safeReference = (ref: string) => {
   if (!/^[A-Za-z0-9-]{1,40}$/.test(ref)) throw new Error(`Not a reference: ${ref}`);
   return ref;
@@ -172,6 +239,20 @@ export function bigbuyOrdering(env: Record<string, string | undefined>): Supplie
     async lookup(reference) {
       const raw = await call(config, "GET", `/rest/order/reference/${encodeURIComponent(safeReference(reference))}.json`);
       return raw === "no-budget" ? { kind: "unknown" } : lookupAnswer(raw);
+    },
+    async tracking(refs) {
+      const ids = refs.filter((r) => /^\d{1,20}$/.test(r));
+      if (!ids.length) return { kind: "ok", orders: [] };
+      if (!carriers || Date.now() - carriers.at > 24 * 3_600_000) {
+        const raw = await call(config, "GET", "/rest/tracking/carriers.json", undefined, TRACKING);
+        // Without names the parcels still count; the names are tried again next time.
+        if (raw !== "no-budget" && raw.status === 200) carriers = { names: parseCarriers(raw.json), at: Date.now() };
+      }
+      const raw = await call(config, "POST", "/rest/tracking/orders.json?isoCode=en", { track: { orders: ids.map((id) => ({ id })) } }, TRACKING);
+      if (raw === "no-budget") return { kind: "unknown" };
+      // 404 "No carriers found": nothing has left yet (GEDOCUMENTEERD).
+      if (raw.status === 404) return { kind: "ok", orders: [] };
+      return raw.status === 200 ? parseTracking(raw.json, carriers?.names ?? new Map()) : { kind: "unknown" };
     },
   };
 }

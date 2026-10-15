@@ -17,10 +17,14 @@ import { issueAccessToken } from "@/lib/orders/store";
 import { readOrderView } from "@/lib/orders/view";
 import { siteUrl } from "@/lib/seo";
 import { bareAddress, recipient, type MailConfig } from "./config";
+import { invoicesOfOrder } from "@/lib/invoices";
+import { parcelsOfOrder } from "@/lib/orders/tracking";
+import { readReturn } from "@/lib/returns";
+import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, type ReturnMailData } from "./after-sale";
 import { adminAlert, adminNewOrder, alertKind, orderCancelled, orderConfirmation, type Links } from "./messages";
 import type { MailSender, OutgoingMail } from "./transport";
 
-export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert"] as const;
+export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert", "order-shipped", "return-requested", "return-rejected", "return-refunded", "admin-new-return"] as const;
 /** Minutes to wait after the n-th failure: quick at first (a hiccup), then hours (a server that is down). */
 const BACKOFF_MINUTES = [1, 5, 15, 60, 180, 360, 720];
 export const MAX_ATTEMPTS = BACKOFF_MINUTES.length + 1;
@@ -36,7 +40,7 @@ type Row = { id: number | string; kind: string; dedupe_key: string; payload: unk
 
 /** What a record becomes, read from the frozen order at the moment of sending. */
 async function compose(row: Row, config: MailConfig, now: Date): Promise<Composed> {
-  const payload = (typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload) as { orderId?: unknown; reason?: unknown; error?: unknown } | null;
+  const payload = (typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload) as { orderId?: unknown; reason?: unknown; error?: unknown; returnId?: unknown } | null;
   const orderId = Number(payload?.orderId);
   const order = Number.isSafeInteger(orderId) ? await readOrderView(getPool(), orderId, now) : null;
   if (!order) return { kind: "skip", reason: "bestelling niet gevonden" };
@@ -44,7 +48,18 @@ async function compose(row: Row, config: MailConfig, now: Date): Promise<Compose
   const customerLinks = async (): Promise<Links> => {
     // A key of its own for every message (docs/DATAMODEL.md § Order: toegangssleutels).
     const token = await withTransaction((conn) => issueAccessToken(conn, orderId, now));
-    return { statusUrl: url(statusPath(order.locale, token)), contactUrl: url(localizePath(order.locale, "/contact")), logoUrl: url(LOGO), email: company.email };
+    return { statusUrl: url(statusPath(order.locale, token)), contactUrl: url(localizePath(order.locale, "/contact")), logoUrl: url(LOGO), email: company.email, returnUrl: url(localizePath(order.locale, "/retour")) };
+  };
+  /** The return of a return mail, as the mail needs it; null when it is not there (or not of this order). */
+  const returnData = async (): Promise<(ReturnMailData & { status: string }) | null> => {
+    const returnId = Number(payload?.returnId);
+    const r = Number.isSafeInteger(returnId) ? await readReturn(getPool(), returnId) : null;
+    if (!r || r.orderId !== orderId) return null;
+    return {
+      locale: order.locale, reference: order.reference, number: r.number, status: r.status,
+      lines: r.lines.map((l) => ({ name: l.name, sku: l.sku, quantity: l.quantity, reason: l.reason })),
+      max: r.max, refund: r.refund, deductionReason: r.deductionReason, rejectReason: r.rejectReason,
+    };
   };
   switch (row.kind) {
     case "order-confirmation":
@@ -61,6 +76,32 @@ async function compose(row: Row, config: MailConfig, now: Date): Promise<Compose
     case "admin-alert": {
       const detail = { reason: typeof payload?.reason === "string" ? payload.reason : undefined, error: typeof payload?.error === "string" ? payload.error : undefined };
       return { kind: "mail", intended: config.ordersTo, mail: adminAlert({ reference: order.reference, kind: alertKind(row.dedupe_key), detail, paid: order.paidAt !== null }, adminUrl, url(LOGO), adminMessages()) };
+    }
+    case "order-shipped": {
+      const parcels = await parcelsOfOrder(getPool(), orderId);
+      const invoice = (await invoicesOfOrder(getPool(), orderId)).find((i) => i.kind === "invoice");
+      const data = { locale: order.locale, reference: order.reference, lines: order.lines, parcels, delivery: order.delivery, invoiceNumber: invoice?.number ?? null };
+      return { kind: "mail", intended: order.customer.email, mail: orderShipped(data, await customerLinks(), getMessages(order.locale)) };
+    }
+    case "return-requested": {
+      const r = await returnData();
+      if (!r) return { kind: "skip", reason: "retour niet gevonden" };
+      return { kind: "mail", intended: order.customer.email, mail: returnRequested(r, await customerLinks(), getMessages(order.locale)) };
+    }
+    case "return-rejected": {
+      const r = await returnData();
+      if (r?.status !== "REJECTED") return { kind: "skip", reason: "retour niet (meer) afgewezen" };
+      return { kind: "mail", intended: order.customer.email, mail: returnRejected(r, await customerLinks(), getMessages(order.locale)) };
+    }
+    case "return-refunded": {
+      const r = await returnData();
+      if (r?.status !== "REFUNDED") return { kind: "skip", reason: "retour niet terugbetaald" };
+      return { kind: "mail", intended: order.customer.email, mail: returnRefunded(r, await customerLinks(), getMessages(order.locale)) };
+    }
+    case "admin-new-return": {
+      const r = await returnData();
+      if (!r) return { kind: "skip", reason: "retour niet gevonden" };
+      return { kind: "mail", intended: config.ordersTo, mail: adminNewReturn(r, adminUrl, url(LOGO), adminMessages()) };
     }
     default:
       return { kind: "skip", reason: `geen mail voor ${row.kind}` };

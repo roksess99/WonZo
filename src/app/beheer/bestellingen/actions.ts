@@ -8,9 +8,10 @@
 
 import { revalidatePath } from "next/cache";
 import { AdminAccessDenied, requireAction } from "@/lib/admin/access";
-import { acceptPurchasePrice, cancelAndRefund, refundPayment, releaseHold, resendMail, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
+import { acceptPurchasePrice, cancelAndRefund, cleanReason, refundPayment, releaseHold, resendMail, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
 import { searchOrders, type OrderListRow } from "@/lib/admin/orders";
 import { getPool } from "@/lib/db";
+import { markDelivered } from "@/lib/orders/tracking";
 
 export type SearchState = { kind: "idle" } | { kind: "invalid" } | { kind: "results"; rows: OrderListRow[] } | { kind: "denied" };
 
@@ -95,6 +96,16 @@ export async function resendMailAction(_: OrderActionState, form: FormData): Pro
   return run("bestellingen", id(form.get("orderId")), (actor, orderId) =>
     !outboxId ? Promise.resolve({ ok: false, error: "changed" }) : resendMail({ orderId, outboxId, reason: form.get("reason"), actor }),
   );
+}
+
+/** The admin marks the order delivered: the withdrawal window starts now (D-09). */
+export async function markDeliveredAction(_: OrderActionState, form: FormData): Promise<OrderActionState> {
+  return run("bestellingen", id(form.get("orderId")), async (actor, orderId) => {
+    const reason = cleanReason(form.get("reason"));
+    if (!reason) return { ok: false, error: "reason-required" };
+    const r = await markDelivered({ orderId, reason, actor });
+    return r.ok ? { ok: true, refund: "none" } : { ok: false, error: r.error };
+  });
 }
 
 export async function refundPaymentAction(_: OrderActionState, form: FormData): Promise<OrderActionState> {

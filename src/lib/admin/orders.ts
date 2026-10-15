@@ -5,11 +5,15 @@
 // call this only after their permission check, so customer details are never
 // fetched for someone who may not see them (.claude/rules/beveiliging.md).
 
+import { amsterdamMonthStartOf, amsterdamYearMonth } from "@/lib/dates";
 import { fromDbTime, selectRows, toDbTime, type Queryable } from "@/lib/db";
 import { money, type Money } from "@/lib/money";
 import { isOrderStatus, type OrderStatus } from "@/lib/orders/states";
 import type { PaymentStatus, RefundStatus } from "@/lib/payments/states";
+import { invoicesOfOrder } from "@/lib/invoices";
 import { supplierOrdersOf, type SupplierOrderRow } from "@/lib/orders/purchasing";
+import { parcelsOfOrder } from "@/lib/orders/tracking";
+import { returnsOfOrder, type ReturnRow } from "@/lib/returns";
 
 /** The tabs of the order list: what still has to happen first. */
 export const ORDER_GROUPS = {
@@ -31,17 +35,8 @@ function groupWhere(group: OrderGroup): { sql: string; params: string[] } {
 
 /** Midnight on the first of this month in the Netherlands, as an instant. */
 export function amsterdamMonthStart(now: Date): Date {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "2-digit", timeZone: "Europe/Amsterdam", timeZoneName: "longOffset" })
-      .formatToParts(now)
-      .map((p) => [p.type, p.value]),
-  );
-  // The offset on the 1st can differ from today's (summer time ends in October): ask again for that day.
-  const guess = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, 1));
-  const offset = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Amsterdam", timeZoneName: "longOffset" }).formatToParts(guess).find((p) => p.type === "timeZoneName")!.value;
-  const m = /GMT([+-])(\d{2}):(\d{2})/.exec(offset);
-  const minutes = m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) : 0;
-  return new Date(guess.getTime() - minutes * 60_000);
+  const { year, month } = amsterdamYearMonth(now);
+  return amsterdamMonthStartOf(year, month);
 }
 
 export type OrderSummary = {
@@ -69,15 +64,8 @@ export async function orderSummary(db: Queryable, now: Date): Promise<OrderSumma
 
 export type AttentionItem =
   | { kind: "hold"; orderId: number; reference: string; status: OrderStatus; holdReason: string }
-  /** Paid, but the order did not take it: paid after expiry, after a failure, or a second payment. */
+  /** Paid, but the order did not take it: paid after expiry or a failure (recorded as paid, owner 2026-10-13), or a second payment. */
   | { kind: "paid-not-accepted"; orderId: number; reference: string; status: OrderStatus; paymentId: string; open: Money }
-  /**
-   * Mollie reported "paid" on a payment that had already failed or expired
-   * here. The payment machine has no way from there to PAID
-   * (docs/STATE_MACHINES.md § Payment), so it stays as it was and only an
-   * alert went out — the money is at Mollie all the same.
-   */
-  | { kind: "paid-late"; orderId: number; reference: string; status: OrderStatus; paymentId: string; recordedAs: PaymentStatus; amount: Money }
   | { kind: "refund-failed"; orderId: number; reference: string; refundId: string; amount: Money }
   /** More than 10 % above the frozen purchase price (D-04): waits for the owner. */
   | { kind: "purchase-blocked"; orderId: number; reference: string; expected: Money; checked: Money }
@@ -89,8 +77,14 @@ export type AttentionItem =
   | { kind: "purchase-unknown"; orderId: number; reference: string }
   /** A mail that could not go out: refused for good, or too many tries (src/lib/mail/worker.ts). */
   | { kind: "mail-failed"; orderId: number; reference: string; outboxId: number; mailKind: string; error: string }
+  /** The invoice could not be made (e.g. VAT on shipping with two rates, still open in D-15): nothing is guessed. */
+  | { kind: "invoice-failed"; orderId: number; reference: string; outboxId: number; error: string }
   /** Asked, but Mollie's answer never came; reconciliation keeps asking. */
-  | { kind: "refund-unknown"; orderId: number; reference: string; refundId: string; amount: Money };
+  | { kind: "refund-unknown"; orderId: number; reference: string; refundId: string; amount: Money }
+  /** A return waits for the admin: the parcel to come in (REQUESTED), or the judgement (RECEIVED) — D-09. */
+  | { kind: "return-waiting"; orderId: number; reference: string; returnId: number; returnNumber: string; returnStatus: "REQUESTED" | "RECEIVED"; max: Money }
+  /** Paid back, but its credit note could not be made (e.g. a deduction with two VAT rates, D-15): nothing is guessed. */
+  | { kind: "return-credit-missing"; orderId: number; reference: string; returnId: number; returnNumber: string };
 
 /** Everything a person has to decide about, oldest first. Empty in a healthy shop. */
 export async function attentionItems(db: Queryable, now: Date): Promise<AttentionItem[]> {
@@ -119,20 +113,6 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
     if (open > 0 && isOrderStatus(p.status)) items.push({ kind: "paid-not-accepted", orderId: Number(p.order_id), reference: p.reference, status: p.status, paymentId: p.id, open: money(open) });
   }
 
-  // What Mollie said is in provider_events (one row per payment and reported state, "tr_…:PAID").
-  const late = await selectRows<{ id: string; order_id: number | string; reference: string; status: string; local: string; amount_cents: number | string }>(
-    db,
-    `SELECT p.id, p.order_id, o.reference, o.status, p.status AS local, p.amount_cents
-       FROM payments p
-       JOIN orders o ON o.id = p.order_id
-       JOIN provider_events e ON e.provider = 'mollie' AND e.event_key = CONCAT(p.provider_payment_id, ':PAID')
-      WHERE p.status IN ('FAILED', 'CANCELED', 'EXPIRED')
-      ORDER BY p.created_at LIMIT 100`,
-  );
-  for (const p of late) {
-    if (isOrderStatus(p.status)) items.push({ kind: "paid-late", orderId: Number(p.order_id), reference: p.reference, status: p.status, paymentId: p.id, recordedAs: p.local as PaymentStatus, amount: money(Number(p.amount_cents)) });
-  }
-
   const purchases = await selectRows<{ order_id: number | string; reference: string; status: string; blocked_reason: string | null; expected_cost_cents: number | string; checked_products_cents: number | string | null; first_failed_at: string | null; gave_up_at: string | null; last_error: string | null; updated_at: string }>(
     db,
     `SELECT s.order_id, o.reference, s.status, s.blocked_reason, s.expected_cost_cents, s.checked_products_cents, s.first_failed_at, s.gave_up_at, s.last_error, s.updated_at
@@ -155,7 +135,10 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
        FROM outbox x JOIN orders o ON o.id = CAST(JSON_VALUE(x.payload, '$.orderId') AS UNSIGNED)
       WHERE x.status = 'FAILED' ORDER BY x.id LIMIT 100`,
   );
-  for (const x of mails) items.push({ kind: "mail-failed", orderId: Number(x.order_id), reference: x.reference, outboxId: Number(x.id), mailKind: x.kind, error: x.last_error ?? "" });
+  for (const x of mails) {
+    const base = { orderId: Number(x.order_id), reference: x.reference, outboxId: Number(x.id), error: x.last_error ?? "" };
+    items.push(x.kind === "invoice" ? { kind: "invoice-failed", ...base } : { kind: "mail-failed", ...base, mailKind: x.kind });
+  }
 
   // A failed refund stays work until a newer refund on the same payment replaces it.
   const refunds = await selectRows<{ id: string; order_id: number | string; reference: string; status: string; amount_cents: number | string }>(
@@ -170,6 +153,21 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
   for (const r of refunds) {
     const base = { orderId: Number(r.order_id), reference: r.reference, refundId: r.id, amount: money(Number(r.amount_cents)) };
     items.push(r.status === "FAILED" ? { kind: "refund-failed", ...base } : { kind: "refund-unknown", ...base });
+  }
+
+  const returns = await selectRows<{ id: number | string; number: string; status: string; order_id: number | string; reference: string; max: number | string; credit: number | string | null; closed_at: string | null }>(
+    db,
+    `SELECT r.id, r.number, r.status, r.order_id, o.reference, r.lines_cents + r.shipping_cents AS max, r.closed_at,
+            (SELECT c.id FROM invoices c WHERE c.return_id = r.id LIMIT 1) AS credit
+       FROM returns r JOIN orders o ON o.id = r.order_id
+      WHERE r.status IN ('REQUESTED', 'RECEIVED') OR (r.status = 'REFUNDED' AND r.closed_at < ?)
+      ORDER BY r.id LIMIT 100`,
+    [toDbTime(new Date(now.getTime() - 10 * 60_000))],
+  );
+  for (const r of returns) {
+    const base = { orderId: Number(r.order_id), reference: r.reference, returnId: Number(r.id), returnNumber: r.number };
+    if (r.status === "REQUESTED" || r.status === "RECEIVED") items.push({ kind: "return-waiting", ...base, returnStatus: r.status, max: money(Number(r.max)) });
+    else if (r.credit === null) items.push({ kind: "return-credit-missing", ...base });
   }
   return items;
 }
@@ -229,6 +227,9 @@ export type AdminOrder = {
   paidAt: Date | null;
   snapshotExpiresAt: Date;
   cancelWindowEndsAt: Date | null;
+  shippedAt: Date | null;
+  /** The withdrawal window runs from here (D-09). */
+  deliveredAt: Date | null;
   customer: { firstName: string; lastName: string; street: string; houseNumber: string; postcode: string; city: string; country: string; email: string; phone: string };
   lines: {
     lineNo: number;
@@ -257,14 +258,17 @@ export type AdminOrder = {
     method: string | null;
     providerPaymentId: string | null;
     createdAt: Date;
-    /** Mollie reported it paid while it is failed or expired here (see AttentionItem "paid-late"). */
-    paidLate: boolean;
   }[];
   refunds: { id: string; paymentId: string; status: RefundStatus; amount: Money; reason: string; requestedBy: string; providerRefundId: string | null; createdAt: Date }[];
   events: { from: string | null; to: string; actor: string; reason: string | null; at: Date }[];
   purchases: (SupplierOrderRow & { events: { to: string; actor: string; reason: string | null; at: Date }[] })[];
   /** Mail for this order that could not go out (src/lib/mail/worker.ts). */
   failedMails: { id: number; kind: string; error: string }[];
+  /** The invoice and credit notes of this order (src/lib/invoices). */
+  invoices: { id: number; number: string; kind: "invoice" | "credit" }[];
+  /** What the supplier reports about the parcels (src/lib/orders/tracking.ts). */
+  parcels: { trackingNumber: string; carrier: string | null; statusText: string | null; delivered: boolean }[];
+  returns: ReturnRow[];
   audit: { actor: string; action: string; reason: string | null; at: Date }[];
 };
 
@@ -276,14 +280,14 @@ const d = (r: Raw, k: string) => (r[k] === null || r[k] === undefined ? null : f
 export async function readAdminOrder(db: Queryable, orderId: number): Promise<AdminOrder | null> {
   const [o] = await selectRows<Raw>(
     db,
-    `SELECT id, reference, status, hold_reason, locale, currency, created_at, paid_at, snapshot_expires_at, cancel_window_ends_at,
+    `SELECT id, reference, status, hold_reason, locale, currency, created_at, paid_at, snapshot_expires_at, cancel_window_ends_at, shipped_at, delivered_at,
             email, phone, first_name, last_name, street, house_number, postcode, city, country,
             subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents
        FROM orders WHERE id = ?`,
     [orderId],
   );
   if (!o || !isOrderStatus(s(o, "status")) || o.currency !== "EUR") return null;
-  const [lines, payments, refunds, events, audit, purchases, purchaseEvents, failedMails] = await Promise.all([
+  const [lines, payments, refunds, events, audit, purchases, purchaseEvents, failedMails, invoices, parcels, returns] = await Promise.all([
     selectRows<Raw>(
       db,
       "SELECT line_no, name, brand, sku, source, product_id, offer_id, quantity, unit_price_cents, line_total_cents, vat_rate_bp, large_shipping_cents, supplier_cost_cents, supplier_cost_currency FROM order_lines WHERE order_id = ? ORDER BY line_no",
@@ -291,9 +295,7 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     ),
     selectRows<Raw>(
       db,
-      `SELECT p.id, p.status, p.amount_cents, p.method, p.provider_payment_id, p.created_at,
-              EXISTS (SELECT 1 FROM provider_events e WHERE e.provider = 'mollie' AND e.event_key = CONCAT(p.provider_payment_id, ':PAID')) AS reported_paid
-         FROM payments p WHERE p.order_id = ? ORDER BY p.created_at, p.id`,
+      "SELECT p.id, p.status, p.amount_cents, p.method, p.provider_payment_id, p.created_at FROM payments p WHERE p.order_id = ? ORDER BY p.created_at, p.id",
       [orderId],
     ),
     selectRows<Raw>(db, "SELECT id, payment_id, status, amount_cents, reason, requested_by, provider_refund_id, created_at FROM refunds WHERE order_id = ? ORDER BY created_at, id", [orderId]),
@@ -306,6 +308,9 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
       [orderId],
     ),
     selectRows<Raw>(db, "SELECT id, kind, last_error FROM outbox WHERE status = 'FAILED' AND JSON_VALUE(payload, '$.orderId') = ? ORDER BY id", [orderId]),
+    invoicesOfOrder(db, orderId),
+    parcelsOfOrder(db, orderId),
+    returnsOfOrder(db, orderId),
   ]);
   return {
     id: n(o, "id"),
@@ -317,6 +322,8 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     paidAt: d(o, "paid_at"),
     snapshotExpiresAt: d(o, "snapshot_expires_at")!,
     cancelWindowEndsAt: d(o, "cancel_window_ends_at"),
+    shippedAt: d(o, "shipped_at"),
+    deliveredAt: d(o, "delivered_at"),
     customer: {
       firstName: s(o, "first_name"), lastName: s(o, "last_name"), street: s(o, "street"), houseNumber: s(o, "house_number"),
       postcode: s(o, "postcode"), city: s(o, "city"), country: s(o, "country"), email: s(o, "email"), phone: s(o, "phone"),
@@ -338,7 +345,6 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     payments: payments.map((p) => ({
       id: s(p, "id"), status: s(p, "status") as PaymentStatus, amount: money(n(p, "amount_cents")), method: p.method === null ? null : s(p, "method"),
       providerPaymentId: p.provider_payment_id === null ? null : s(p, "provider_payment_id"), createdAt: d(p, "created_at")!,
-      paidLate: Number(p.reported_paid) === 1 && ["FAILED", "CANCELED", "EXPIRED"].includes(s(p, "status")),
     })),
     refunds: refunds.map((r) => ({
       id: s(r, "id"), paymentId: s(r, "payment_id"), status: s(r, "status") as RefundStatus, amount: money(n(r, "amount_cents")), reason: s(r, "reason"),
@@ -346,6 +352,9 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     })),
     events: events.map((e) => ({ from: e.from_status === null ? null : s(e, "from_status"), to: s(e, "to_status"), actor: s(e, "actor"), reason: e.reason === null ? null : s(e, "reason"), at: d(e, "at")! })),
     audit: audit.map((a) => ({ actor: s(a, "actor"), action: s(a, "action"), reason: a.reason === null ? null : s(a, "reason"), at: d(a, "at")! })),
+    invoices,
+    parcels,
+    returns,
     failedMails: failedMails.map((x) => ({ id: n(x, "id"), kind: s(x, "kind"), error: s(x, "last_error") })),
     purchases: purchases.map((p) => ({
       ...p,

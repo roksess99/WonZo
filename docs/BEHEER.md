@@ -156,6 +156,14 @@ ander bedrag betalen dan hij zag.
   "status opvragen" — geen tweede "terugbetalen"-knop.
 - Afwijzen vraagt een reden, en die reden wordt vastgelegd.
 
+**Gebouwd (2026-10-13):** `/beheer/retouren` en een blok bij elke bestelling:
+**pakket ontvangen**, dan **akkoord: terugbetalen** (het maximum staat
+ingevuld; lager mag met een reden, de knop noemt eerst het exacte bedrag) of
+**niet akkoord**. Wie er komt: het recht "retouren"; terugbetalen vraagt
+"terugbetalen" — allebei alleen de eigenaar (D-07). Een open retour staat in
+"vraagt aandacht". Daarnaast **als afgeleverd markeren**: BigBuy meldt de
+aflevering, maar welke woorden het daarvoor gebruikt is nog niet gemeten.
+
 ---
 
 ## Beoordelingen
@@ -175,7 +183,8 @@ ander bedrag betalen dan hij zag.
 - Rechten per onderdeel, ook met één beheerder. Zodra er een tweede bijkomt wil
   je kunnen zeggen: wel bestellingen, geen prijzen.
 - **Het logboek is zichtbaar in het paneel**, niet alleen in de database. Wie,
-  wat, wanneer, waarop.
+  wat, wanneer, waarop. Gebouwd (2026-10-13): `/beheer/logboek`, recht
+  "logboek" (alleen de eigenaar).
 
 ---
 

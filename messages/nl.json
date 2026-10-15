@@ -27,10 +27,22 @@
     "categories": "Categorieën"
   },
   "categories": {
-    "wonen": { "name": "Wonen", "intro": "Opbergen, meubels, decoratie en alles voor de keuken en de tafel." },
-    "tuin": { "name": "Tuin", "intro": "Tuinmeubels, parasols, bewatering en de barbecue." },
-    "buitenleven": { "name": "Buitenleven", "intro": "Kamperen en thuis sporten." },
-    "dieren": { "name": "Dieren", "intro": "Halsbanden, tuigen, manden en jassen voor je huisdier." }
+    "wonen": {
+      "name": "Wonen",
+      "intro": "Opbergen, meubels, decoratie en alles voor de keuken en de tafel."
+    },
+    "tuin": {
+      "name": "Tuin",
+      "intro": "Tuinmeubels, parasols, bewatering en de barbecue."
+    },
+    "buitenleven": {
+      "name": "Buitenleven",
+      "intro": "Kamperen en thuis sporten."
+    },
+    "dieren": {
+      "name": "Dieren",
+      "intro": "Halsbanden, tuigen, manden en jassen voor je huisdier."
+    }
   },
   "subcategories": {
     "opslag": "Opslag en organisatie",
@@ -219,6 +231,9 @@
     "metaTitle": "Je bestelling",
     "title": "Bestelling {reference}",
     "placedOn": "Geplaatst op {date}",
+    "invoice": "Download factuur {number} (PDF)",
+    "credit": "Download creditnota {number} (PDF)",
+    "invoicesTitle": "Factuur",
     "keepLink": "Bewaar deze pagina: met deze link vind je je bestelling later terug.",
     "pending": "We wachten op de bevestiging van je betaling.",
     "pendingText": "Dat duurt meestal een paar seconden. Deze pagina ververst vanzelf.",
@@ -260,7 +275,11 @@
     "deliverTo": "Bezorgadres",
     "contactTitle": "Contactgegevens",
     "notFoundTitle": "Deze bestelling vinden we niet",
-    "notFoundText": "Controleer of je de hele link uit je mail hebt gebruikt. Lukt het niet, neem dan contact met ons op."
+    "notFoundText": "Controleer of je de hele link uit je mail hebt gebruikt. Lukt het niet, neem dan contact met ons op.",
+    "tracking": "Volg je pakket: {carrier} {number}",
+    "trackingNoCarrier": "Trackingnummer: {number}",
+    "returnLink": "Iets terugsturen? Ga naar het retourformulier",
+    "returnLinkText": "Je hebt daarvoor je factuurnummer nodig: {number}."
   },
   "countries": {
     "ES": "Spanje",
@@ -300,7 +319,8 @@
     "company": "Bedrijfsgegevens",
     "kvk": "KvK {kvk}",
     "vat": "Btw {vat}",
-    "language": "Taal"
+    "language": "Taal",
+    "returns": "Retourneren"
   },
   "notFound": {
     "title": "Deze pagina bestaat niet",
@@ -325,6 +345,7 @@
     "shippingLarge": "Verzending grote artikelen",
     "total": "Totaal",
     "inclVat": "Alle bedragen zijn inclusief btw.",
+    "vatLine": "waarvan btw {rate}",
     "statusLink": "Bekijk je bestelling",
     "statusText": "Je bestelling bekijken: {url}",
     "confirmation": {
@@ -338,8 +359,8 @@
       "nextTitle": "Wat er nu gebeurt",
       "next": "Tot {time} kun je je bestelling nog annuleren of je gegevens aanpassen. Daarna bestellen we hem voor je; je ontvangt hem naar verwachting binnen {min}–{max} werkdagen.",
       "withdrawalTitle": "Bedenktijd: 14 dagen",
-      "withdrawal": "Je hebt 14 dagen bedenktijd vanaf de dag dat je het pakket ontvangt, zonder dat je een reden hoeft te geven. Wil je de bestelling terugsturen, laat het ons dan binnen die 14 dagen weten via {email}. Daarna heb je nog 14 dagen om het pakket terug te sturen. We betalen je binnen 14 dagen na je melding terug, bij een volledige retour ook de verzendkosten.",
-      "withdrawalMore": "Meer over terugsturen en contact: {url}"
+      "withdrawal": "Je hebt 14 dagen bedenktijd vanaf de dag dat je het pakket ontvangt, zonder dat je een reden hoeft te geven. Wil je de bestelling terugsturen, meld het dan binnen die 14 dagen aan via het retourformulier op onze site (je hebt daarvoor het factuurnummer nodig) of via {email}. Daarna heb je nog 14 dagen om het pakket terug te sturen. We betalen je binnen 14 dagen na je melding terug, bij een volledige retour ook de verzendkosten.",
+      "withdrawalMore": "Het retourformulier: {url}"
     },
     "cancelled": {
       "subject": "Bestelling {reference} geannuleerd",
@@ -348,6 +369,109 @@
       "intro": "Je bestelling {reference} is geannuleerd.",
       "refund": "Je krijgt {amount} terug op de rekening of kaart waarmee je betaalde. Dat duurt meestal een paar werkdagen.",
       "questions": "Vragen? Mail ons op {email}."
-    }
+    },
+    "returnLink": "Iets terugsturen: {url}",
+    "shipped": {
+      "subject": "Bestelling {reference} is onderweg",
+      "preheader": "Je pakket is onderweg.",
+      "title": "Je pakket is onderweg",
+      "intro": "Je bestelling {reference} is verzonden.",
+      "trackingTitle": "Volg je pakket",
+      "tracking": "{carrier}: {number}",
+      "trackingNoCarrier": "Trackingnummer: {number}",
+      "linesTitle": "Wat er onderweg is",
+      "expected": "Je ontvangt het naar verwachting binnen {min}–{max} werkdagen na je bestelling.",
+      "invoice": "Je factuurnummer is {number}. Dat heb je nodig als je iets wilt terugsturen."
+    },
+    "returnRequested": {
+      "subject": "Retour {number} aangemeld",
+      "preheader": "We hebben je retour ontvangen. Zo stuur je het pakket terug.",
+      "title": "Je retour is aangemeld",
+      "intro": "Retournummer {number}, bij bestelling {reference}.",
+      "linesTitle": "Wat je terugstuurt",
+      "stepsTitle": "Zo stuur je het terug",
+      "addressTitle": "Retouradres (als je het label kwijt bent: mail ons)",
+      "amount": "Je krijgt maximaal {amount} terug. We betalen terug zodra we het pakket hebben ontvangen en bekeken, op de rekening of kaart waarmee je betaalde."
+    },
+    "returnRejected": {
+      "subject": "Retour {number}: niet akkoord",
+      "preheader": "We hebben je retour bekeken.",
+      "title": "We kunnen je retour niet goedkeuren",
+      "intro": "We hebben je retour {number} bij bestelling {reference} bekeken.",
+      "reason": "Reden: {reason}",
+      "next": "Ben je het er niet mee eens? Mail ons op {email}, met je retournummer."
+    },
+    "returnRefunded": {
+      "subject": "Retour {number} terugbetaald",
+      "preheader": "We hebben {amount} teruggestort.",
+      "title": "Je geld is onderweg",
+      "intro": "Voor retour {number} bij bestelling {reference} hebben we {amount} teruggestort op de rekening of kaart waarmee je betaalde. Dat duurt meestal een paar werkdagen.",
+      "deduction": "Dat is minder dan het maximum van {max}, omdat: {reason}"
+    },
+    "questions": "Vragen? Mail ons op {email}."
+  },
+  "returns": {
+    "metaTitle": "Retourneren",
+    "metaDescription": "Stuur een bestelling van WonZo terug: binnen 14 dagen zonder reden, en altijd als iets verkeerd, beschadigd of defect is.",
+    "title": "Retourneren",
+    "intro": "Niet tevreden, of klopt er iets niet? Meld je retour hier aan. Je hebt het mailadres van je bestelling en je factuurnummer nodig.",
+    "howTitle": "Zo werkt het",
+    "how1": "Je hebt 14 dagen bedenktijd vanaf de dag dat je het pakket ontvangt. Daarbinnen mag je alles terugsturen zonder reden.",
+    "how2": "Is iets verkeerd geleverd, beschadigd of defect, dan kun je het ook na die 14 dagen terugsturen.",
+    "how3": "In je pakket zit een retourlabel. Daarmee stuur je het pakket gratis terug.",
+    "how4": "Stuur je alles terug, dan krijg je ook de verzendkosten terug. We betalen terug zodra we het pakket hebben ontvangen en bekeken, op de rekening of kaart waarmee je betaalde.",
+    "addressTitle": "Retouradres",
+    "addressText": "Label kwijt? Neem contact met ons op via {email}.",
+    "findTitle": "Je bestelling opzoeken",
+    "email": "E-mailadres van je bestelling",
+    "invoice": "Factuurnummer",
+    "invoiceHint": "Staat op je factuur, bijvoorbeeld 2026-00042. Je vindt de factuur via de link in je bevestigingsmail, en in de mail dat je pakket onderweg is.",
+    "find": "Zoeken",
+    "emailInvalid": "Vul een e-mailadres in, zoals naam@voorbeeld.nl.",
+    "invoiceInvalid": "Vul het factuurnummer in zoals het op je factuur staat, bijvoorbeeld 2026-00042.",
+    "notFound": "We vinden geen bestelling met dit mailadres en factuurnummer. Kijk ze nog eens na, of mail ons op {email}.",
+    "openReturn": "Voor deze bestelling loopt al een retour. Je hoort van ons zodra die is afgehandeld.",
+    "notReturnable": "Deze bestelling kan niet via het formulier worden teruggestuurd. Mail ons op {email}, dan kijken we het samen na.",
+    "nothingLeft": "Alles van deze bestelling is al teruggestuurd.",
+    "rateLimit": "Te veel pogingen. Probeer het over een paar minuten opnieuw.",
+    "error": "Er ging iets mis. Probeer het opnieuw.",
+    "busy": "Even geduld…",
+    "chooseTitle": "Wat stuur je terug?",
+    "chooseIntro": "Bestelling {reference}. Kies per artikel hoeveel je terugstuurt en waarom.",
+    "withdrawalUntil": "Je bedenktijd loopt tot {date}.",
+    "withdrawalClosed": "De bedenktijd van 14 dagen is voorbij. Terugsturen kan nog als iets verkeerd geleverd, beschadigd of defect is.",
+    "price": "{price} per stuk",
+    "sku": "Artikelnummer {sku}",
+    "alreadyReturned": "Al teruggestuurd: {count}",
+    "quantity": "Aantal terugsturen",
+    "reason": "Reden",
+    "reasonChoose": "Kies een reden",
+    "reasons": {
+      "none": "Ik wil het niet meer (geen reden nodig)",
+      "wrong": "Verkeerd artikel ontvangen",
+      "damaged": "Beschadigd aangekomen",
+      "defect": "Werkt niet of is defect"
+    },
+    "errorQuantity": "Kies een aantal dat je nog kunt terugsturen.",
+    "errorReason": "Kies een reden.",
+    "errorWindow": "Na de bedenktijd kan dit alleen bij verkeerd geleverd, beschadigd of defect.",
+    "errorEmpty": "Kies minstens één artikel om terug te sturen.",
+    "note": "Opmerking (mag leeg blijven)",
+    "noteHint": "Bijvoorbeeld wat er beschadigd is. Hoogstens 500 tekens.",
+    "noteTooLong": "Je opmerking is te lang: hoogstens 500 tekens.",
+    "summaryTitle": "Wat je terugkrijgt",
+    "summaryNone": "Kies hierboven wat je terugstuurt.",
+    "summaryLines": "Artikelen: {amount}",
+    "summaryShipping": "Verzendkosten: {amount}",
+    "summaryTotal": "Je krijgt maximaal {amount} terug",
+    "summaryNote": "Je krijgt de verzendkosten terug als je alles terugstuurt, en de eigen verzendkosten van een groot artikel als dat verkeerd, beschadigd of defect is. Is een artikel meer gebruikt dan nodig om het te bekijken, dan kan het bedrag lager zijn.",
+    "submit": "Retour aanmelden",
+    "back": "Andere bestelling",
+    "doneTitle": "Je retour is aangemeld",
+    "doneText": "Retournummer {number}. We hebben je een mail gestuurd met de stappen hieronder.",
+    "step1": "Pak de artikelen goed in, het liefst in de originele verpakking.",
+    "step2": "Plak het retourlabel uit je pakket erop.",
+    "step3": "Stuur het pakket binnen 14 dagen terug.",
+    "doneMax": "Je krijgt maximaal {amount} terug, zodra we het pakket hebben ontvangen en bekeken."
   }
 }

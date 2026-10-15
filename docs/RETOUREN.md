@@ -3,6 +3,24 @@
 Een retour is de afwikkeling van dezelfde koop, niet een nieuw geval. Alles wat
 hier gebeurt raakt geld, en de wet schrijft een flink deel ervan voor.
 
+**Gebouwd (fase 6, 2026-10-13, D-09):** `src/lib/returns/`, het formulier op
+`/retour` (`/en/return`), de afhandeling in het paneel (`/beheer/retouren` en
+bij de bestelling) en de verzendstatus van BigBuy (`src/lib/orders/tracking.ts`).
+De klant meldt aan met het mailadres van de bestelling en het
+**factuurnummer** (eigenaar, 2026-10-13 — in plaats van het ordernummer;
+dezelfde controle: nummer én adres, één melding bij elke misser, een limiet
+per bezoeker en per factuurnummer). Per regel een aantal en een reden; "geen
+reden nodig" is er een van. Het maximum komt uit `src/lib/returns/amount.ts`,
+in het formulier en op de server dezelfde functie. De beheerder klikt
+**ontvangen**, en daarna **akkoord** (hele bedrag of minder, met een reden)
+of **niet akkoord** (met een reden die de klant krijgt). Na de terugbetaling
+volgen de mail en een creditnota. De retourzending betaalt de winkel: het
+label zit in het pakket (D-09, nog te bevestigen door BigBuy, vraag 24).
+
+Nog niet: het modelformulier voor herroeping als eigen pagina; intrekken door
+de klant (`WITHDRAWN`); `COMPLETED` na de termijn; de teksten laten
+controleren door een adviseur.
+
 Dit beschrijft de Nederlandse situatie (BW boek 6, afdeling 2B — de uitwerking
 van Richtlijn 2011/83/EU consumentenrechten). Verkoop je ook buiten Nederland,
 kijk dan of je markt afwijkt. Statussen: `docs/STATE_MACHINES.md` § Return en §

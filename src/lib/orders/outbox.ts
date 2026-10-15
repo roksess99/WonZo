@@ -7,7 +7,7 @@
 
 import { toDbTime, type Connection } from "@/lib/db";
 
-export type OutboxKind = "order-confirmation" | "admin-new-order" | "supplier-order" | "invoice" | "order-cancelled" | "admin-alert";
+export type OutboxKind = "order-confirmation" | "admin-new-order" | "supplier-order" | "invoice" | "order-cancelled" | "order-shipped" | "admin-alert" | "return-requested" | "return-rejected" | "return-refunded" | "admin-new-return";
 
 export async function enqueue(conn: Connection, kind: OutboxKind | string, dedupeKey: string, payload: Record<string, unknown>, now: Date): Promise<void> {
   // A second write of the same effect is a no-op, not an error (retry-safe).

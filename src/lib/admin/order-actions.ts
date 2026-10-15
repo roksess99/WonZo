@@ -8,13 +8,14 @@
 
 import { appendAudit } from "@/lib/admin/audit";
 import { toDbTime, withTransaction, type Connection } from "@/lib/db";
-import { compare, money, subtract, type Money } from "@/lib/money";
+import { add, compare, money, subtract, type Money } from "@/lib/money";
 import { canTransition, type OrderStatus } from "@/lib/orders/states";
 import { acceptPrice, cancelOpenPurchases, retryPurchase, supplierOrdersOf } from "@/lib/orders/purchasing";
 import { lockOrder, transitionOrder } from "@/lib/orders/store";
 import { AT_SUPPLIER } from "@/lib/orders/supplier-states";
-import { requestFullRefund, requestPaymentRefund, submitRefund } from "@/lib/payments";
+import { requestPaymentRefund, submitRefund } from "@/lib/payments";
 import { defaultProvider, type PaymentProvider } from "@/lib/payments/mollie";
+import { PAYMENT_OPEN } from "@/lib/payments/states";
 import { paymentsOfOrder, refundable } from "@/lib/payments/store";
 import type { AdminOrder } from "./orders";
 
@@ -56,16 +57,16 @@ export type AdminOptions = {
   cancel: { refund: Money } | null;
   /** Paid payments the order did not take: to give back. */
   refundPayments: { paymentId: string; open: Money }[];
-  /** Held before it was paid (the amount differs): no button yet, the state machine has no way on (a question for the owner). */
+  /** Held before it was paid (a different amount came in): cancelling pays back everything that was paid (owner 2026-10-13). */
   heldUnpaid: boolean;
-  /** Paid at Mollie after it failed or expired here: no button yet, for the same reason. */
-  paidLate: boolean;
   /** The supplier asks more than 10 % above the frozen price (D-04): order anyway at this price. */
   acceptPrice: { supplierOrderId: string; expected: Money; checked: Money } | null;
   /** 24 hours of refusals (D-04): try again for another 24 hours. */
   retryPurchase: { supplierOrderId: string; error: string } | null;
   /** Mail that could not go out: send again once the cause is solved. */
   resendMails: { outboxId: number; kind: string }[];
+  /** Purchased and not delivered as far as we know: the admin can mark it delivered (the supplier's status words are not measured yet). */
+  markDelivered: boolean;
 };
 
 /**
@@ -79,20 +80,25 @@ export function adminOptions(order: AdminOrder): AdminOptions {
   const blocked = open.find((p) => p.blockedReason === "PRICE_INCREASE" && (p.status === "DRAFT" || p.status === "REJECTED"));
   const gaveUp = open.find((p) => p.gaveUpAt !== null && !p.blockedReason && (p.status === "DRAFT" || p.status === "REJECTED"));
   const heldUnpaid = order.holdReason !== null && !PAID_STATUSES.includes(order.status) && order.status !== "CANCELLED";
+  const cancellable = heldUnpaid || (PAID_STATUSES.includes(order.status) && canTransition(order.status, "CANCELLED", "admin"));
   return {
     releaseHold: order.holdReason !== null && PAID_STATUSES.includes(order.status),
     cancel:
-      canTransition(order.status, "CANCELLED", "admin") && !order.purchases.some((p) => AT_SUPPLIER.includes(p.status))
-        ? { refund: taken ? openOnPayment(order, taken.id) : money(0) }
+      cancellable && !order.purchases.some((p) => AT_SUPPLIER.includes(p.status))
+        ? { refund: heldUnpaid ? paid.reduce((sum, p) => add(sum, openOnPayment(order, p.id)), money(0)) : taken ? openOnPayment(order, taken.id) : money(0) }
         : null,
     refundPayments: heldUnpaid
       ? []
       : paid.filter((p) => p !== taken).map((p) => ({ paymentId: p.id, open: openOnPayment(order, p.id) })).filter((x) => x.open.amount > 0),
     heldUnpaid,
-    paidLate: order.payments.some((p) => p.paidLate),
     acceptPrice: blocked && blocked.checkedProducts ? { supplierOrderId: blocked.id, expected: blocked.expectedCost, checked: blocked.checkedProducts } : null,
     retryPurchase: gaveUp ? { supplierOrderId: gaveUp.id, error: gaveUp.lastError ?? "" } : null,
     resendMails: order.failedMails.map((x) => ({ outboxId: x.id, kind: x.kind })),
+    markDelivered:
+      ["PURCHASED", "PARTIALLY_FULFILLED", "SHIPPED"].includes(order.status) &&
+      order.holdReason === null &&
+      order.purchases.length > 0 &&
+      order.purchases.every((p) => ["PLACED", "PARTIALLY_SHIPPED", "SHIPPED", "DELIVERED"].includes(p.status)),
   };
 }
 
@@ -108,11 +114,12 @@ async function liftHold(conn: Connection, orderId: number, holdReason: string, r
  * reconciliation sends it once there is one; no answer from the provider is
  * handled inside submitRefund (UNKNOWN). Anything else is a bug and is thrown.
  */
-async function send(refundId: string | null, provider: PaymentProvider | null | undefined, now: Date): Promise<"none" | "sent" | "queued"> {
-  if (!refundId) return "none";
+async function send(refundIds: string | null | (string | null)[], provider: PaymentProvider | null | undefined, now: Date): Promise<"none" | "sent" | "queued"> {
+  const ids = (Array.isArray(refundIds) ? refundIds : [refundIds]).filter((x): x is string => x !== null);
+  if (!ids.length) return "none";
   const p = provider === undefined ? defaultProvider() : provider;
   if (!p) return "queued";
-  await submitRefund(refundId, p, now);
+  for (const id of ids) await submitRefund(id, p, now);
   return "sent";
 }
 
@@ -135,6 +142,8 @@ export async function releaseHold(input: { orderId: number; expectedHold: string
  * (docs/STATE_MACHINES.md: PAID or FULFILLMENT_PENDING → CANCELLED by admin,
  * refund REQUESTED in the same transaction). A hold is lifted in the same
  * transaction, with its own audit line: cancelling is how it is solved.
+ * An order held before it was paid (a different amount came in) is cancelled
+ * the same way, with every paid payment paid back (owner 2026-10-13).
  */
 export async function cancelAndRefund(
   input: { orderId: number; expectedRefundCents: number; reason: unknown; actor: string; now?: Date },
@@ -143,23 +152,31 @@ export async function cancelAndRefund(
   const reason = cleanReason(input.reason);
   if (!reason) return { ok: false, error: "reason-required" };
   const now = input.now ?? new Date();
-  const outcome = await withTransaction(async (conn): Promise<{ ok: false; error: ActionError } | { ok: true; refundId: string | null }> => {
+  const outcome = await withTransaction(async (conn): Promise<{ ok: false; error: ActionError } | { ok: true; refundIds: (string | null)[] }> => {
     const order = await lockOrder(conn, input.orderId);
     if (!order) return { ok: false, error: "not-found" };
     if (!canTransition(order.status, "CANCELLED", "admin")) return { ok: false, error: "not-allowed" };
+    const payments = await paymentsOfOrder(conn, order.id);
+    const unpaid = !PAID_STATUSES.includes(order.status);
+    // Unpaid: only a held order, and only once nothing is still open at Mollie (that could still be paid).
+    if (unpaid && (!order.holdReason || payments.some((p) => PAYMENT_OPEN.includes(p.status)))) return { ok: false, error: "not-allowed" };
     // BigBuy has no cancel call (D-04): once a purchase order may be there, cancelling is a ticket at BigBuy, not a button here.
     if ((await supplierOrdersOf(conn, order.id, true)).some((s) => AT_SUPPLIER.includes(s.status))) return { ok: false, error: "at-supplier" };
-    const taken = (await paymentsOfOrder(conn, order.id)).find((p) => p.status === "PAID");
-    const amount = taken ? await refundable(conn, taken) : money(0);
+    const paid = payments.filter((p) => p.status === "PAID");
+    const toRefund = unpaid ? paid : paid.slice(0, 1);
+    let amount = money(0);
+    for (const p of toRefund) amount = add(amount, await refundable(conn, p));
     if (compare(amount, money(input.expectedRefundCents)) !== 0) return { ok: false, error: "amount-changed" };
     if (order.holdReason && !(await liftHold(conn, order.id, order.holdReason, reason, input.actor, now))) return { ok: false, error: "changed" };
     await cancelOpenPurchases(conn, order.id, reason, now);
     await transitionOrder(conn, { orderId: order.id, to: "CANCELLED", actor: "admin", reason, now });
     await appendAudit(conn, { actor: input.actor, action: "order.cancelled", objectType: "order", objectId: order.id, before: { status: order.status }, after: { status: "CANCELLED" }, reason }, now);
-    return { ok: true, refundId: await requestFullRefund(conn, order.id, reason, input.actor, now) };
+    const refundIds: (string | null)[] = [];
+    for (const p of toRefund) refundIds.push(await requestPaymentRefund(conn, p, reason, input.actor, now));
+    return { ok: true, refundIds };
   });
   if (!outcome.ok) return outcome;
-  return { ok: true, refund: await send(outcome.refundId, provider, now) };
+  return { ok: true, refund: await send(outcome.refundIds, provider, now) };
 }
 
 /** The owner lets a purchase above the 10 % be ordered anyway, at the price the supplier asked (D-04). */

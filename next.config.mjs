@@ -31,8 +31,9 @@ const nextConfig = {
   agentRules: false,
   // Loaded by Node at run time instead of bundled by webpack: mysql2 loads
   // parts of itself dynamically (character sets), which a bundle can break;
-  // nodemailer is Node-only (sockets, TLS) and gains nothing from bundling.
-  serverExternalPackages: ["mysql2", "nodemailer"],
+  // nodemailer is Node-only (sockets, TLS) and gains nothing from bundling;
+  // pdfkit reads its own data files next to itself, which a bundle moves away.
+  serverExternalPackages: ["mysql2", "nodemailer", "pdfkit"],
   // Product photos through our own domain, resized per screen (D-31). The
   // optimiser fetches only from the supplier's image host — never a URL from
   // input (.claude/rules/beveiliging.md § SSRF) — and keeps its result a week:

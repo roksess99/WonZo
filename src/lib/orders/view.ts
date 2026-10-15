@@ -26,7 +26,7 @@ export type OrderView = {
   payment: PaymentStatus | null;
   refunds: { status: RefundStatus; amount: Money }[];
   customer: CustomerDetails;
-  lines: { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null }[];
+  lines: { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null; vatRateBp: number }[];
   subtotal: Money;
   shippingStandard: Money;
   shippingLarge: Money;
@@ -46,7 +46,7 @@ export async function readOrderView(db: Queryable, orderId: number, now: Date = 
   if (!o || typeof o.status !== "string" || !isOrderStatus(o.status)) return null;
   const lines = await selectRows<Record<string, string | number | null>>(
     db,
-    "SELECT name, sku, quantity, unit_price_cents, line_total_cents, large_shipping_cents, min_days, max_days, ships_from FROM order_lines WHERE order_id = ? ORDER BY line_no",
+    "SELECT name, sku, quantity, unit_price_cents, line_total_cents, large_shipping_cents, vat_rate_bp, min_days, max_days, ships_from FROM order_lines WHERE order_id = ? ORDER BY line_no",
     [orderId],
   );
   const [payment] = await selectRows<{ status: string }>(db, "SELECT status FROM payments WHERE order_id = ? ORDER BY created_at DESC, id DESC LIMIT 1", [orderId]);
@@ -81,6 +81,7 @@ export async function readOrderView(db: Queryable, orderId: number, now: Date = 
       unitPrice: money(Number(l.unit_price_cents)),
       lineTotal: money(Number(l.line_total_cents)),
       largeShipping: l.large_shipping_cents === null ? null : money(Number(l.large_shipping_cents)),
+      vatRateBp: Number(l.vat_rate_bp),
     })),
     subtotal: money(Number(o.subtotal_cents)),
     shippingStandard: money(Number(o.shipping_standard_cents)),

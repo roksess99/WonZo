@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { holdText } from "@/components/admin/AttentionList";
+import { auditAction, auditActor } from "@/components/admin/audit";
 import { dateTime, shortDate, time, vatRate } from "@/components/admin/format";
 import { OrderActionsPanel } from "@/components/admin/OrderActionsPanel";
+import { ReturnCard } from "@/components/admin/ReturnCard";
 import { requirePage } from "@/lib/admin/access";
 import { adminMessages } from "@/lib/admin/messages";
 import { adminOptions } from "@/lib/admin/order-actions";
@@ -11,6 +13,7 @@ import { can } from "@/lib/admin/permissions";
 import { orderingMode } from "@/lib/catalog/ordering";
 import { getPool, hasDatabase } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { withdrawalEndsAt } from "@/lib/returns/amount";
 import { interpolate } from "@/lib/text";
 
 export async function generateMetadata({ params }: PageProps<"/beheer/bestellingen/[id]">) {
@@ -47,8 +50,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
   const options = adminOptions(order);
   const hold = order.holdReason ? holdText(m, order.holdReason) : null;
   // Cancelling a paid order before purchasing is always offered; the block only turns red when something is wrong.
-  const needsAttention = order.holdReason !== null || options.refundPayments.length > 0 || options.heldUnpaid || options.paidLate || options.acceptPrice !== null || options.retryPurchase !== null || options.resendMails.length > 0;
-  const hasActions = needsAttention || options.cancel !== null;
+  const needsAttention = order.holdReason !== null || options.refundPayments.length > 0 || options.heldUnpaid || options.acceptPrice !== null || options.retryPurchase !== null || options.resendMails.length > 0;
+  const hasActions = needsAttention || options.cancel !== null || options.markDelivered;
+  const withdrawalEnds = withdrawalEndsAt(order.deliveredAt);
 
   return (
     <>
@@ -71,6 +75,17 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
           <p>{interpolate(m.order.windowUntil, { time: time(order.cancelWindowEndsAt) })}</p>
         ) : null}
         {order.status === "PENDING_PAYMENT" || order.status === "PAYMENT_FAILED" ? <p>{interpolate(m.order.notPaidUntil, { time: shortDate(order.snapshotExpiresAt) })}</p> : null}
+        {order.shippedAt || order.deliveredAt ? (
+          <p>
+            {[
+              order.shippedAt ? interpolate(m.order.shippedOn, { date: shortDate(order.shippedAt) }) : null,
+              order.deliveredAt ? interpolate(m.order.deliveredOn, { date: shortDate(order.deliveredAt) }) : null,
+              withdrawalEnds ? interpolate(m.order.withdrawalUntil, { date: shortDate(withdrawalEnds) }) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        ) : null}
       </div>
 
       {hasActions ? (
@@ -233,6 +248,29 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
         ) : null}
       </section>
 
+      <section aria-labelledby="invoices" className="flex flex-col gap-2 rounded-md bg-surface p-6 ring-1 ring-line">
+        <h2 id="invoices" className="font-display text-h2">
+          {m.order.invoicesTitle}
+        </h2>
+        {order.invoices.length ? (
+          <ul className="flex flex-col gap-1">
+            {order.invoices.map((inv) => (
+              <li key={inv.id}>
+                {can(admin.role, "facturen") ? (
+                  <a href={`/beheer/facturen/${inv.id}/pdf`} className="underline decoration-2 underline-offset-4">
+                    {interpolate(inv.kind === "credit" ? m.order.creditLink : m.order.invoiceLink, { number: inv.number })}
+                  </a>
+                ) : (
+                  interpolate(inv.kind === "credit" ? m.order.creditLink : m.order.invoiceLink, { number: inv.number })
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted">{m.order.invoiceNone}</p>
+        )}
+      </section>
+
       <section aria-labelledby="purchase" className="flex flex-col gap-2 rounded-md bg-surface p-6 ring-1 ring-line">
         <h2 id="purchase" className="font-display text-h2">
           {m.order.purchaseTitle}
@@ -271,6 +309,30 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
         ) : (
           <p className="text-muted">{m.order.purchaseNotYet}</p>
         )}
+        {order.parcels.length ? (
+          <>
+            <h3 className="font-medium">{m.order.parcelsTitle}</h3>
+            <ul className="flex flex-col gap-1 tabular-nums">
+              {order.parcels.map((p) => (
+                <li key={p.trackingNumber}>
+                  {interpolate(m.order.parcel, { carrier: p.carrier ?? m.order.parcelUnknownCarrier, number: p.trackingNumber })}
+                  <span className="ms-2 text-body-sm text-muted">{p.delivered ? m.order.parcelDelivered : p.statusText ? interpolate(m.order.parcelStatus, { status: p.statusText }) : ""}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </section>
+
+      <section aria-labelledby="returns" className="flex flex-col gap-3 rounded-md bg-surface p-6 ring-1 ring-line">
+        <h2 id="returns" className="font-display text-h2">
+          {m.order.returnsTitle}
+        </h2>
+        {order.returns.length ? (
+          order.returns.map((r) => <ReturnCard key={r.id} r={r} m={m} canAct={can(admin.role, "retouren")} canRefund={can(admin.role, "terugbetalen")} showOrder={false} />)
+        ) : (
+          <p className="text-muted">{m.order.returnsNone}</p>
+        )}
       </section>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -296,8 +358,8 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
             <ol className="flex flex-col gap-2">
               {order.audit.map((a, i) => (
                 <li key={i}>
-                  <span className="tabular-nums text-muted">{shortDate(a.at)}</span> · {a.action}{" "}
-                  <span className="text-body-sm text-muted">{interpolate(m.order.historyBy, { actor: a.actor })}</span>
+                  <span className="tabular-nums text-muted">{shortDate(a.at)}</span> · {auditAction(m, a.action)}{" "}
+                  <span className="text-body-sm text-muted">{interpolate(m.order.historyBy, { actor: auditActor(m, a.actor) })}</span>
                   {a.reason ? <span className="block text-body-sm text-muted">{a.reason}</span> : null}
                 </li>
               ))}

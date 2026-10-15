@@ -17,8 +17,8 @@ geplande taak `POST /api/cron/orders`). Voorvertoning met voorbeeldbestellingen
 op `/beheer/mail`; één testmail los van de site met
 `node --env-file=.env scripts/mail-test.mjs jouw@adres.nl`.
 
-Nog niet: **het btw-bedrag apart in de bevestiging** (wacht op de rekenwijze,
-D-15; tot dan "alle bedragen inclusief btw", zoals de winkelwagen), een link
+Het btw-bedrag per tarief staat in de bevestiging, uit dezelfde functie als de
+factuur (D-15, 2026-10-12). Nog niet: een link
 naar het **modelformulier** (de pagina bestaat nog niet; tot dan de
 contactpagina), en de mails voor verzonden en retour. Een verlopen,
 onbetaalde bestelling krijgt bewust geen annuleringsmail.
@@ -125,6 +125,12 @@ hebt, en wanneer het er ongeveer is.
 
 **Retour terugbetaald**: het bedrag, het retournummer, dat het teruggaat naar
 de rekening waarmee betaald is, en dat het een paar werkdagen kan duren.
+
+Gebouwd (2026-10-13, `src/lib/mail/after-sale.ts`): **onderweg** (met
+trackingnummer en het factuurnummer dat het retourformulier vraagt), **retour
+aangemeld** (stappen en retouradres), **retour niet akkoord** (met de reden),
+**retour terugbetaald** (met de waardevermindering als die er is), en voor de
+beheerder **nieuwe retour**. Alle vijf in de voorvertoning van het paneel.
 
 **Beoordelingsuitnodiging**: kort, één knop, en één per bestelling.
 

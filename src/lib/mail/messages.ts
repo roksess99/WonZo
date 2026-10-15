@@ -7,11 +7,12 @@ import type { AdminMessages } from "@/lib/admin/messages";
 import type { Locale } from "@/lib/i18n/config";
 import type { Messages } from "@/lib/i18n/messages";
 import { formatMoney, type Money } from "@/lib/money";
+import { MixedVatShipping, vatBreakdown } from "@/lib/pricing/vat";
 import { interpolate } from "@/lib/text";
 import { block, companyLines, layout, textLayout, type RenderedMail } from "./layout";
 import { escapeHtml, link } from "./style";
 
-export type MailLine = { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null };
+export type MailLine = { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null; vatRateBp: number };
 
 export type OrderMailData = {
   locale: Locale;
@@ -27,7 +28,7 @@ export type OrderMailData = {
   delivery: { minWorkingDays: number; maxWorkingDays: number };
 };
 
-export type Links = { statusUrl: string; contactUrl: string; logoUrl: string; email: string };
+export type Links = { statusUrl: string; contactUrl: string; logoUrl: string; email: string; /** The return form (D-09). */ returnUrl: string };
 
 const fmt = (locale: Locale, d: Date, withDate: boolean) =>
   new Intl.DateTimeFormat(locale === "nl" ? "nl-NL" : "en-GB", {
@@ -36,6 +37,22 @@ const fmt = (locale: Locale, d: Date, withDate: boolean) =>
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
+
+/**
+ * The VAT per rate under the total (BW 6:230v: the VAT amount apart), from the
+ * same function as the invoice (D-15): mail and invoice never differ a cent.
+ * Shipping with two rates is still open in D-15: then only "including VAT".
+ */
+function vatRows(o: OrderMailData, m: Messages["mail"]): { left: string; right: string }[] {
+  try {
+    const vat = vatBreakdown(o.lines, { amount: o.shippingStandard.amount + o.shippingLarge.amount, currency: o.total.currency });
+    const pct = (bp: number) => `${new Intl.NumberFormat(o.locale === "nl" ? "nl-NL" : "en-GB", { maximumFractionDigits: 2 }).format(bp / 100)}%`;
+    return vat.byRate.map((r) => ({ left: interpolate(m.vatLine, { rate: pct(r.vatRateBp) }), right: formatMoney(r.vat) }));
+  } catch (err) {
+    if (err instanceof MixedVatShipping) return [];
+    throw err;
+  }
+}
 
 /** The order table and the amounts, as rows for HTML and lines for text. */
 function amounts(o: OrderMailData, m: Messages["mail"]) {
@@ -49,6 +66,7 @@ function amounts(o: OrderMailData, m: Messages["mail"]) {
     { left: m.shipping, right: o.shippingStandard.amount === 0 ? m.shippingFree : formatMoney(o.shippingStandard) },
     ...(o.shippingLarge.amount > 0 ? [{ left: m.shippingLarge, right: formatMoney(o.shippingLarge) }] : []),
     { left: m.total, right: formatMoney(o.total), bold: true },
+    ...vatRows(o, m),
   ];
   const text = [
     ...o.lines.map((l) => `${interpolate(m.line, { quantity: l.quantity, name: l.name })} — ${formatMoney(l.lineTotal)} (${interpolate(m.lineSub, { price: formatMoney(l.unitPrice), sku: l.sku })})`),
@@ -59,12 +77,12 @@ function amounts(o: OrderMailData, m: Messages["mail"]) {
 }
 
 /** A text with "{url}" in it, as HTML with that place a real link. */
-function withLink(template: string, url: string): string {
+export function withLink(template: string, url: string): string {
   const [before = "", after = ""] = template.split("{url}");
   return `${escapeHtml(before)}${link(url, url)}${escapeHtml(after)}`;
 }
 
-const footerOf = (m: { why: string; kvk: string; vat: string }) => ({ details: companyLines(m), why: m.why });
+export const footerOf = (m: { why: string; kvk: string; vat: string }) => ({ details: companyLines(m), why: m.why });
 
 /** The confirmation (docs/MAIL.md, `WETTELIJK` BW 6:230v): on its own it has to be right, not only behind a link. */
 export function orderConfirmation(o: OrderMailData, links: Links, all: Messages): RenderedMail {
@@ -101,7 +119,7 @@ export function orderConfirmation(o: OrderMailData, links: Links, all: Messages)
       block.button(links.statusUrl, m.statusLink),
       block.h2(c.withdrawalTitle),
       block.p(escapeHtml(withdrawal)),
-      block.p(withLink(c.withdrawalMore, links.contactUrl)),
+      block.p(withLink(c.withdrawalMore, links.returnUrl)),
     ].join("\n"),
   });
   const text = textLayout(
@@ -124,7 +142,7 @@ export function orderConfirmation(o: OrderMailData, links: Links, all: Messages)
       "",
       c.withdrawalTitle,
       withdrawal,
-      interpolate(c.withdrawalMore, { url: links.contactUrl }),
+      interpolate(c.withdrawalMore, { url: links.returnUrl }),
     ],
     footer,
   );

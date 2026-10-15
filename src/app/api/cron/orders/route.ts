@@ -1,6 +1,7 @@
 // POST /api/cron/orders — the scheduled work on orders, every few minutes:
-// releasing orders after the 30-minute window and purchasing them at the
-// supplier (D-04, src/lib/orders/purchasing.ts), cancelling unpaid orders
+// releasing orders after the 30-minute window, purchasing them at the
+// supplier (D-04, src/lib/orders/purchasing.ts) and following the parcels
+// (src/lib/orders/tracking.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
 // (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
 // (src/lib/mail/worker.ts) and tidying the rate limit. Bearer
@@ -13,6 +14,9 @@ import { json, refuseJob } from "@/lib/http";
 import { defaultOrdering } from "@/lib/catalog/ordering";
 import { releaseClosedWindows } from "@/lib/orders";
 import { runPurchasing } from "@/lib/orders/purchasing";
+import { runTracking } from "@/lib/orders/tracking";
+import { runInvoicing } from "@/lib/invoices";
+import { settleReturns } from "@/lib/returns";
 import { defaultMail } from "@/lib/mail";
 import { sendDueMail } from "@/lib/mail/worker";
 import { expireUnpaidOrders, reconcile } from "@/lib/payments";
@@ -35,6 +39,12 @@ export async function POST(request: Request): Promise<Response> {
       const released = await releaseClosedWindows(now);
       // Purchasing at the supplier (D-04); with SUPPLIER_ORDERING off only the drafts.
       const purchasing = await runPurchasing(defaultOrdering(), now);
+      // Where the parcels are: shipped, delivered (D-09: the withdrawal window runs from the delivery).
+      const tracked = await runTracking(defaultOrdering(), now);
+      // Returns whose refund the provider settled: refunded (mail, credit note) or back to the admin (D-09).
+      const returns = await settleReturns(now);
+      // Invoices for what was released, credit notes for what was cancelled after invoicing or returned (D-21, D-09).
+      const invoicing = await runInvoicing(now);
       const expired = provider ? await expireUnpaidOrders(provider, now) : { cancelled: [] };
       const reconciled = provider ? await reconcile(provider, now) : { payments: 0, refunds: 0 };
       // Last: the mail of everything above (confirmations, alerts) goes out in the same run.
@@ -52,6 +62,11 @@ export async function POST(request: Request): Promise<Response> {
         released: released.released.length,
         purchaseDrafts: purchasing.drafts,
         purchased: purchasing.outcomes.filter((o) => o === "placed").length,
+        shipped: tracked.shipped,
+        delivered: tracked.delivered,
+        invoices: invoicing.invoices,
+        creditNotes: invoicing.credits,
+        returnsRefunded: returns.refunded,
         cancelled: expired.cancelled.length,
         ...reconciled,
         mailSent: mailed.sent,

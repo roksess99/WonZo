@@ -22,6 +22,11 @@ export function Footer({ locale, m }: { locale: Locale; m: Messages }) {
               </Link>
             </li>
             <li>
+              <Link href={localizePath(locale, "/retour")} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+                {m.footer.returns}
+              </Link>
+            </li>
+            <li>
               <Link href={localizePath(locale, "/contact")} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
                 {m.footer.contact}
               </Link>

@@ -27,10 +27,22 @@
     "categories": "Categories"
   },
   "categories": {
-    "wonen": { "name": "Home", "intro": "Storage, furniture, decor and everything for the kitchen and the table." },
-    "tuin": { "name": "Garden", "intro": "Garden furniture, umbrellas, watering and the barbecue." },
-    "buitenleven": { "name": "Outdoors", "intro": "Camping and working out at home." },
-    "dieren": { "name": "Pets", "intro": "Collars, harnesses, beds and coats for your pet." }
+    "wonen": {
+      "name": "Home",
+      "intro": "Storage, furniture, decor and everything for the kitchen and the table."
+    },
+    "tuin": {
+      "name": "Garden",
+      "intro": "Garden furniture, umbrellas, watering and the barbecue."
+    },
+    "buitenleven": {
+      "name": "Outdoors",
+      "intro": "Camping and working out at home."
+    },
+    "dieren": {
+      "name": "Pets",
+      "intro": "Collars, harnesses, beds and coats for your pet."
+    }
   },
   "subcategories": {
     "opslag": "Storage and organisation",
@@ -219,6 +231,9 @@
     "metaTitle": "Your order",
     "title": "Order {reference}",
     "placedOn": "Placed on {date}",
+    "invoice": "Download invoice {number} (PDF)",
+    "credit": "Download credit note {number} (PDF)",
+    "invoicesTitle": "Invoice",
     "keepLink": "Keep this page: with this link you can find your order later.",
     "pending": "We are waiting for the confirmation of your payment.",
     "pendingText": "This usually takes a few seconds. This page refreshes by itself.",
@@ -260,7 +275,11 @@
     "deliverTo": "Delivery address",
     "contactTitle": "Contact details",
     "notFoundTitle": "We cannot find this order",
-    "notFoundText": "Check that you used the whole link from your email. If it still does not work, please contact us."
+    "notFoundText": "Check that you used the whole link from your email. If it still does not work, please contact us.",
+    "tracking": "Track your parcel: {carrier} {number}",
+    "trackingNoCarrier": "Tracking number: {number}",
+    "returnLink": "Sending something back? Go to the return form",
+    "returnLinkText": "You need your invoice number for it: {number}."
   },
   "countries": {
     "ES": "Spain",
@@ -300,7 +319,8 @@
     "company": "Company details",
     "kvk": "KvK {kvk}",
     "vat": "VAT {vat}",
-    "language": "Language"
+    "language": "Language",
+    "returns": "Returns"
   },
   "notFound": {
     "title": "This page doesn't exist",
@@ -325,6 +345,7 @@
     "shippingLarge": "Shipping for large items",
     "total": "Total",
     "inclVat": "All amounts include VAT.",
+    "vatLine": "of which VAT {rate}",
     "statusLink": "View your order",
     "statusText": "View your order: {url}",
     "confirmation": {
@@ -338,8 +359,8 @@
       "nextTitle": "What happens next",
       "next": "Until {time} you can still cancel your order or change your details. After that we order it for you; you can expect it within {min}–{max} working days.",
       "withdrawalTitle": "Cooling-off period: 14 days",
-      "withdrawal": "You have 14 days from the day you receive the parcel to change your mind, without giving a reason. If you want to send the order back, let us know within those 14 days at {email}. You then have another 14 days to send the parcel back. We refund you within 14 days of your notice, including the shipping costs for a full return.",
-      "withdrawalMore": "More about returns and contact: {url}"
+      "withdrawal": "You have 14 days from the day you receive the parcel to change your mind, without giving a reason. If you want to send the order back, register it within those 14 days with the return form on our site (you need the invoice number for it) or at {email}. You then have another 14 days to send the parcel back. We refund you within 14 days of your notice, including the shipping costs for a full return.",
+      "withdrawalMore": "The return form: {url}"
     },
     "cancelled": {
       "subject": "Order {reference} cancelled",
@@ -348,6 +369,109 @@
       "intro": "Your order {reference} has been cancelled.",
       "refund": "You will get {amount} back on the account or card you paid with. This usually takes a few working days.",
       "questions": "Questions? Email us at {email}."
-    }
+    },
+    "returnLink": "Sending something back: {url}",
+    "shipped": {
+      "subject": "Order {reference} is on its way",
+      "preheader": "Your parcel is on its way.",
+      "title": "Your parcel is on its way",
+      "intro": "Your order {reference} has been shipped.",
+      "trackingTitle": "Track your parcel",
+      "tracking": "{carrier}: {number}",
+      "trackingNoCarrier": "Tracking number: {number}",
+      "linesTitle": "What is on its way",
+      "expected": "You can expect it within {min}–{max} working days of your order.",
+      "invoice": "Your invoice number is {number}. You need it if you want to send something back."
+    },
+    "returnRequested": {
+      "subject": "Return {number} registered",
+      "preheader": "We have received your return. This is how you send the parcel back.",
+      "title": "Your return is registered",
+      "intro": "Return number {number}, for order {reference}.",
+      "linesTitle": "What you are sending back",
+      "stepsTitle": "How to send it back",
+      "addressTitle": "Return address (lost the label? email us)",
+      "amount": "You get at most {amount} back. We refund you as soon as we have received and checked the parcel, to the account or card you paid with."
+    },
+    "returnRejected": {
+      "subject": "Return {number}: not approved",
+      "preheader": "We have checked your return.",
+      "title": "We cannot approve your return",
+      "intro": "We have checked your return {number} for order {reference}.",
+      "reason": "Reason: {reason}",
+      "next": "Do you disagree? Email us at {email}, with your return number."
+    },
+    "returnRefunded": {
+      "subject": "Return {number} refunded",
+      "preheader": "We have refunded {amount}.",
+      "title": "Your money is on its way",
+      "intro": "For return {number} of order {reference} we have refunded {amount} to the account or card you paid with. This usually takes a few working days.",
+      "deduction": "That is less than the maximum of {max}, because: {reason}"
+    },
+    "questions": "Questions? Email us at {email}."
+  },
+  "returns": {
+    "metaTitle": "Returns",
+    "metaDescription": "Send a WonZo order back: within 14 days without a reason, and always when something is wrong, damaged or defective.",
+    "title": "Returns",
+    "intro": "Not happy, or something not right? Register your return here. You need the email address of your order and your invoice number.",
+    "howTitle": "How it works",
+    "how1": "You have 14 days from the day you receive the parcel to change your mind. Within that time you may send everything back without a reason.",
+    "how2": "If something was delivered wrong, damaged or defective, you can also send it back after those 14 days.",
+    "how3": "Your parcel contains a return label. With it you send the parcel back for free.",
+    "how4": "If you send everything back, you also get the shipping costs back. We refund you as soon as we have received and checked the parcel, to the account or card you paid with.",
+    "addressTitle": "Return address",
+    "addressText": "Lost the label? Contact us at {email}.",
+    "findTitle": "Find your order",
+    "email": "Email address of your order",
+    "invoice": "Invoice number",
+    "invoiceHint": "It is on your invoice, for example 2026-00042. You find the invoice through the link in your confirmation email, and in the email that your parcel is on its way.",
+    "find": "Find",
+    "emailInvalid": "Enter an email address, such as name@example.com.",
+    "invoiceInvalid": "Enter the invoice number as it is on your invoice, for example 2026-00042.",
+    "notFound": "We cannot find an order with this email address and invoice number. Please check them, or email us at {email}.",
+    "openReturn": "A return is already open for this order. You will hear from us once it has been handled.",
+    "notReturnable": "This order cannot be sent back with the form. Email us at {email} and we will look at it together.",
+    "nothingLeft": "Everything from this order has already been sent back.",
+    "rateLimit": "Too many attempts. Please try again in a few minutes.",
+    "error": "Something went wrong. Please try again.",
+    "busy": "One moment…",
+    "chooseTitle": "What are you sending back?",
+    "chooseIntro": "Order {reference}. Choose for each item how many you send back and why.",
+    "withdrawalUntil": "Your cooling-off period runs until {date}.",
+    "withdrawalClosed": "The 14-day cooling-off period has passed. You can still send something back if it was delivered wrong, damaged or defective.",
+    "price": "{price} each",
+    "sku": "Item number {sku}",
+    "alreadyReturned": "Already sent back: {count}",
+    "quantity": "Number to send back",
+    "reason": "Reason",
+    "reasonChoose": "Choose a reason",
+    "reasons": {
+      "none": "I no longer want it (no reason needed)",
+      "wrong": "Received the wrong item",
+      "damaged": "Arrived damaged",
+      "defect": "Does not work or is defective"
+    },
+    "errorQuantity": "Choose a number you can still send back.",
+    "errorReason": "Choose a reason.",
+    "errorWindow": "After the cooling-off period this is only possible when wrong, damaged or defective.",
+    "errorEmpty": "Choose at least one item to send back.",
+    "note": "Comment (may stay empty)",
+    "noteHint": "For example what is damaged. At most 500 characters.",
+    "noteTooLong": "Your comment is too long: at most 500 characters.",
+    "summaryTitle": "What you get back",
+    "summaryNone": "Choose above what you send back.",
+    "summaryLines": "Items: {amount}",
+    "summaryShipping": "Shipping costs: {amount}",
+    "summaryTotal": "You get at most {amount} back",
+    "summaryNote": "You get the shipping costs back when you send everything back, and the own shipping costs of a large item when it is wrong, damaged or defective. If an item has been used more than needed to check it, the amount can be lower.",
+    "submit": "Register return",
+    "back": "Another order",
+    "doneTitle": "Your return is registered",
+    "doneText": "Return number {number}. We have emailed you the steps below.",
+    "step1": "Pack the items well, preferably in the original packaging.",
+    "step2": "Stick the return label from your parcel on it.",
+    "step3": "Send the parcel back within 14 days.",
+    "doneMax": "You get at most {amount} back, once we have received and checked the parcel."
   }
 }

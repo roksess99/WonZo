@@ -8,7 +8,7 @@
 import { randomUUID } from "node:crypto";
 import { appendAudit } from "@/lib/admin/audit";
 import { fromDbTime, getPool, selectRows, withTransaction, type Connection } from "@/lib/db";
-import { compare } from "@/lib/money";
+import { compare, type Money } from "@/lib/money";
 import { enqueue } from "@/lib/orders/outbox";
 import { insideCancelWindow } from "@/lib/orders/states";
 import { lockOrder, ordersWithExpiredSnapshot, setHold, transitionOrder, type LockedOrder } from "@/lib/orders/store";
@@ -162,9 +162,10 @@ export function pathTo(from: PaymentStatus, to: PaymentStatus, actor: PaymentAct
 /**
  * Applies the provider's view of a payment to ours, inside a transaction
  * that locks the order (docs/PAYMENTS.md § Webhooks, steps 3–5). The amount
- * must equal the frozen order exactly; a payment the state machine does not
- * allow (paid after it failed, paid on a cancelled order) changes nothing and
- * becomes an alert for the owner — never an automatic fix.
+ * must equal the frozen order exactly. A payment paid after it failed or
+ * expired here is recorded as paid (owner 2026-10-13), but an order that did
+ * not take it — cancelled, failed, held, or paid by another payment — is never
+ * reopened or refunded by itself: an alert, and the admin pays it back.
  */
 export async function applyProviderPayment(conn: Connection, paymentId: string, answer: ProviderPayment, actor: PaymentActor, now: Date): Promise<PaymentRow | null> {
   const before = await paymentById(conn, paymentId);
@@ -181,15 +182,22 @@ export async function applyProviderPayment(conn: Connection, paymentId: string, 
 
   const path = pathTo(local.status, target, actor);
   if (!path) {
-    // E.g. "paid" on a payment that already failed or expired here: the owner decides.
+    // E.g. "paid" on a payment that was charged back here: the owner decides.
     await enqueue(conn, "admin-alert", `payment:${paymentId}:${local.status}->${target}`, { orderId: local.orderId, paymentId, local: local.status, provider: answer.status }, now);
     return local;
   }
   for (const to of path) await transitionPayment(conn, { paymentId, to, actor, now });
 
+  // What came in is what the provider says, not what we asked (.claude/rules/geld.md § Volgorde, step 3):
+  // a refund can only give back what was paid, so a different amount is recorded — and held below.
+  if (target === "PAID" && answer.amount.currency === local.amount.currency && compare(answer.amount, local.amount) !== 0) {
+    await conn.query("UPDATE payments SET amount_cents = ? WHERE id = ?", [answer.amount.amount, paymentId]);
+    await appendAudit(conn, { actor, action: "payment.amount-from-provider", objectType: "order", objectId: local.orderId, before: { amountCents: local.amount.amount }, after: { amountCents: answer.amount.amount, paymentId } }, now);
+  }
+
   if (!order) return paymentById(conn, paymentId);
   if (target === "PAID") {
-    const sameAmount = answer.amount.currency === local.amount.currency && compare(answer.amount, local.amount) === 0 && compare(local.amount, order.total) === 0;
+    const sameAmount = answer.amount.currency === local.amount.currency && compare(answer.amount, order.total) === 0;
     if (!sameAmount) await setHold(conn, order.id, "AMOUNT_MISMATCH", actor, now);
     else if (order.status === "PENDING_PAYMENT" && !order.holdReason) await transitionOrder(conn, { orderId: order.id, to: "PAID", actor: actor === "system" ? "provider" : actor, now });
     else {
@@ -260,13 +268,28 @@ export async function requestFullRefund(conn: Connection, orderId: number, reaso
  * Records a refund of what is left on one paid payment, in the caller's
  * transaction (which holds the order row): a second payment, or one on an
  * order that did not take it. Returns null when nothing is left.
+ *
+ * With `part`: exactly that amount, for a return (D-09). The caller computed
+ * it server-side; more than is left on the payment is refused here as well,
+ * never cut off (.claude/rules/geld.md § Buiten bereik).
  */
-export async function requestPaymentRefund(conn: Connection, payment: PaymentRow, reason: string, requestedBy: string, now: Date): Promise<string | null> {
+export async function requestPaymentRefund(
+  conn: Connection,
+  payment: PaymentRow,
+  reason: string,
+  requestedBy: string,
+  now: Date,
+  part?: { amount: Money; returnId: number },
+): Promise<string | null> {
   if (payment.status !== "PAID") return null;
-  const amount = await refundable(conn, payment);
+  const left = await refundable(conn, payment);
+  if (part && (!Number.isSafeInteger(part.amount.amount) || part.amount.amount < 1 || part.amount.currency !== left.currency || part.amount.amount > left.amount)) {
+    throw new Error(`refund of ${part.amount.amount} on payment ${payment.id} is out of range (left ${left.amount})`);
+  }
+  const amount = part ? part.amount : left;
   if (amount.amount === 0) return null;
   const id = randomUUID();
-  await insertRefund(conn, { id, orderId: payment.orderId, paymentId: payment.id, amount, reason, requestedBy, now });
+  await insertRefund(conn, { id, orderId: payment.orderId, paymentId: payment.id, amount, reason, requestedBy, now, returnId: part?.returnId ?? null });
   await appendAudit(conn, { actor: requestedBy, action: "refund.requested", objectType: "order", objectId: payment.orderId, after: { refundId: id, paymentId: payment.id, amountCents: amount.amount, currency: amount.currency }, reason }, now);
   return id;
 }
@@ -392,7 +415,9 @@ export async function expireUnpaidOrders(providerArg?: PaymentProvider | null, n
       const order = await lockOrder(conn, orderId);
       if (!order || (order.status !== "PENDING_PAYMENT" && order.status !== "PAYMENT_FAILED")) return false;
       const payments = await paymentsOfOrder(conn, orderId);
-      if (payments.some((p) => p.status === "PAID" || PAYMENT_OPEN.includes(p.status))) return false;
+      if (payments.some((p) => PAYMENT_OPEN.includes(p.status))) return false;
+      // Money the order did not take keeps it open until it is paid back (a late payment, owner 2026-10-13).
+      for (const p of payments) if (p.status === "PAID" && (await refundable(conn, p)).amount > 0) return false;
       return (await transitionOrder(conn, { orderId, to: "CANCELLED", actor: "system", reason: "verlopen: niet betaald binnen 60 minuten", now })).changed;
     });
     if (done) cancelled.push(orderId);
