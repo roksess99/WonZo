@@ -132,7 +132,11 @@ aangemeld** (stappen en retouradres), **retour niet akkoord** (met de reden),
 **retour terugbetaald** (met de waardevermindering als die er is), en voor de
 beheerder **nieuwe retour**. Alle vijf in de voorvertoning van het paneel.
 
-**Beoordelingsuitnodiging**: kort, één knop, en één per bestelling.
+**Beoordelingsuitnodiging**: kort, één knop, en één per bestelling. Gebouwd
+(2026-10-15, D-12): 7 dagen na de aflevering, niet bij een retour en niet aan
+wie zich afmeldde (dat wordt bij het versturen nog eens gecontroleerd); de
+afmeldlink staat in de mail. Of zo'n uitnodiging als reclame telt, moet een
+adviseur bevestigen.
 
 ### Onderwerpregels
 

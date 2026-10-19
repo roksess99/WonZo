@@ -8,6 +8,11 @@ Juridische uitspraken hieronder zijn `WETTELIJK` met een bron, en worden door
 een adviseur bevestigd voordat de privacyverklaring live gaat (D-10). Dit
 document is geen juridisch advies.
 
+**De privacyverklaring staat op `/privacy` (`/en/privacy`), 2026-10-15**
+(`messages/legal/`, Nederlands beslissend, D-32). Ze volgt dit bestand. Open
+staat de bewaartermijn van mailadres en telefoon na levering (D-24): die
+staat op de pagina als "nog in te vullen".
+
 Twee vragen die makkelijk door elkaar lopen:
 
 1. **Wat komt er op het apparaat van de bezoeker?** Bepaalt of er een
@@ -36,12 +41,12 @@ geen "nvt".
 | Flow | Gegevens | Doel | Grondslag (AVG art. 6) | Bewaartermijn | Rol ontvanger | Locatie | Versleuteling |
 |---|---|---|---|---|---|---|---|
 | Browser → applicatie | formuliervelden, IP, user agent | bestelling, beveiliging | b (overeenkomst), f (beveiliging) | IP in logs: `<<LOG_RETENTIE>>` | — | — | TLS |
-| Applicatie → database | naam, adres, mail, telefoon, bestelling | levering, administratie | b; c (fiscale bewaarplicht) | `docs/DATAMODEL.md` § Bewaren | eigen (hosting = verwerker) | `<<HOSTING_LOCATIE>>` | TLS naar database; at rest: `<<DB_ENCRYPTIE>>` |
+| Applicatie → database | naam, adres, mail, telefoon, bestelling | levering, administratie | b; c (fiscale bewaarplicht) | `docs/DATAMODEL.md` § Bewaren | eigen (hosting = verwerker) | Nederland (Hostinger, opgave eigenaar 2026-10-15) | TLS naar database; at rest: `<<DB_ENCRYPTIE>>` |
 | Applicatie → betaaldienst (Mollie, D-05) | bedrag, ordernummer, order-id en betaal-id (metadata), taal; de klant geeft zijn betaalgegevens rechtstreeks aan Mollie (hosted checkout) | betaling | b | volgens de betaaldienst | doorgaans zelfstandig verwerkingsverantwoordelijke voor de betaling — nog te bevestigen bij Mollie (D-05) | `<<BETAALDIENST_LOCATIE>>` | TLS |
 | Applicatie → leverancier (BigBuy) | naam, afleveradres, **mailadres en telefoonnummer** (verplichte velden bij bestellen — `docs/api/LEVERANCIER.md` § 10), artikelen | levering (dropship) | b | volgens de leverancier | verwerker of zelfstandig — vastleggen bij D-01 | `<<LEVERANCIER_LOCATIE>>` | TLS |
 | Applicatie → mailprovider (Hostinger, D-29) | mailadres, naam, afleveradres en de bestelling (in de bevestiging) | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS (465) of STARTTLS (587), verplicht |
 | Applicatie → error tracking | technische context, **geen** persoonsgegevens (`docs/OBSERVABILITY.md`) | stabiliteit | f | `<<ERROR_RETENTIE>>` | verwerker | `<<ERROR_LOCATIE>>` | TLS |
-| Browser → analytics | alleen met toestemming of een privacyvriendelijke opzet zonder tracking — D-10 | | a of f | | | | |
+| Browser → eigen statistieken (D-10, eigenaar 2026-10-15) | alleen het pad van de pagina; geen cookie, geen IP-adres, geen bezoeker-id; de sleutel van een statuslink wordt eraf geknipt (`src/lib/stats.ts`) | weten welke pagina's bekeken worden | f | geen persoonsgegeven: geen termijn nodig | eigen (hosting = verwerker) | Nederland (opgave eigenaar, 2026-10-15) | TLS |
 
 **Verwerkersovereenkomst** met elke verwerker (`WETTELIJK`: AVG art. 28).
 **Doorgifte buiten de EER** alleen met een geldig mechanisme (AVG hoofdstuk V);
@@ -97,6 +102,10 @@ aanwijzen.
 | `invoice_vat` (fase 6) | geen | c | als de factuur | met de factuur |
 | `returns`, `return_lines`, `return_events` (fase 6, D-09) | geen direct, behalve `customer_note`: vrije tekst van de klant, kan van alles bevatten | b (de koop afwikkelen), c (de creditnota volgt eruit) | als de bestelling | ja |
 | `shipments` (fase 6) | het trackingnummer: daarmee is bij de vervoerder het adres te vinden | b (de klant laten volgen waar het pakket is) | als de bestelling | ja |
+| `reviews` (D-12) | de tekst en de naam die de klant zelf invult; via de bestelling te herleiden | a (de klant kiest zelf om te beoordelen) | tot de klant vraagt hem weg te halen (dan verborgen; echt wissen: nog te bouwen) | nee — eigen termijn |
+| `review_tokens` (D-12) | geen: alleen de hash van een sleutel | f (alleen kopers kunnen beoordelen) | als de bestelling | ja |
+| `review_optouts` (D-12) | een hash van het mailadres, niet het adres | f (niet opnieuw uitnodigen wie dat niet wil) | zolang er uitnodigingen gaan | nee |
+| `page_views` (D-10) | geen: dag, pad en aantal | f | onbeperkt (geen persoonsgegeven) | n.v.t. |
 | `service_checks` (fase 6) | geen: de stand van Mollie en BigBuy, en het tegoed | — | wordt overschreven bij elke meting | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
@@ -113,7 +122,9 @@ Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
 
 | Partij | Wat ze krijgen | Waarom |
 |---|---|---|
-| | | |
+| BigBuy (Spanje) | naam, afleveradres, mailadres, telefoon, de artikelen | het pakket versturen (dropship) |
+| Mollie (Nederland) | bedrag, ordernummer, taal; de betaalgegevens geeft de klant zelf | de betaling |
+| Hostinger (servers in Nederland) | alles wat in de database en de mail staat | hosting, database, mail (verwerker) |
 
 - **De betaaldienst wordt vergeten** als de verklaring dateert van vóór de
   betaalkoppeling. Loop deze lijst na bij elke nieuwe koppeling.

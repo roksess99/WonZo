@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReturnForm } from "@/components/returns/ReturnForm";
 import { Container } from "@/components/ui";
 import { company } from "@/lib/company";
 import { isLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
+import { localizePath } from "@/lib/i18n/paths";
 import { pageMetadata } from "@/lib/seo";
 import { interpolate } from "@/lib/text";
 
@@ -53,6 +55,11 @@ export default async function ReturnPage({ params }: PageProps<"/[lang]/retour">
           {company.address}
         </address>
         <p className="text-body-sm text-muted">{interpolate(m.addressText, { email: company.email })}</p>
+        <p>
+          <Link href={localizePath(lang, "/herroepingsformulier")} className="underline decoration-2 underline-offset-4">
+            {m.modelForm}
+          </Link>
+        </p>
       </section>
     </Container>
   );

@@ -20,11 +20,12 @@ import { bareAddress, recipient, type MailConfig } from "./config";
 import { invoicesOfOrder } from "@/lib/invoices";
 import { parcelsOfOrder } from "@/lib/orders/tracking";
 import { readReturn } from "@/lib/returns";
-import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, type ReturnMailData } from "./after-sale";
+import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, reviewInvite, type ReturnMailData } from "./after-sale";
+import { issueReviewToken, optedOut } from "@/lib/reviews";
 import { adminAlert, adminNewOrder, alertKind, orderCancelled, orderConfirmation, type Links } from "./messages";
 import type { MailSender, OutgoingMail } from "./transport";
 
-export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert", "order-shipped", "return-requested", "return-rejected", "return-refunded", "admin-new-return"] as const;
+export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert", "order-shipped", "return-requested", "return-rejected", "return-refunded", "admin-new-return", "review-invite"] as const;
 /** Minutes to wait after the n-th failure: quick at first (a hiccup), then hours (a server that is down). */
 const BACKOFF_MINUTES = [1, 5, 15, 60, 180, 360, 720];
 export const MAX_ATTEMPTS = BACKOFF_MINUTES.length + 1;
@@ -48,7 +49,7 @@ async function compose(row: Row, config: MailConfig, now: Date): Promise<Compose
   const customerLinks = async (): Promise<Links> => {
     // A key of its own for every message (docs/DATAMODEL.md § Order: toegangssleutels).
     const token = await withTransaction((conn) => issueAccessToken(conn, orderId, now));
-    return { statusUrl: url(statusPath(order.locale, token)), contactUrl: url(localizePath(order.locale, "/contact")), logoUrl: url(LOGO), email: company.email, returnUrl: url(localizePath(order.locale, "/retour")) };
+    return { statusUrl: url(statusPath(order.locale, token)), contactUrl: url(localizePath(order.locale, "/contact")), logoUrl: url(LOGO), email: company.email, returnUrl: url(localizePath(order.locale, "/retour")), withdrawalFormUrl: url(localizePath(order.locale, "/herroepingsformulier")) };
   };
   /** The return of a return mail, as the mail needs it; null when it is not there (or not of this order). */
   const returnData = async (): Promise<(ReturnMailData & { status: string }) | null> => {
@@ -102,6 +103,16 @@ async function compose(row: Row, config: MailConfig, now: Date): Promise<Compose
       const r = await returnData();
       if (!r) return { kind: "skip", reason: "retour niet gevonden" };
       return { kind: "mail", intended: config.ordersTo, mail: adminNewReturn(r, adminUrl, url(LOGO), adminMessages()) };
+    }
+    case "review-invite": {
+      // Checked again at sending: an opt-out or a return since the invitation was queued wins (D-12).
+      if (order.status !== "DELIVERED" && order.status !== "COMPLETED") return { kind: "skip", reason: "niet afgeleverd" };
+      if (await optedOut(getPool(), order.customer.email)) return { kind: "skip", reason: "afgemeld voor uitnodigingen" };
+      const [ret] = await selectRows<{ x: number }>(getPool(), "SELECT 1 AS x FROM returns WHERE order_id = ? AND status NOT IN ('REJECTED', 'WITHDRAWN') LIMIT 1", [orderId]);
+      if (ret) return { kind: "skip", reason: "retour: geen uitnodiging" };
+      const token = await withTransaction((conn) => issueReviewToken(conn, orderId, now));
+      const reviewUrl = url(localizePath(order.locale, `/beoordelen/${token}`));
+      return { kind: "mail", intended: order.customer.email, mail: reviewInvite({ locale: order.locale, reference: order.reference }, reviewUrl, await customerLinks(), getMessages(order.locale)) };
     }
     default:
       return { kind: "skip", reason: `geen mail voor ${row.kind}` };

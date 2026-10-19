@@ -138,6 +138,13 @@ kenmerk dat de mailserver teruggeeft. De outbox kent nu de standen `PENDING`,
 `SENT` (mail weg), `DONE` (afgehandeld zonder mail, of inkooporder gemaakt) en
 `FAILED` (mail kon niet weg; in "vraagt aandacht", opnieuw te versturen).
 
+En (`db/migrations/0010_reviews.sql`, D-12): `reviews` (één per bestelling
+en onderwerp — de winkel of één artikel — met sterren, tekst, de zelfgekozen
+naam, status en het antwoord van de winkel), `review_tokens` (de sleutel in
+de uitnodiging, als hash) en `review_optouts` (afgemelde mailadressen, als
+hash). En `db/migrations/0009_page_views.sql` (D-10): paginaweergaven per dag
+en pad.
+
 En (`db/migrations/0008_returns_tracking.sql`): `returns` met `return_lines`
 en `return_events` (een aanvraag met per bestelregel aantal en reden, het
 maximum dat terug kan, en wat de beheerder terugbetaalde; één open retour per

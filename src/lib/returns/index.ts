@@ -263,6 +263,16 @@ async function readReturns(db: Queryable, where: string, params: unknown[]): Pro
 
 export const returnsOfOrder = (db: Queryable, orderId: number) => readReturns(db, "r.order_id = ?", [orderId]);
 
+/**
+ * How many returns wait for the owner, and the earliest refund deadline among
+ * them (the law's clock, ./amount.ts). Only counts and a date: shown to
+ * every role on the dashboard, so nothing about the customer.
+ */
+export async function openReturnsSummary(db: Queryable): Promise<{ count: number; earliestRequestedAt: Date | null }> {
+  const [row] = await selectRows<{ n: number | string; first: string | null }>(db, "SELECT COUNT(*) AS n, MIN(requested_at) AS first FROM returns WHERE status IN ('REQUESTED', 'RECEIVED', 'REFUNDING')");
+  return { count: Number(row?.n ?? 0), earliestRequestedAt: row?.first ? fromDbTime(row.first) : null };
+}
+
 /** The returns tab: open ones (oldest first matters less than seeing them all), or the closed ones. */
 export async function listReturns(db: Queryable, open: boolean): Promise<ReturnRow[]> {
   const marks = RETURN_CLOSED.map(() => "?").join(", ");

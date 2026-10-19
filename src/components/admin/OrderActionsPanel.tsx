@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
-import { acceptPriceAction, cancelAndRefundAction, markDeliveredAction, refundPaymentAction, releaseHoldAction, resendMailAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
+import { acceptPriceAction, cancelAndRefundAction, lookupPurchaseAction, markDeliveredAction, refundPaymentAction, releaseHoldAction, resendMailAction, retryPurchaseFormAction, type OrderActionState } from "@/app/beheer/bestellingen/actions";
 import type { AdminMessages } from "@/lib/admin/messages";
 import type { AdminOptions } from "@/lib/admin/order-actions";
 import { formatMoney } from "@/lib/money";
@@ -26,12 +26,33 @@ function errorText(state: OrderActionState, m: Labels): string | null {
       return m.errorAccess;
     case "at-supplier":
       return m.errorAtSupplier;
+    case "ordering-off":
+      return m.errorOrderingOff;
   }
 }
 
 function doneText(state: OrderActionState, m: Labels): string | null {
   if (state.ok !== true) return null;
   return state.refund === "sent" ? m.doneSent : state.refund === "queued" ? m.doneQueued : m.done;
+}
+
+/** A harmless action without a confirmation or a reason: it asks, it changes nothing at the supplier. */
+function PlainAction({ label, action, fields, m }: { label: string; action: (state: OrderActionState, form: FormData) => Promise<OrderActionState>; fields: Record<string, string>; m: Labels }) {
+  const [state, formAction, pending] = useActionState<OrderActionState, FormData>(action, { ok: null });
+  const error = errorText(state, m);
+  return (
+    <form action={formAction} className="flex flex-col gap-2">
+      {Object.entries(fields).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
+      <button type="submit" aria-disabled={pending} onClick={(e) => pending && e.preventDefault()} className="min-h-11 rounded-md bg-surface px-5 font-bold ring-1 ring-border hover:bg-background">
+        {pending ? m.busy : label}
+      </button>
+      <p role="status" className={`text-body-sm ${error ? "font-medium text-danger" : "text-success"}`}>
+        {error ?? (state.ok ? m.lookupDone : "")}
+      </p>
+    </form>
+  );
 }
 
 /**
@@ -190,6 +211,9 @@ export function OrderActionsPanel({
               />
             ))
           : null}
+        {canManage && options.lookupPurchase ? (
+          <PlainAction label={m.lookupPurchase} action={lookupPurchaseAction} fields={{ ...base, supplierOrderId: options.lookupPurchase.supplierOrderId }} m={m} />
+        ) : null}
         {canManage && options.markDelivered ? (
           <ConfirmAction label={m.markDelivered} text={m.markDeliveredText} confirmLabel={m.markDeliveredConfirm} action={markDeliveredAction} fields={base} m={m} money={false} />
         ) : null}

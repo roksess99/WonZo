@@ -192,3 +192,28 @@ export function adminNewReturn(r: ReturnMailData, adminUrl: string, logoUrl: str
     ),
   };
 }
+
+/**
+ * The invitation to review (D-12, owner 2026-10-15): once per order, 7 days
+ * after the delivery, with the way to opt out in the mail itself — it may
+ * count as advertising (`WETTELIJK`, to be confirmed by an adviser).
+ */
+export function reviewInvite(o: { locale: Locale; reference: string }, reviewUrl: string, links: Links, all: Messages): RenderedMail {
+  const m = all.mail;
+  const c = m.reviewInvite;
+  const subject = interpolate(c.subject, { reference: o.reference });
+  const footer = footerOf(m);
+  const intro = interpolate(c.intro, { reference: o.reference });
+  return {
+    subject,
+    html: layout({
+      lang: o.locale,
+      title: subject,
+      preheader: c.preheader,
+      logoUrl: links.logoUrl,
+      footer,
+      body: [block.h1(c.title), block.p(escapeHtml(intro)), block.button(reviewUrl, c.button), block.p(escapeHtml(c.once)), block.p(withLink(c.optOut, reviewUrl))].join("\n"),
+    }),
+    text: textLayout([c.title, "", intro, "", interpolate(c.text, { url: reviewUrl }), "", c.once, interpolate(c.optOut, { url: reviewUrl })], footer),
+  };
+}

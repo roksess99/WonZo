@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { dateTime, vatRate } from "@/components/admin/format";
+import { vatRate } from "@/components/admin/format";
+import { InvoiceSearch } from "@/components/admin/InvoiceSearch";
+import { InvoiceTable } from "@/components/admin/InvoiceTable";
 import { requirePage } from "@/lib/admin/access";
 import { adminMessages } from "@/lib/admin/messages";
 import { can } from "@/lib/admin/permissions";
@@ -56,6 +58,13 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/beheer/
         </a>
       </p>
 
+      <section aria-labelledby="search" className="flex flex-col gap-3 rounded-md bg-surface p-6 ring-1 ring-line">
+        <h2 id="search" className="font-display text-h2">
+          {m.searchTitle}
+        </h2>
+        <InvoiceSearch m={m} busy={adminMessages().actions.busy} denied={adminMessages().actions.errorAccess} showOrders={showOrders} />
+      </section>
+
       {loaded ? null : (
         <p role="alert" className="font-medium text-danger">
           {adminMessages().dashboard.loadError}
@@ -101,41 +110,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/beheer/
           {interpolate(m.listTitle, { month: monthName(month), year })}
         </h2>
         {rows.length ? (
-          <table className="w-full border-collapse text-start tabular-nums">
-            <thead className="hidden text-body-sm text-muted sm:table-header-group">
-              <tr className="border-b border-line">
-                <th scope="col" className="py-2 pe-4 text-start font-medium">{m.colNumber}</th>
-                <th scope="col" className="py-2 pe-4 text-start font-medium">{m.colOrder}</th>
-                <th scope="col" className="py-2 pe-4 text-start font-medium">{m.colCustomer}</th>
-                <th scope="col" className="py-2 pe-4 text-start font-medium">{m.colDate}</th>
-                <th scope="col" className="py-2 text-end font-medium">{m.colTotal}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="flex flex-wrap gap-x-4 border-b border-line py-3 sm:table-row sm:py-0">
-                  <td className="py-0 font-medium sm:py-2 sm:pe-4">
-                    <a href={`/beheer/facturen/${r.id}/pdf`} className="underline decoration-2 underline-offset-4">
-                      {r.number}
-                    </a>
-                    {r.kind === "credit" ? <span className="ms-2 text-body-sm text-muted">{m.credit}</span> : null}
-                  </td>
-                  <td className="py-0 sm:py-2 sm:pe-4">
-                    {showOrders ? (
-                      <Link href={`/beheer/bestellingen/${r.orderId}`} className="underline-offset-4 hover:underline">
-                        {r.reference}
-                      </Link>
-                    ) : (
-                      r.reference
-                    )}
-                  </td>
-                  <td className="w-full py-0 sm:w-auto sm:py-2 sm:pe-4">{r.customer}</td>
-                  <td className="py-0 text-muted sm:py-2 sm:pe-4">{dateTime(r.issuedAt)}</td>
-                  <td className="py-0 sm:py-2 sm:text-end">{formatMoney(r.totalIncl)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <InvoiceTable rows={rows} m={m} showOrders={showOrders} caption={interpolate(m.listTitle, { month: monthName(month), year })} />
         ) : (
           <p className="text-muted">{m.empty}</p>
         )}

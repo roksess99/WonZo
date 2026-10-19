@@ -2,13 +2,16 @@ import Link from "next/link";
 import type { AdminMessages } from "@/lib/admin/messages";
 import { formatMoney } from "@/lib/money";
 import type { ReturnRow } from "@/lib/returns";
+import { refundClock, refundDeadline } from "@/lib/returns/amount";
 import { interpolate } from "@/lib/text";
 import { shortDate } from "./format";
 import { ReturnActions } from "./ReturnActions";
 
 /** One return: what comes back, why, the maximum, and what the admin can do now (D-09). */
-export function ReturnCard({ r, m, canAct, canRefund, showOrder }: { r: ReturnRow; m: AdminMessages; canAct: boolean; canRefund: boolean; showOrder: boolean }) {
+export function ReturnCard({ r, m, canAct, canRefund, showOrder, now }: { r: ReturnRow; m: AdminMessages; canAct: boolean; canRefund: boolean; showOrder: boolean; now: Date }) {
   const rm = m.returns;
+  const open = r.status === "REQUESTED" || r.status === "RECEIVED";
+  const clock = refundClock(r.requestedAt, now);
   return (
     <article aria-labelledby={`return-${r.id}`} className="flex flex-col gap-2 border-b border-line pb-4 last:border-b-0 last:pb-0">
       <h3 id={`return-${r.id}`} className="flex flex-wrap items-baseline gap-x-3 font-medium tabular-nums">
@@ -24,6 +27,12 @@ export function ReturnCard({ r, m, canAct, canRefund, showOrder }: { r: ReturnRo
         {interpolate(rm.requestedOn, { date: shortDate(r.requestedAt) })}
         {r.receivedAt ? ` · ${interpolate(rm.receivedOn, { date: shortDate(r.receivedAt) })}` : ""}
       </p>
+      {open ? (
+        // The law's clock (docs/RETOUREN.md): 14 days from the notice to pay back.
+        <p className={`text-body-sm font-medium ${clock === "late" ? "text-danger" : clock === "soon" ? "text-warning" : ""}`}>
+          {interpolate(clock === "late" ? rm.refundByLate : rm.refundBy, { date: shortDate(refundDeadline(r.requestedAt)) })}
+        </p>
+      ) : null}
       <ul className="flex flex-col gap-1">
         {r.lines.map((l) => (
           <li key={l.lineNo}>

@@ -150,7 +150,7 @@ describe("the audit log in words", () => {
 });
 
 describe("the mails after the sale", () => {
-  const links = { statusUrl: "https://wonzo.nl/bestelling/abc", contactUrl: "https://wonzo.nl/contact", logoUrl: "https://wonzo.nl/x.png", email: "info@wonzo.nl", returnUrl: "https://wonzo.nl/retour" };
+  const links = { statusUrl: "https://wonzo.nl/bestelling/abc", contactUrl: "https://wonzo.nl/contact", logoUrl: "https://wonzo.nl/x.png", email: "info@wonzo.nl", returnUrl: "https://wonzo.nl/retour", withdrawalFormUrl: "https://wonzo.nl/herroepingsformulier" };
   it("on its way: the tracking number and the invoice number, a name with markup as text", () => {
     const mail = orderShipped(
       { locale: "nl", reference: "WZ-2026-00001", lines: [{ name: "<b>Stoel</b>", quantity: 2 }], parcels: [{ carrier: "GLS", trackingNumber: "ES123" }], delivery: { minWorkingDays: 3, maxWorkingDays: 6 }, invoiceNumber: "2026-00007" },

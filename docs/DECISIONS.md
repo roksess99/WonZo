@@ -238,6 +238,18 @@ leverbaar), elektronica (registratie bij Stichting OPEN, energielabel,
 inname), en gereviseerde artikelen (uitleg en garantievragen bij elke
 verkoop).
 
+**Indeling (eigenaar, 2026-10-15):** thuis sporten staat niet meer onder
+Buitenleven maar in een eigen hoofdcategorie **Sport**; Buitenleven houdt
+kamperen. Het oude adres (`/buitenleven/thuis-sporten`,
+`/en/outdoors/home-fitness`) leidt om met een 308. De toegestane
+subcategorieën veranderen niet. **Buiten sporten** staat er nog niet in; de eigenaar kiest na deze meting:
+in de meting van 2026-10-05 (`tmp/catalog-explore/producten.csv`, nieuw, op
+voorraad, basis of licht, geen elektrisch woord in de naam) is wat er buiten
+fitness te koop is vooral kleding, schoenen en ballen in losse maten met 1 tot 3 stuks,
+plus wat D-36 uitsluit (zwemmen, opblaasbaar voor water). Wel diep op
+voorraad, en nog niet toegestaan: "Fitness en lichaamsbeweging ›
+Accessoires" (3 artikelen van InnovaGoods): een keuze voor de eigenaar.
+
 **Voorstel uit het onderzoek** (`docs/ONDERZOEK.md` § 6): selectie op
 toegestane subcategorie, douanecode basis of licht, geen elektrisch kenmerk,
 conditie nieuw, voorraad, GPSR-gegevens aanwezig en een prijsondergrens. Met
@@ -634,6 +646,18 @@ Werkwijze en dataflows: `docs/PRIVACY.md`.
 welke soort; is er een toestemmingsbanner nodig; wie bevestigt de
 privacyverklaring juridisch.
 
+**Eigenaar (2026-10-15):** statistieken komen er, privacyvriendelijk: **een
+eigen telling op de server** — paginabezoeken per pagina per dag, zonder
+cookies, zonder IP-adres op te slaan, zonder derde partij of extra pakket, te
+zien in het paneel. Daarmee is er geen toestemmingsbanner nodig (`WETTELIJK`:
+Telecommunicatiewet art. 11.7a raakt alleen opslag op het apparaat; te
+bevestigen). Verworpen: Plausible (een script van een derde in de browser, een
+account en verwerkersovereenkomst) en Google Analytics (banner met toestemming
+vooraf). De servers van Hostinger staan in **Nederland** (opgave eigenaar,
+2026-10-15): geen doorgifte buiten de EER voor hosting en mail. De verkoper is
+een **eenmanszaak** (R.M.A. Marketing). Status blijft BLOCKED tot D-18; de
+bewaartermijnen (D-24) en de juridische bevestiging staan nog open.
+
 ---
 
 ## D-11 · Marketingmail
@@ -659,6 +683,23 @@ bevestigen). Uitnodiging per bestelling met een token; verbergen alleen met
 reden; geen sterrengemiddelde in de markering zonder echte beoordelingen.
 
 **Te beantwoorden:** komen ze er; eigen systeem of een dienst.
+
+**Eigenaar (2026-10-15): ze komen er, nu al** (in afwijking van "later" in
+D-35), als **eigen systeem** — geen dienst, geen script van een derde in de
+browser. De klant beoordeelt **de winkel én de artikelen** die hij kocht (1
+tot 5 sterren en een tekst), via een link die alleen bij zijn bestelling hoort.
+**7 dagen na de aflevering** één uitnodiging per mail, met een **afmeldlink**
+(laten bevestigen door de adviseur: een uitnodiging kan als reclame gelden).
+Een beoordeling verschijnt meteen; verbergen alleen met een reden, in het
+logboek; de beheerder kan antwoorden. Verworpen: een dienst als Kiyoh of
+Trustpilot (kosten, een derde in de browser), alleen met een vinkje bij het
+afrekenen (veel minder reacties), alleen een link zonder mail.
+
+**Uitwerking (2026-10-15), te bevestigen:** geen uitnodiging voor een
+bestelling met een retour die niet is afgewezen; afmelden geldt voor het
+mailadres (bewaard als hash, niet als adres); de klant kiest zelf de naam
+waaronder de beoordeling staat (leeg: "Klant"); in de markering voor
+zoekmachines geen sterren zolang dat niet apart gekozen is.
 
 ---
 
@@ -1172,6 +1213,11 @@ vertaald.
 welke taal mail, factuur en algemene voorwaarden gaan (de taal van de klant,
 of altijd Nederlands — juridische teksten laten bevestigen).
 
+**Eigenaar (2026-10-15):** de juridische teksten (algemene voorwaarden,
+privacyverklaring, modelformulier) in het **Nederlands en het Engels**; bij
+verschil is de **Nederlandse tekst beslissend**. Mail volgt de taal van de
+klant (zo gebouwd); de factuur is Nederlands.
+
 ---
 
 ## D-33 · Donkere modus
@@ -1280,7 +1326,7 @@ WonZo", in het Nederlands en Engels. De ontwerpregels uit § 4 gelden voor elk
 scherm.
 
 **Later**, bewust niet in de eerste versie: klantaccount (D-23),
-beoordelingen (D-12), verlanglijst, vergelijken, achteraf betalen, nieuwsbrief
+verlanglijst, vergelijken, achteraf betalen, nieuwsbrief
 (D-11), keurmerk. **Bewust niet:** nep-urgentie, pop-ups bij binnenkomst,
 automatisch draaiende carrousels, een chatbot die zich als mens voordoet.
 
@@ -1327,6 +1373,9 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-15 | D-02 | Eigenaar: thuis sporten in een eigen hoofdcategorie Sport, niet onder Buitenleven; oud adres leidt om. Buiten sporten nog niet: gemeten 2026-10-05 is er vrijwel niets leverbaar, keuze aan de eigenaar |
+| 2026-10-15 | D-12, D-35 | Eigenaar: beoordelingen nu al, eigen systeem, winkel én artikelen, uitnodiging 7 dagen na aflevering met afmeldlink (D-12); uit "later" gehaald (D-35) |
+| 2026-10-15 | D-10, D-32 | Eigenaar: eigen statistieken op de server zonder cookies (geen banner); servers Hostinger in Nederland; eenmanszaak (D-10, blijft BLOCKED). Juridische teksten NL en EN, Nederlands beslissend (D-32) |
 | 2026-10-13 | D-07, D-09 | Eigenaar: te late of afwijkende betaling als betaald vastleggen, beheerder betaalt terug (D-07); retourformulier met mailadres en factuurnummer, reden per artikel (ook "geen reden"), retourlabel door BigBuy in het pakket (te bevestigen, vraag 24), deels terugbetalen mag, termijn via tracking (D-09) |
 | 2026-10-12 | D-15, D-21 | Eigenaar: btw per product, totalen excl. en incl. (D-15, nog OPEN tot de boekhouder bevestigt; verzendkosten bij twee tarieven open). Facturen en creditnota's gebouwd met pdfkit en DM Sans (toestemming eigenaar voor beide downloads): na het venster, nummer uit de teller, PDF opgeslagen; btw-overzicht per maand in het paneel |
 | 2026-10-12 | D-29 | Mail gebouwd met nodemailer (toestemming eigenaar): bevestiging, annulering, meldingen aan de beheerder, via de outbox met backoff; voorvertoning in het paneel en een los testscript. Btw-bedrag in de bevestiging wacht op D-15 |

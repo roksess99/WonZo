@@ -274,6 +274,17 @@ async function settleUnknown(ordering: SupplierOrdering, so: SupplierOrderRow, n
 }
 
 /**
+ * The admin asks now instead of waiting for the next round (docs/BEHEER.md §
+ * De bestelling zelf: "status opvragen", never "order again"). Only for a
+ * purchase order that is UNKNOWN; the same lookup by our reference.
+ */
+export async function lookupPurchaseNow(ordering: SupplierOrdering, supplierOrderId: string, now: Date): Promise<PurchaseOutcome | "changed"> {
+  const so = await supplierOrderById(getPool(), supplierOrderId);
+  if (!so || so.status !== "UNKNOWN") return "changed";
+  return settleUnknown(ordering, so, now);
+}
+
+/**
  * The purchasing round of the orders job: drafts from the outbox, then every
  * purchase order that is due. Without ordering (SUPPLIER_ORDERING off) only
  * the drafts: the panel shows them as waiting.

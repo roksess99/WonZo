@@ -13,6 +13,13 @@ import { getPool, hasDatabase } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { mailHealth } from "@/lib/mail";
 import { paymentHealth } from "@/lib/payments/health";
+import { openReturnsSummary } from "@/lib/returns";
+import { invoiceTotals } from "@/lib/invoices";
+import { readFunnel, readStats } from "@/lib/stats";
+import { lowReviewsWithoutReply } from "@/lib/reviews";
+import { FunnelList } from "@/components/admin/FunnelList";
+
+const monthName = (month: number) => new Intl.DateTimeFormat("nl-NL", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, month - 1, 15)));
 import { interpolate } from "@/lib/text";
 
 // Behind the same check as the page: to a stranger even the title says nothing.
@@ -62,9 +69,12 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
   const { "geen-toegang": denied } = await searchParams;
   const now = new Date();
   const orders = can(admin.role, "bestellingen") && hasDatabase;
+  const invoices = can(admin.role, "facturen") && hasDatabase;
+  const visits = can(admin.role, "statistieken") && hasDatabase;
+  const reviews = can(admin.role, "beoordelingen") && hasDatabase;
 
   // Independent of each other: in parallel. A block whose source fails is left out, the rest stays.
-  const [payment, supplier, balance, summary, attention, latest, waiting, mail] = await Promise.all([
+  const [payment, supplier, balance, summary, attention, latest, waiting, mail, returns, totals, week, funnel, lowReviews] = await Promise.all([
     paymentHealth(now),
     supplierHealth(now),
     orders ? supplierBalance(now).catch(logged("balance", null)) : null,
@@ -73,6 +83,12 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
     orders ? latestOrders(getPool()).catch(logged("latest", null)) : null,
     hasDatabase ? waitingPurchases(getPool()).catch(logged("waiting", 0)) : 0,
     mailHealth(now),
+    // Only a count and a date: for every role, like the other warnings.
+    hasDatabase ? openReturnsSummary(getPool()).catch(logged("returns", null)) : null,
+    invoices ? invoiceTotals(getPool(), now).catch(logged("invoices", null)) : null,
+    visits ? readStats(getPool(), 7, now, 5).catch(logged("visits", null)) : null,
+    visits ? readFunnel(getPool(), 30, now).catch(logged("funnel", null)) : null,
+    reviews ? lowReviewsWithoutReply(getPool()).catch(logged("reviews", null)) : null,
   ]);
   const ordering: OrderingStatus = { mode: orderingModeOrBad(), waiting };
 
@@ -85,7 +101,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
           <p className="text-body-sm">{interpolate(m.noAccess.text, { permission: m.permissions[denied] })}</p>
         </div>
       ) : null}
-      <HealthAlerts payment={payment} supplier={supplier} ordering={ordering} mail={mail} m={m.health} />
+      <HealthAlerts payment={payment} supplier={supplier} ordering={ordering} mail={mail} returns={returns} now={now} m={m.health} />
 
       {orders ? (
         <>
@@ -166,6 +182,88 @@ export default async function Dashboard({ searchParams }: PageProps<"/beheer">) 
             </p>
           </section>
         </>
+      ) : null}
+
+      {reviews ? (
+        // docs/BEHEER.md § Dashboard: a low score should be answered.
+        <section aria-labelledby="reviews-tile" className={`flex flex-col gap-2 rounded-md bg-surface p-6 ring-1 ring-line ${lowReviews ? "border-l-4 border-warning" : ""}`}>
+          <h2 id="reviews-tile" className="font-display text-h2">
+            {m.dashboard.reviewsTitle}
+          </h2>
+          {lowReviews === null ? (
+            <LoadError text={m.dashboard.loadError} />
+          ) : (
+            <p>{lowReviews ? (lowReviews === 1 ? m.dashboard.reviewsLowOne : interpolate(m.dashboard.reviewsLow, { count: lowReviews })) : m.dashboard.reviewsNone}</p>
+          )}
+          <p>
+            <Link href={lowReviews ? "/beheer/beoordelingen?lijst=laag" : "/beheer/beoordelingen"} className="font-medium underline decoration-2 underline-offset-4">
+              {m.dashboard.reviewsLink}
+            </Link>
+          </p>
+        </section>
+      ) : null}
+
+      {invoices || visits ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {invoices ? (
+            <section aria-labelledby="invoices-tile" className="flex flex-col gap-2 rounded-md bg-surface p-6 ring-1 ring-line">
+              <h2 id="invoices-tile" className="font-display text-h2">
+                {m.dashboard.invoicesTitle}
+              </h2>
+              {totals ? (
+                <>
+                  <ul className="flex flex-col gap-1 tabular-nums">
+                    {totals.years.map((y) => (
+                      <li key={y.year} className="flex justify-between gap-4">
+                        <span className={y.year === totals.year ? "font-bold" : ""}>{interpolate(m.dashboard.invoicesYear, { year: y.year, count: y.documents })}</span>
+                        <span className={y.year === totals.year ? "font-bold" : ""}>{formatMoney(y.total)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {totals.months.length ? (
+                    <ul className="flex flex-col gap-1 border-t border-line pt-2 text-body-sm tabular-nums">
+                      {totals.months.map((mo) => (
+                        <li key={mo.month} className="flex justify-between gap-4">
+                          <Link href={`/beheer/facturen?jaar=${totals.year}&maand=${mo.month}`} className="underline-offset-4 hover:underline">
+                            {interpolate(m.dashboard.invoicesMonth, { month: monthName(mo.month), count: mo.documents })}
+                          </Link>
+                          <span>{formatMoney(mo.total)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted">{m.dashboard.invoicesNone}</p>
+                  )}
+                  <p className="text-body-sm text-muted">{m.dashboard.invoicesNote}</p>
+                </>
+              ) : (
+                <LoadError text={m.dashboard.loadError} />
+              )}
+            </section>
+          ) : null}
+          {visits ? (
+            <section aria-labelledby="visits-tile" className="flex flex-col gap-2 rounded-md bg-surface p-6 ring-1 ring-line">
+              <h2 id="visits-tile" className="font-display text-h2">
+                {m.dashboard.visitsTitle}
+              </h2>
+              {week && funnel ? (
+                <>
+                  <p className="tabular-nums">
+                    {interpolate(m.dashboard.visitsWeek, { today: week.days.at(-1)?.views ?? 0, week: week.total })}
+                  </p>
+                  <FunnelList f={funnel} days={30} m={m.stats} />
+                  <p>
+                    <Link href="/beheer/statistieken" className="font-medium underline decoration-2 underline-offset-4">
+                      {m.dashboard.visitsMore}
+                    </Link>
+                  </p>
+                </>
+              ) : (
+                <LoadError text={m.dashboard.loadError} />
+              )}
+            </section>
+          ) : null}
+        </div>
       ) : null}
     </>
   );

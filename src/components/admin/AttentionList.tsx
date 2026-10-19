@@ -4,6 +4,7 @@ import type { AttentionItem } from "@/lib/admin/orders";
 import { formatMoney } from "@/lib/money";
 import { increasePercent } from "@/lib/orders/supplier-states";
 import { shortDate } from "./format";
+import { refundDeadline } from "@/lib/returns/amount";
 import { interpolate } from "@/lib/text";
 
 export function holdText(m: AdminMessages, reason: string): { what: string; todo?: string } {
@@ -22,7 +23,7 @@ function describe(item: AttentionItem, m: AdminMessages): { title: string; todo?
     case "return-waiting":
       return {
         title: interpolate(item.returnStatus === "REQUESTED" ? m.attention.returnRequested : m.attention.returnReceived, { number: item.returnNumber, reference: item.reference, amount: formatMoney(item.max) }),
-        todo: item.returnStatus === "REQUESTED" ? m.attention.returnRequestedAction : m.attention.returnReceivedAction,
+        todo: `${item.returnStatus === "REQUESTED" ? m.attention.returnRequestedAction : m.attention.returnReceivedAction} ${interpolate(m.returns.refundBy, { date: shortDate(refundDeadline(item.requestedAt)) })}`,
       };
     case "return-credit-missing":
       return { title: interpolate(m.attention.returnCreditMissing, { number: item.returnNumber, reference: item.reference }), todo: m.attention.returnCreditMissingAction };

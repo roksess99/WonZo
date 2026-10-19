@@ -28,7 +28,7 @@ export type OrderMailData = {
   delivery: { minWorkingDays: number; maxWorkingDays: number };
 };
 
-export type Links = { statusUrl: string; contactUrl: string; logoUrl: string; email: string; /** The return form (D-09). */ returnUrl: string };
+export type Links = { statusUrl: string; contactUrl: string; logoUrl: string; email: string; /** The return form (D-09). */ returnUrl: string; /** The model withdrawal form (BW 6:230o). */ withdrawalFormUrl: string };
 
 const fmt = (locale: Locale, d: Date, withDate: boolean) =>
   new Intl.DateTimeFormat(locale === "nl" ? "nl-NL" : "en-GB", {
@@ -120,6 +120,7 @@ export function orderConfirmation(o: OrderMailData, links: Links, all: Messages)
       block.h2(c.withdrawalTitle),
       block.p(escapeHtml(withdrawal)),
       block.p(withLink(c.withdrawalMore, links.returnUrl)),
+      block.p(withLink(c.withdrawalForm, links.withdrawalFormUrl)),
     ].join("\n"),
   });
   const text = textLayout(
@@ -143,6 +144,7 @@ export function orderConfirmation(o: OrderMailData, links: Links, all: Messages)
       c.withdrawalTitle,
       withdrawal,
       interpolate(c.withdrawalMore, { url: links.returnUrl }),
+      interpolate(c.withdrawalForm, { url: links.withdrawalFormUrl }),
     ],
     footer,
   );

@@ -139,7 +139,7 @@ const seeds: Seed[] = [
   // ---- Buitenleven › kamperen
   { id: 1300120, sku: "V0710212", taxonomy: 93, brand: 1, nl: "Inklapbare campingstoel Folstul InnovaGoods", en: "Folstul InnovaGoods folding camping chair", descNl: "Lichte stoel met bekerhouder.", descEn: "Light chair with cup holder.", wholesale: 29.71, retail: 59.99, hs: "94017900", stocks: FAST_SLOW(701), image: "chair", ship: "14.02", dateAdd: "2026-06-10 08:00:00" },
   { id: 1300121, sku: "S6105001", taxonomy: 50, brand: 6, nl: "Bestway Slaapzak Polyester Temperatuur 3 °C", en: "Bestway sleeping bag polyester temperature 3 °C", descNl: "Slaapzak voor drie seizoenen.", descEn: "Three-season sleeping bag.", wholesale: 12.63, retail: 32.99, hs: "94049000", stocks: FAST_SLOW(25), image: "mat", ship: "13.81", dateAdd: "2026-06-11 08:00:00" },
-  // ---- Buitenleven › thuis sporten
+  // ---- Sport › thuis sporten
   { id: 1300122, sku: "V0104096", taxonomy: 7987, brand: 1, nl: "Set draagbaar trainingssysteem met oefengids InnovaGoods", en: "InnovaGoods portable training system with exercise guide", descNl: "Weerstandsbanden, handvatten en deuranker in één set.", descEn: "Resistance bands, handles and door anchor in one set.", wholesale: 48.56, retail: 99.99, hs: "95069190", stocks: FAST_SLOW(548), image: "dumbbell", ship: "14.89", dateAdd: "2026-07-01 08:00:00" },
   { id: 1300123, sku: "V0104099", taxonomy: 8092, brand: 1, nl: "Yogamat met uitlijnlijnen Asaná InnovaGoods", en: "Asaná InnovaGoods yoga mat with alignment lines", descNl: "Antislipmat van 6 mm.", descEn: "6 mm non-slip mat.", wholesale: 9.31, retail: 24.99, hs: "95069190", stocks: FAST_SLOW(0, 30), image: "mat", condition: "REFURBISHED_B", dateAdd: "2026-07-02 08:00:00" }, // excluded: refurbished
   // ---- Dieren

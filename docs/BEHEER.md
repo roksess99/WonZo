@@ -13,6 +13,21 @@ bestellijst, het scherm per bestelling en de knoppen bij een bestelling die
 aandacht vraagt (`src/app/beheer/`, `src/lib/admin/`). Inloggen komt als
 laatste (D-07); tot dan opent het paneel alleen lokaal.
 
+**Aangevuld (2026-10-15)**, na het naast de bouwbeschrijving van de eigenaar
+leggen: in de bestellijst per regel de stand bij BigBuy; bij een inkooporder
+zonder uitsluitsel de knop "status opvragen bij BigBuy" (op de eigen
+referentie, nooit opnieuw bestellen); een waarschuwing als BigBuy een andere
+inkoopprijs rekende dan bevroren; zoeken in de facturen op nummer,
+ordernummer, naam, mailadres of bedrag (met POST: geen persoonsgegeven in de
+URL); bij elke open retour de wettelijke klok (14 dagen na de melding), en
+een melding voor iedereen op het dashboard als er retouren wachten; op het
+dashboard de facturen per jaar en maand (recht "facturen") en het bezoek met
+de trechter winkelwagen → afrekenen → betaling gestart → betaald (recht
+"statistieken", uit de eigen telling en de bestellingen — geen volgen per
+bezoeker, D-10). Nog niet, wachtend op een beslissing: prijzen (D-16, D-03),
+kortingen en codes (D-08), beoordelingen (D-12); beheerders en inloggen
+(6a) als laatste.
+
 ---
 
 ## De grondvraag
@@ -168,6 +183,14 @@ aflevering, maar welke woorden het daarvoor gebruikt is nog niet gemeten.
 
 ## Beoordelingen
 
+**Gebouwd (2026-10-15, D-12):** `/beheer/beoordelingen` (recht
+"beoordelingen", ook marketing): alle, lage score zonder antwoord, verborgen;
+antwoorden, verbergen en weer tonen met een reden (logboek); de bestellingen
+die nog een uitnodiging krijgen, met de datum. Het scherm toont het
+ordernummer, nooit de naam of het adres van de klant. Op het dashboard het
+aantal lage scores zonder antwoord. Nog niet: een beoordeling echt wissen op
+verzoek van de klant (nu: verbergen met die reden).
+
 - Verschijnen meteen; verbergen kan alleen **met een reden**. Selectief
   publiceren is een oneerlijke handelspraktijk.
 - Antwoorden werkt beter dan weghalen.
@@ -268,6 +291,13 @@ een bezoekerstrechter blijft weg zolang D-10 er niet over beslist heeft (zie
 hieronder).
 
 ---
+
+## Statistieken
+
+**Gebouwd (2026-10-15, D-10):** `/beheer/statistieken`, recht
+"statistieken" (eigenaar en marketing): paginaweergaven per dag en de meest
+bekeken pagina's over 7, 30 of 90 dagen. Geteld op de eigen server, zonder
+cookies en zonder iets over de bezoeker (`src/lib/stats.ts`).
 
 ## Wat er bewust niet in hoort
 

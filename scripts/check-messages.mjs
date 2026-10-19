@@ -45,6 +45,31 @@ if (fs.existsSync(ADMIN)) {
   }
 }
 
+// The legal texts (D-32, owner 2026-10-15: Dutch and English, Dutch decisive): the same
+// sections and paragraphs in both, nothing empty, the same placeholders per paragraph —
+// a paragraph missing in one language is a different contract.
+const LEGAL = path.join(DIR, 'legal');
+if (fs.existsSync(LEGAL)) {
+  const deep = (obj, prefix = '', out = new Map()) => {
+    for (const [k, v] of Object.entries(obj)) {
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (v && typeof v === 'object') deep(v, key, out);
+      else out.set(key, v);
+    }
+    return out;
+  };
+  const legal = fs.readdirSync(LEGAL).filter((f) => f.endsWith('.json')).sort().map((f) => [f, deep(JSON.parse(fs.readFileSync(path.join(LEGAL, f), 'utf8')))]);
+  const keys = new Set(legal.flatMap(([, m]) => [...m.keys()]));
+  const vars = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
+  for (const [file, map] of legal) {
+    for (const key of keys) if (!map.has(key)) problems.push(`legal/${file}: missing "${key}"`);
+    for (const [key, value] of map) {
+      if (typeof value !== 'string' || value.trim() === '') problems.push(`legal/${file}: "${key}" is empty or not text`);
+      for (const [otherFile, other] of legal) if (other.has(key) && vars(other.get(key)) !== vars(value)) problems.push(`legal/${file} vs ${otherFile}: "${key}" has different placeholders`);
+    }
+  }
+}
+
 const unique = [...new Set(problems)];
 if (unique.length) {
   console.error(`Message check FAILED (${files.join(', ')}):`);

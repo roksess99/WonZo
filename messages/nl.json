@@ -1,7 +1,7 @@
 {
   "meta": {
     "siteName": "WonZo",
-    "description": "Spullen voor in en rond het huis: opslag, meubels, decoratie, tuin, buitenleven en dieren. Eerlijk over prijs en levertijd."
+    "description": "Spullen voor in en rond het huis: opslag, meubels, decoratie, tuin, buitenleven, sport en dieren. Eerlijk over prijs en levertijd."
   },
   "a11y": {
     "skipToContent": "Naar de inhoud",
@@ -37,7 +37,11 @@
     },
     "buitenleven": {
       "name": "Buitenleven",
-      "intro": "Kamperen en thuis sporten."
+      "intro": "Kampeerstoelen en -tafels, slaapzakken en luchtbedden."
+    },
+    "sport": {
+      "name": "Sport",
+      "intro": "Thuis sporten: spieropbouw, pilates en yoga."
     },
     "dieren": {
       "name": "Dieren",
@@ -214,7 +218,7 @@
     "quantityOf": "{quantity} × {name}",
     "withdrawal": "Je hebt 14 dagen bedenktijd na ontvangst.",
     "cancelWindow": "Na je betaling kun je je bestelling nog 30 minuten annuleren of je gegevens aanpassen.",
-    "terms": "Met je bestelling ga je akkoord met de algemene voorwaarden van WonZo.",
+    "terms": "Met je bestelling ga je akkoord met de {terms} van WonZo.",
     "submit": "Bestellen en betalen",
     "submitting": "Bezig met bestellen…",
     "toPayment": "Je gaat naar de betaalpagina…",
@@ -225,7 +229,8 @@
     "error": "Er ging iets mis. Er is niets afgeschreven. Probeer het opnieuw.",
     "rateLimited": "Te veel pogingen achter elkaar. Probeer het over een paar minuten opnieuw.",
     "unavailable": "We kunnen de producten nu even niet controleren. Probeer het over een paar minuten opnieuw.",
-    "backToCart": "Terug naar je winkelwagen"
+    "backToCart": "Terug naar je winkelwagen",
+    "termsLink": "algemene voorwaarden"
   },
   "order": {
     "metaTitle": "Je bestelling",
@@ -320,7 +325,10 @@
     "kvk": "KvK {kvk}",
     "vat": "Btw {vat}",
     "language": "Taal",
-    "returns": "Retourneren"
+    "returns": "Retourneren",
+    "terms": "Algemene voorwaarden",
+    "privacy": "Privacy",
+    "reviews": "Beoordelingen"
   },
   "notFound": {
     "title": "Deze pagina bestaat niet",
@@ -360,7 +368,8 @@
       "next": "Tot {time} kun je je bestelling nog annuleren of je gegevens aanpassen. Daarna bestellen we hem voor je; je ontvangt hem naar verwachting binnen {min}–{max} werkdagen.",
       "withdrawalTitle": "Bedenktijd: 14 dagen",
       "withdrawal": "Je hebt 14 dagen bedenktijd vanaf de dag dat je het pakket ontvangt, zonder dat je een reden hoeft te geven. Wil je de bestelling terugsturen, meld het dan binnen die 14 dagen aan via het retourformulier op onze site (je hebt daarvoor het factuurnummer nodig) of via {email}. Daarna heb je nog 14 dagen om het pakket terug te sturen. We betalen je binnen 14 dagen na je melding terug, bij een volledige retour ook de verzendkosten.",
-      "withdrawalMore": "Het retourformulier: {url}"
+      "withdrawalMore": "Het retourformulier: {url}",
+      "withdrawalForm": "Het modelformulier voor herroeping: {url}"
     },
     "cancelled": {
       "subject": "Bestelling {reference} geannuleerd",
@@ -408,7 +417,17 @@
       "intro": "Voor retour {number} bij bestelling {reference} hebben we {amount} teruggestort op de rekening of kaart waarmee je betaalde. Dat duurt meestal een paar werkdagen.",
       "deduction": "Dat is minder dan het maximum van {max}, omdat: {reason}"
     },
-    "questions": "Vragen? Mail ons op {email}."
+    "questions": "Vragen? Mail ons op {email}.",
+    "reviewInvite": {
+      "subject": "Hoe bevalt je bestelling {reference}?",
+      "preheader": "Laat in een minuut weten wat je ervan vindt.",
+      "title": "Hoe bevalt het?",
+      "intro": "Je bestelling {reference} is een week geleden afgeleverd. We horen graag wat je ervan vindt: van de artikelen en van ons.",
+      "button": "Beoordeel je bestelling",
+      "text": "Beoordelen: {url}",
+      "optOut": "Liever geen uitnodigingen meer? Dat zet je uit via dezelfde link: {url}",
+      "once": "Je krijgt deze uitnodiging één keer per bestelling."
+    }
   },
   "returns": {
     "metaTitle": "Retourneren",
@@ -472,6 +491,45 @@
     "step1": "Pak de artikelen goed in, het liefst in de originele verpakking.",
     "step2": "Plak het retourlabel uit je pakket erop.",
     "step3": "Stuur het pakket binnen 14 dagen terug.",
-    "doneMax": "Je krijgt maximaal {amount} terug, zodra we het pakket hebben ontvangen en bekeken."
+    "doneMax": "Je krijgt maximaal {amount} terug, zodra we het pakket hebben ontvangen en bekeken.",
+    "modelForm": "Liever een formulier op papier of per mail? Gebruik het modelformulier voor herroeping."
+  },
+  "reviews": {
+    "productTitle": "Beoordelingen",
+    "loading": "Beoordelingen laden…",
+    "error": "De beoordelingen zijn nu niet te laden.",
+    "none": "Nog geen beoordelingen.",
+    "summary": "{average} van 5, uit {count} beoordelingen",
+    "summaryOne": "{average} van 5, uit 1 beoordeling",
+    "averageLabel": "Gemiddeld {average} van de 5 sterren",
+    "ratingLabel": "{rating} van de 5 sterren",
+    "anonymous": "Klant",
+    "reply": "Antwoord van WonZo",
+    "howCollected": "Alleen klanten die bij ons bestelden kunnen een beoordeling geven, via een persoonlijke link na de levering. We tonen alle beoordelingen, ook de negatieve. Een beoordeling verbergen we alleen met een reden, bijvoorbeeld als er persoonsgegevens of scheldwoorden in staan.",
+    "shopTitle": "Wat klanten over WonZo zeggen",
+    "shopIntro": "Beoordelingen van klanten over hun bestelling bij WonZo: de levering, de service en hoe het ging.",
+    "formTitle": "Beoordeel je bestelling",
+    "formIntro": "Bestelling {reference}. Geef sterren aan wat je wilt beoordelen; je kiest zelf wat.",
+    "shopQuestion": "Hoe was je bestelling bij WonZo?",
+    "productQuestion": "Hoe bevalt {name}?",
+    "bodyLabel": "Toelichting (mag leeg blijven)",
+    "nameLabel": "Je naam bij de beoordeling (mag leeg blijven)",
+    "nameHint": "Bijvoorbeeld je voornaam. Laat je het leeg, dan staat er „Klant”.",
+    "publicNote": "Je beoordeling verschijnt op de site met de naam die je hierboven kiest. Zet er geen adres of telefoonnummer in.",
+    "submit": "Beoordeling plaatsen",
+    "busy": "Even geduld…",
+    "thanksTitle": "Bedankt!",
+    "thanksText": "Je beoordeling staat op de site.",
+    "allDone": "Je hebt deze bestelling al beoordeeld. Bedankt!",
+    "notYet": "Je kunt je bestelling beoordelen zodra hij is afgeleverd.",
+    "errorEmpty": "Geef minstens één onderdeel sterren.",
+    "errorName": "Gebruik voor je naam alleen letters, cijfers, spaties, punten en streepjes.",
+    "errorBody": "Je toelichting is te lang: hoogstens 2000 tekens.",
+    "rateLimit": "Te veel pogingen. Probeer het over een paar minuten opnieuw.",
+    "notFoundTitle": "Deze link werkt niet",
+    "notFoundText": "Gebruik de hele link uit je mail. Lukt het niet, neem dan contact met ons op.",
+    "optOutText": "Wil je geen uitnodigingen meer om te beoordelen? Dan sturen we je die niet meer, ook niet bij een volgende bestelling.",
+    "optOut": "Geen uitnodigingen meer",
+    "optOutDone": "Je krijgt geen uitnodigingen meer."
   }
 }

@@ -12,6 +12,7 @@ import { isOrderStatus, type OrderStatus } from "@/lib/orders/states";
 import type { PaymentStatus, RefundStatus } from "@/lib/payments/states";
 import { invoicesOfOrder } from "@/lib/invoices";
 import { supplierOrdersOf, type SupplierOrderRow } from "@/lib/orders/purchasing";
+import { isSupplierOrderStatus, type SupplierOrderStatus } from "@/lib/orders/supplier-states";
 import { parcelsOfOrder } from "@/lib/orders/tracking";
 import { returnsOfOrder, type ReturnRow } from "@/lib/returns";
 
@@ -82,7 +83,7 @@ export type AttentionItem =
   /** Asked, but Mollie's answer never came; reconciliation keeps asking. */
   | { kind: "refund-unknown"; orderId: number; reference: string; refundId: string; amount: Money }
   /** A return waits for the admin: the parcel to come in (REQUESTED), or the judgement (RECEIVED) — D-09. */
-  | { kind: "return-waiting"; orderId: number; reference: string; returnId: number; returnNumber: string; returnStatus: "REQUESTED" | "RECEIVED"; max: Money }
+  | { kind: "return-waiting"; orderId: number; reference: string; returnId: number; returnNumber: string; returnStatus: "REQUESTED" | "RECEIVED"; max: Money; requestedAt: Date }
   /** Paid back, but its credit note could not be made (e.g. a deduction with two VAT rates, D-15): nothing is guessed. */
   | { kind: "return-credit-missing"; orderId: number; reference: string; returnId: number; returnNumber: string };
 
@@ -155,9 +156,9 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
     items.push(r.status === "FAILED" ? { kind: "refund-failed", ...base } : { kind: "refund-unknown", ...base });
   }
 
-  const returns = await selectRows<{ id: number | string; number: string; status: string; order_id: number | string; reference: string; max: number | string; credit: number | string | null; closed_at: string | null }>(
+  const returns = await selectRows<{ id: number | string; number: string; status: string; order_id: number | string; reference: string; max: number | string; credit: number | string | null; closed_at: string | null; requested_at: string }>(
     db,
-    `SELECT r.id, r.number, r.status, r.order_id, o.reference, r.lines_cents + r.shipping_cents AS max, r.closed_at,
+    `SELECT r.id, r.number, r.status, r.order_id, o.reference, r.lines_cents + r.shipping_cents AS max, r.closed_at, r.requested_at,
             (SELECT c.id FROM invoices c WHERE c.return_id = r.id LIMIT 1) AS credit
        FROM returns r JOIN orders o ON o.id = r.order_id
       WHERE r.status IN ('REQUESTED', 'RECEIVED') OR (r.status = 'REFUNDED' AND r.closed_at < ?)
@@ -166,19 +167,35 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
   );
   for (const r of returns) {
     const base = { orderId: Number(r.order_id), reference: r.reference, returnId: Number(r.id), returnNumber: r.number };
-    if (r.status === "REQUESTED" || r.status === "RECEIVED") items.push({ kind: "return-waiting", ...base, returnStatus: r.status, max: money(Number(r.max)) });
+    if (r.status === "REQUESTED" || r.status === "RECEIVED") items.push({ kind: "return-waiting", ...base, returnStatus: r.status, max: money(Number(r.max)), requestedAt: fromDbTime(r.requested_at) });
     else if (r.credit === null) items.push({ kind: "return-credit-missing", ...base });
   }
   return items;
 }
 
-export type OrderListRow = { id: number; reference: string; createdAt: Date; customer: string; total: Money; status: OrderStatus; holdReason: string | null };
+export type OrderListRow = {
+  id: number;
+  reference: string;
+  createdAt: Date;
+  customer: string;
+  total: Money;
+  status: OrderStatus;
+  holdReason: string | null;
+  /** The purchase order at the supplier, if there is one yet (docs/BEHEER.md § De lijst: ordered at the supplier or not). */
+  purchase: SupplierOrderStatus | null;
+};
 
-const LIST_COLUMNS = "id, reference, created_at, first_name, last_name, total_cents, status, hold_reason";
-type RawListRow = { id: number | string; reference: string; created_at: string; first_name: string; last_name: string; total_cents: number | string; status: string; hold_reason: string | null };
+const LIST_COLUMNS = `id, reference, created_at, first_name, last_name, total_cents, status, hold_reason,
+  (SELECT s.status FROM supplier_orders s WHERE s.order_id = orders.id ORDER BY s.created_at, s.id LIMIT 1) AS purchase_status`;
+type RawListRow = {
+  id: number | string; reference: string; created_at: string; first_name: string; last_name: string; total_cents: number | string; status: string; hold_reason: string | null; purchase_status: string | null;
+};
 const toListRow = (r: RawListRow): OrderListRow[] =>
   isOrderStatus(r.status)
-    ? [{ id: Number(r.id), reference: r.reference, createdAt: fromDbTime(r.created_at), customer: `${r.first_name} ${r.last_name}`, total: money(Number(r.total_cents)), status: r.status, holdReason: r.hold_reason }]
+    ? [{
+        id: Number(r.id), reference: r.reference, createdAt: fromDbTime(r.created_at), customer: `${r.first_name} ${r.last_name}`, total: money(Number(r.total_cents)), status: r.status, holdReason: r.hold_reason,
+        purchase: r.purchase_status !== null && isSupplierOrderStatus(r.purchase_status) ? r.purchase_status : null,
+      }]
     : [];
 
 export const PAGE_SIZE = 25;

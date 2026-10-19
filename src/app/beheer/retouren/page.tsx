@@ -21,6 +21,7 @@ export default async function ReturnsPage({ searchParams }: PageProps<"/beheer/r
   const m = adminMessages();
   const sp = await searchParams;
   const open = sp.tab !== "afgerond";
+  const now = new Date();
   // A failure says so; it does not look like "no returns" (docs/BEHEER.md).
   const rows = hasDatabase
     ? await listReturns(getPool(), open).catch((err: unknown) => {
@@ -48,7 +49,7 @@ export default async function ReturnsPage({ searchParams }: PageProps<"/beheer/r
       ) : (
         <section aria-label={open ? m.returns.tabOpen : m.returns.tabClosed} className="flex flex-col gap-4 rounded-md bg-surface p-6 ring-1 ring-line">
           {rows.length ? (
-            rows.map((r) => <ReturnCard key={r.id} r={r} m={m} canAct={can(admin.role, "retouren")} canRefund={can(admin.role, "terugbetalen")} showOrder={can(admin.role, "bestellingen")} />)
+            rows.map((r) => <ReturnCard key={r.id} r={r} m={m} canAct={can(admin.role, "retouren")} canRefund={can(admin.role, "terugbetalen")} now={now} showOrder={can(admin.role, "bestellingen")} />)
           ) : (
             <p className="text-muted">{open ? m.returns.empty : m.returns.emptyClosed}</p>
           )}

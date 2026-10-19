@@ -28,7 +28,22 @@ export const SHOP_FAULT: readonly ReturnReason[] = ["wrong", "damaged", "defect"
 
 /** `WETTELIJK` (BW 6:230o, to be confirmed): 14 days from receipt. */
 export const WITHDRAWAL_DAYS = 14;
+/** `WETTELIJK` (BW 6:230r, to be confirmed): paid back within 14 days of the notice; waiting for the parcel is allowed. */
+export const REFUND_DAYS = 14;
+/** The admin is warned this long before the refund deadline. */
+export const REFUND_WARN_DAYS = 3;
 const DAY_MS = 86_400_000;
+
+/** The last day to pay back a return registered at `requestedAt` (the law's clock, docs/RETOUREN.md). */
+export function refundDeadline(requestedAt: Date): Date {
+  return new Date(requestedAt.getTime() + REFUND_DAYS * DAY_MS);
+}
+
+/** "ok", "soon" (within REFUND_WARN_DAYS) or "late": how the clock of an open return stands. */
+export function refundClock(requestedAt: Date, now: Date): "ok" | "soon" | "late" {
+  const left = refundDeadline(requestedAt).getTime() - now.getTime();
+  return left < 0 ? "late" : left <= REFUND_WARN_DAYS * DAY_MS ? "soon" : "ok";
+}
 
 export type ReturnableLine = {
   lineNo: number;

@@ -8,10 +8,20 @@
 
 import { revalidatePath } from "next/cache";
 import { AdminAccessDenied, requireAction } from "@/lib/admin/access";
-import { acceptPurchasePrice, cancelAndRefund, cleanReason, refundPayment, releaseHold, resendMail, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
+import { acceptPurchasePrice, cancelAndRefund, cleanReason, lookupPurchase, refundPayment, releaseHold, resendMail, retryPurchaseAction as retryPurchase, type ActionError, type ActionResult } from "@/lib/admin/order-actions";
 import { searchOrders, type OrderListRow } from "@/lib/admin/orders";
 import { getPool } from "@/lib/db";
 import { markDelivered } from "@/lib/orders/tracking";
+import { defaultOrdering } from "@/lib/catalog/ordering";
+
+/** The configured ordering, or null when it is off — a wrong setting is shown on the dashboard, not thrown here. */
+const safeOrdering = () => {
+  try {
+    return defaultOrdering();
+  } catch {
+    return null;
+  }
+};
 
 export type SearchState = { kind: "idle" } | { kind: "invalid" } | { kind: "results"; rows: OrderListRow[] } | { kind: "denied" };
 
@@ -95,6 +105,14 @@ export async function resendMailAction(_: OrderActionState, form: FormData): Pro
   const outboxId = id(form.get("outboxId"));
   return run("bestellingen", id(form.get("orderId")), (actor, orderId) =>
     !outboxId ? Promise.resolve({ ok: false, error: "changed" }) : resendMail({ orderId, outboxId, reason: form.get("reason"), actor }),
+  );
+}
+
+/** Asks BigBuy now about a purchase order without a clear answer: read only, no reason needed. */
+export async function lookupPurchaseAction(_: OrderActionState, form: FormData): Promise<OrderActionState> {
+  const supplierOrderId = uuid(form.get("supplierOrderId"));
+  return run("bestellingen", id(form.get("orderId")), (actor, orderId) =>
+    !supplierOrderId ? Promise.resolve({ ok: false, error: "changed" }) : lookupPurchase({ orderId, supplierOrderId, actor }, safeOrdering()),
   );
 }
 

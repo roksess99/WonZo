@@ -22,6 +22,12 @@ describe("resolvePublicPath — what the proxy does", () => {
     expect(resolvePublicPath("/en")).toEqual({ kind: "rewrite", locale: "en", internalPath: "/en" });
     expect(resolvePublicPath("/en/garden")).toEqual({ kind: "rewrite", locale: "en", internalPath: "/en/garden" });
   });
+  it("redirects a subcategory that moved to another main category, in both languages", () => {
+    expect(resolvePublicPath("/buitenleven/thuis-sporten")).toEqual({ kind: "redirect", to: "/sport/thuis-sporten" });
+    expect(resolvePublicPath("/en/outdoors/home-fitness")).toEqual({ kind: "redirect", to: "/en/sports/home-fitness" });
+    expect(resolvePublicPath("/sport/thuis-sporten")).toEqual({ kind: "rewrite", locale: "nl", internalPath: "/nl/sport/thuis-sporten" });
+    expect(resolvePublicPath("/buitenleven/kamperen")).toEqual({ kind: "rewrite", locale: "nl", internalPath: "/nl/buitenleven/kamperen" });
+  });
   it("redirects the non-canonical /nl prefix", () => {
     expect(resolvePublicPath("/nl/tuin")).toEqual({ kind: "redirect", to: "/tuin" });
     expect(resolvePublicPath("/nl")).toEqual({ kind: "redirect", to: "/" });
