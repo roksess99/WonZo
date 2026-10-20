@@ -9,7 +9,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/headers", () => ({ headers: async () => new Headers({ host: "localhost:3000" }) }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ host: "localhost:3000" }), cookies: async () => ({ get: () => undefined }) }));
 
 import { markDeliveredAction } from "@/app/beheer/bestellingen/actions";
 import { receiveReturnAction, refundReturnAction, rejectReturnAction } from "@/app/beheer/retouren/actions";

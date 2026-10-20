@@ -239,9 +239,11 @@ Een unieke sleutel zorgt voor **één open retour per bestelling**.
 
 | Entiteit | Kernvelden |
 |---|---|
-| `AdminUser` | `email`, `passwordHash`, `totpSecretEncrypted`, `permissions[]`, `disabledAt?` |
+| `AdminUser` (`admins`) | `email`, `name`, `role` (één van drie vaste rollen, D-07), `passwordHash?` en `totpSecretEncrypted?` (leeg tot de uitnodiging is aangenomen), `totpLastStep?` (geen replay), `activatedAt?`, `disabledAt?`, `createdBy` |
+| `AdminSetup` (`admin_setup`) | één rij, nooit meer: zodra hij bestaat is de opzetpagina dicht |
 | `RecoveryCode` | `adminId`, `codeHash`, `usedAt?` |
-| `Session` | `idHash`, `adminId`, `createdAt`, `lastSeenAt`, `expiresAt`, `ip?`, `userAgent?` |
+| `Session` (`admin_sessions`) | `idHash`, `adminId`, `createdAt`, `lastSeenAt`, `expiresAt` — 30 minuten inactief, 12 uur maximaal (D-07); geen IP en geen user agent |
+| `AdminInvite` (`admin_invites`) | `tokenHash`, `adminId`, `createdAt`, `expiresAt` (48 uur), `usedAt?`; de sleutel staat alleen in de mail |
 | `AuditLog` | `actor`, `action`, `objectType`, `objectId`, `before?`, `after?`, `reason?`, `requestId`, `at` — alleen toevoegen |
 
 ---

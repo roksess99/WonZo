@@ -107,9 +107,14 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Geen sleutel in Git, ook niet in de geschiedenis. Ooit toch gestaan?
       Roteren.
 - [ ] Beheerpaneel op noindex en uit de sitemap en robots.
-- [ ] `ADMIN_DEV_LOGIN` staat niet in de omgeving van productie, en
-      `/beheer` geeft daar 404 tot het inloggen gebouwd is (D-07).
-- [ ] Inloggen met tweede factor.
+- [ ] `ADMIN_DEV_LOGIN` staat niet in de omgeving van productie (D-07).
+- [ ] Inloggen met tweede factor (gebouwd 2026-10-19): `ADMIN_TOTP_KEY` en
+      `ADMIN_SETUP_TOKEN` in de omgeving van productie, de sleutel ook in de
+      wachtwoordkluis; de eerste eigenaar via `/beheer/opzetten`, de QR-code
+      gescand met de telefoon, de herstelcodes bewaard; daarna een tweede
+      eigenaar uitgenodigd (anders sluit een kwijtgeraakte telefoon zonder
+      herstelcodes de winkel buiten).
+- [ ] Gemeten op Hostinger: hoe lang een inlog duurt (scrypt, N = 2^15).
 - [ ] Beveiligingsheaders en CSP ingesteld (`.claude/rules/beveiliging.md`).
 - [ ] Een limiet op inloggen, codes en formulieren die mail of externe calls
       veroorzaken.

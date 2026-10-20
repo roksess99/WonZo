@@ -558,8 +558,40 @@ daarvoor bij de betaling vastgelegd (een terugbetaling kan niet meer zijn dan
 wat er betaald is). Nooit automatisch, en een bestelling wordt
 nooit vanzelf heropend. Verworpen: automatisch terugbetalen.
 
-Nog open: sessieduur (inactief en absoluut) en of de lokale doorgang na het
-bouwen van het inloggen blijft.
+**Eigenaar (2026-10-19), inloggen:**
+
+- **Sessieduur:** opnieuw inloggen na **30 minuten** zonder iets te doen, en
+  altijd na **12 uur**. Verworpen: 15 of 60 minuten, 8 of 24 uur.
+- **De lokale doorgang blijft**, alleen voor ontwikkelen: `pnpm dev`,
+  `ADMIN_DEV_LOGIN=true` én localhost. In productie werkt hij nooit (getest).
+  Verworpen: hem weghalen (ook lokaal elke keer een code).
+- **De app koppelen met een QR-code:** pakket **uqr 0.1.3** (toestemming
+  eigenaar 2026-10-19; uitgebracht 2026-04-03, geen afhankelijkheden, 79 kB,
+  MIT, geen bekende lekken). Verworpen: `qrcode` (21 pakketten mee, deels
+  voor een opdrachtregelprogramma) en alleen overtypen.
+
+**Gebouwd (2026-10-19)** volgens `.claude/rules/beveiliging.md` §
+Authenticatie en § Sessies (`src/lib/admin/auth.ts`, `crypto.ts`,
+`policy.ts`, migratie 0011): mailadres, wachtwoord (scrypt) en code (TOTP)
+in één formulier, één melding voor elke misser; het TOTP-geheim versleuteld
+met `ADMIN_TOTP_KEY`; een code werkt één keer; tien herstelcodes, gehasht,
+elk één keer, met een mail bij gebruik; limieten per account (5 per kwartier,
+20 per dag) en per adres (20 per kwartier, 100 per dag), nooit voorgoed;
+sessies in de database als hash, met "overal uitloggen"; de eerste eigenaar
+via `/beheer/opzetten`, beschermd met `ADMIN_SETUP_TOKEN` en gesloten door een
+rij in `admin_setup`; daarna uitnodigingen per mail (48 uur, één keer). Het
+scherm "Beheerders" (alleen de eigenaar) nodigt uit, wijzigt de rol,
+schakelt uit en in en stelt de toegang opnieuw in; nooit bij jezelf, nooit
+de laatste eigenaar. Een rolwijziging, uitschakelen en opnieuw instellen
+beëindigen de sessies van die beheerder. Alles in het logboek.
+
+`AANNAME`: scrypt met N = 2^15 houdt een inlog op gedeelde hosting onder een
+seconde — te meten op Hostinger; de parameters staan in de opgeslagen hash
+en kunnen omhoog. Niet gebouwd: controle tegen een lijst gelekte
+wachtwoorden (vraagt een lijst of een externe dienst) en wachtwoord vergeten
+per mail (een andere eigenaar stelt de toegang opnieuw in).
+
+Nog open: wie mag terugbetalen en tot welk bedrag zonder tweede persoon.
 
 ---
 
@@ -1373,6 +1405,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-19 | D-07 | Eigenaar: sessie 30 minuten inactief en 12 uur maximaal; lokale doorgang blijft (alleen `pnpm dev` op localhost); QR-code met uqr 0.1.3 (toestemming). Inloggen met 2FA, herstelcodes, opzetpagina, uitnodigingen en het scherm Beheerders gebouwd |
 | 2026-10-15 | D-02 | Eigenaar: thuis sporten in een eigen hoofdcategorie Sport, niet onder Buitenleven; oud adres leidt om. Buiten sporten nog niet: gemeten 2026-10-05 is er vrijwel niets leverbaar, keuze aan de eigenaar |
 | 2026-10-15 | D-12, D-35 | Eigenaar: beoordelingen nu al, eigen systeem, winkel én artikelen, uitnodiging 7 dagen na aflevering met afmeldlink (D-12); uit "later" gehaald (D-35) |
 | 2026-10-15 | D-10, D-32 | Eigenaar: eigen statistieken op de server zonder cookies (geen banner); servers Hostinger in Nederland; eenmanszaak (D-10, blijft BLOCKED). Juridische teksten NL en EN, Nederlands beslissend (D-32) |

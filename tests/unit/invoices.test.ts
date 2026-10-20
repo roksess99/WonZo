@@ -6,7 +6,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/headers", () => ({ headers: async () => new Headers({ host: "localhost:3000" }) }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ host: "localhost:3000" }), cookies: async () => ({ get: () => undefined }) }));
 
 import { GET as adminPdf } from "@/app/beheer/facturen/[id]/pdf/route";
 import { GET as examplePdf } from "@/app/beheer/facturen/voorbeeld/route";

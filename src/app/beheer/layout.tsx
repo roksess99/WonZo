@@ -5,6 +5,7 @@ import { currentAdmin } from "@/lib/admin/access";
 import { adminMessages } from "@/lib/admin/messages";
 import { can } from "@/lib/admin/permissions";
 import { interpolate } from "@/lib/text";
+import { logoutAction } from "./inloggen/actions";
 import "../globals.css";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
@@ -76,8 +77,24 @@ export default async function AdminLayout({ children }: LayoutProps<"/beheer">) 
                     {m.nav.log}
                   </Link>
                 ) : null}
+                {can(admin.role, "beheerders") ? (
+                  <Link href="/beheer/beheerders" className="underline-offset-4 hover:underline">
+                    {m.nav.admins}
+                  </Link>
+                ) : null}
               </nav>
-              <p className="ms-auto text-body-sm text-muted">{interpolate(m.nav.signedInAs, { name: admin.name })}</p>
+              <div className="ms-auto flex flex-wrap items-center gap-3 text-body-sm">
+                <Link href="/beheer/account" className="text-muted underline-offset-4 hover:underline">
+                  {interpolate(m.nav.signedInAs, { name: admin.name })}
+                </Link>
+                {admin.id !== "dev" ? (
+                  <form action={logoutAction}>
+                    <button type="submit" className="min-h-11 rounded-md px-3 font-medium ring-1 ring-border">
+                      {m.nav.logout}
+                    </button>
+                  </form>
+                ) : null}
+              </div>
             </div>
             {admin.id === "dev" ? <p className="bg-warning-soft px-4 py-1 text-center text-body-sm text-warning">{m.nav.localOnly}</p> : null}
           </header>

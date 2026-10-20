@@ -46,6 +46,8 @@ export type AuditRow = {
   at: Date;
   /** The order's number when the object is an order: what the owner recognises. */
   orderReference: string | null;
+  /** The admin's name when the actor is an admin ("admin:<id>"). */
+  actorName: string | null;
 };
 
 export const AUDIT_PAGE_SIZE = 50;
@@ -63,8 +65,9 @@ export async function listAudit(db: Queryable, page: number): Promise<{ rows: Au
   const at = Math.min(Math.max(1, Math.trunc(page) || 1), pages);
   const rows = await selectRows<Record<string, unknown>>(
     db,
-    `SELECT a.id, a.actor, a.action, a.object_type, a.object_id, a.before_state, a.after_state, a.reason, a.at, o.reference
+    `SELECT a.id, a.actor, a.action, a.object_type, a.object_id, a.before_state, a.after_state, a.reason, a.at, o.reference, ad.name AS actor_name
        FROM audit_log a LEFT JOIN orders o ON a.object_type = 'order' AND o.id = a.object_id
+       LEFT JOIN admins ad ON a.actor = CONCAT('admin:', ad.id)
       ORDER BY a.id DESC LIMIT ? OFFSET ?`,
     [AUDIT_PAGE_SIZE, (at - 1) * AUDIT_PAGE_SIZE],
   );
@@ -80,6 +83,7 @@ export async function listAudit(db: Queryable, page: number): Promise<{ rows: Au
       reason: r.reason === null ? null : String(r.reason),
       at: fromDbTime(String(r.at)),
       orderReference: r.reference === null || r.reference === undefined ? null : String(r.reference),
+      actorName: r.actor_name === null || r.actor_name === undefined ? null : String(r.actor_name),
     })),
     total,
     pages,
