@@ -10,11 +10,12 @@ import { interpolate } from "@/lib/text";
 import { ProductImage } from "../catalog/ProductImage";
 import { AlertIcon, CloseIcon, InfoIcon, TruckIcon } from "../icons";
 import { StateMessage } from "../ui";
+import { CodeField, type CodeLabels } from "./CodeField";
 import { QuantityStepper, type StepperLabels } from "./QuantityStepper";
-import { cartActions, useCart } from "./store";
+import { cartActions, useCart, useCode } from "./store";
 import { useQuote } from "./useQuote";
 
-export type CartLabels = StepperLabels & {
+export type CartLabels = StepperLabels & CodeLabels & {
   loading: string;
   updating: string;
   itemsLabel: string;
@@ -66,7 +67,8 @@ const sameRef = (a: Pick<CartLine, "source" | "productId">, b: Pick<CartLine, "s
  */
 export function CartView({ locale, labels, checkoutOn }: { locale: Locale; labels: CartLabels; checkoutOn: boolean }) {
   const lines = useCart();
-  const { quote, current, busy, retry } = useQuote(lines, locale);
+  const code = useCode();
+  const { quote, current, busy, retry } = useQuote(lines, locale, code);
 
   const shopHref = localizePath(locale, "/");
 
@@ -120,6 +122,12 @@ export function CartView({ locale, labels, checkoutOn }: { locale: Locale; label
               <dt>{quote.itemCount === 1 ? labels.subtotalOne : interpolate(labels.subtotal, { count: quote.itemCount })}</dt>
               <dd>{formatMoney(quote.subtotal)}</dd>
             </div>
+            {quote.discount.amount > 0 && quote.code?.kind === "applied" ? (
+              <div className="flex justify-between gap-4">
+                <dt>{interpolate(labels.discount, { code: quote.code.code })}</dt>
+                <dd>−{formatMoney(quote.discount)}</dd>
+              </div>
+            ) : null}
             {quote.shipping.standard.kind !== "none" ? (
               <div className="flex justify-between gap-4">
                 <dt>{labels.shipping}</dt>
@@ -142,6 +150,7 @@ export function CartView({ locale, labels, checkoutOn }: { locale: Locale; label
           ) : null}
           <p className="text-body-sm text-muted">{labels.inclVat}</p>
         </div>
+        <CodeField code={code ?? ""} quote={quote} busy={busy} labels={labels} />
         {quote.delivery ? (
           <p className="flex items-start gap-2 text-body-sm">
             <TruckIcon className="mt-0.5 size-4 shrink-0" />

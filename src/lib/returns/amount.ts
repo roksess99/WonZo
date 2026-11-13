@@ -4,7 +4,9 @@
 // function from the frozen order lines (.claude/rules/geld.md: the amount the
 // customer sees and the amount the server pays come from one function).
 //
-// - The returned pieces at their frozen price per piece (incl. VAT).
+// - The returned pieces at their frozen price per piece (incl. VAT), less
+//   their share of a discount code (D-15: per piece, cumulative and rounded
+//   down, so all returns of a line together give back exactly what was paid).
 // - The normal shipping only when this return makes the whole order come
 //   back (`WETTELIJK`: a partial withdrawal keeps the shipping, to be confirmed).
 // - The own shipping of a large item (D-13) per returned piece when the
@@ -18,6 +20,7 @@
 // pays for sending it back, so nothing is deducted for that.
 
 import { money, type Money } from "@/lib/money";
+import { returnedShare } from "@/lib/pricing/codes";
 
 export const RETURN_REASONS = ["none", "wrong", "damaged", "defect"] as const;
 export type ReturnReason = (typeof RETURN_REASONS)[number];
@@ -51,6 +54,8 @@ export type ReturnableLine = {
   bought: number;
   returned: number;
   unitPrice: Money;
+  /** The code's share in the whole line (D-15); zero without a code. Absent: zero. */
+  codeDiscount?: Money;
   /** Own shipping per piece of a large item (D-13), or null. */
   largeShipping: Money | null;
 };
@@ -69,7 +74,8 @@ export type ReturnRequestLine = { lineNo: number; quantity: number; reason: Retu
 export type ReturnLineError = "quantity" | "reason" | "window";
 
 export type ReturnQuote =
-  | { ok: true; lines: Money; shipping: Money; total: Money; wholeOrder: boolean }
+  /** `codeShares`: per line number, the code's share taken off the returned pieces — stored with the return line. */
+  | { ok: true; lines: Money; shipping: Money; total: Money; wholeOrder: boolean; codeShares: Record<number, number> }
   | { ok: false; error: "empty" | "lines"; lines: Record<number, ReturnLineError> };
 
 /**
@@ -118,7 +124,12 @@ export function quoteReturn(order: ReturnableOrder, request: ReturnRequestLine[]
   const currency = order.shippingStandard.currency;
   const pieces = (lineNo: number) => chosen.find((r) => r.lineNo === lineNo)?.quantity ?? 0;
   const wholeOrder = order.lines.every((l) => l.returned + pieces(l.lineNo) === l.bought);
-  const lines = sum(chosen.map((r) => order.lines.find((l) => l.lineNo === r.lineNo)!.unitPrice.amount * r.quantity));
+  const codeShares: Record<number, number> = {};
+  for (const r of chosen) {
+    const l = order.lines.find((x) => x.lineNo === r.lineNo)!;
+    codeShares[r.lineNo] = returnedShare(l.codeDiscount?.amount ?? 0, l.bought, l.returned, r.quantity);
+  }
+  const lines = sum(chosen.map((r) => order.lines.find((l) => l.lineNo === r.lineNo)!.unitPrice.amount * r.quantity - codeShares[r.lineNo]!));
   let shipping: number;
   if (wholeOrder) {
     // Everything comes back: all shipping of the order, less what earlier returns already count.
@@ -129,5 +140,5 @@ export function quoteReturn(order: ReturnableOrder, request: ReturnRequestLine[]
   }
   // A negative amount can only be a bug in the data (more counted earlier than there was): stop.
   if (lines < 0 || shipping < 0) throw new Error("return amount below zero");
-  return { ok: true, lines: money(lines, currency), shipping: money(shipping, currency), total: money(lines + shipping, currency), wholeOrder };
+  return { ok: true, lines: money(lines, currency), shipping: money(shipping, currency), total: money(lines + shipping, currency), wholeOrder, codeShares };
 }

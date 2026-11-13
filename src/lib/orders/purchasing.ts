@@ -6,15 +6,20 @@
 // answer: UNKNOWN, and the supplier is asked by our own reference, never sent
 // again blindly (docs/IDEMPOTENCY.md). A refusal (most likely too little
 // balance): an alert at once, and again every 30 minutes for 24 hours with the
-// same reference; then the owner chooses (D-04). Server-side only.
+// same reference. Still refused after that: the order is cancelled and the
+// customer paid back in full, by itself (D-04, user 2026-11-13) - only when
+// nothing of the order is at the supplier; otherwise the owner chooses.
+// No answer (UNKNOWN) never leads to a refund: the order may be at BigBuy.
+// A price more than 10 % higher stays the owner's choice. Server-side only.
 
 import { randomUUID } from "node:crypto";
 import { appendAudit } from "@/lib/admin/audit";
 import type { SupplierOrdering, SupplierOrderRequest } from "@/lib/catalog/ordering";
 import { fromDbTime, getPool, selectRows, toDbTime, withTransaction, type Connection, type Queryable } from "@/lib/db";
 import { money, type Money } from "@/lib/money";
+import { requestFullRefund } from "@/lib/payments";
 import { enqueue } from "./outbox";
-import { canTransitionSupplierOrder, isSupplierOrderStatus, priceAcceptable, RETRY_EVERY_MS, RETRY_FOR_MS, type SupplierActor, type SupplierOrderStatus } from "./supplier-states";
+import { AT_SUPPLIER, canTransitionSupplierOrder, isSupplierOrderStatus, priceAcceptable, RETRY_EVERY_MS, RETRY_FOR_MS, type SupplierActor, type SupplierOrderStatus } from "./supplier-states";
 import { lockOrder, transitionOrder } from "./store";
 
 export class SupplierTransitionError extends Error {}
@@ -183,24 +188,49 @@ async function markOrderPurchasedIfDone(conn: Connection, orderId: number, now: 
   }
 }
 
+/** Why an order is cancelled by itself (order history, audit, refund). */
+export const GAVE_UP_REASON = "inkoop bij BigBuy lukte 24 uur niet (D-04)";
+
 /**
- * A try that did not work. The first one alerts the owner at once (D-04);
- * after 24 hours of trying the code stops and the owner chooses.
+ * A try that did not work. The first one alerts the owner at once, so the
+ * balance can be topped up (D-04). After 24 hours of trying: cancelled and
+ * paid back in full (user 2026-11-13), or - when that cannot be done by
+ * itself - the code stops and the owner chooses. Caller holds the order lock.
+ * Returns the id of the refund it recorded, to be sent after the commit.
  */
-async function recordFailure(conn: Connection, so: SupplierOrderRow, error: string, now: Date): Promise<void> {
+async function recordFailure(conn: Connection, so: SupplierOrderRow, error: string, now: Date): Promise<string | null> {
   const first = so.firstFailedAt ?? now;
   const gaveUp = now.getTime() - first.getTime() >= RETRY_FOR_MS;
   await conn.query("UPDATE supplier_orders SET first_failed_at = ?, last_error = ?, next_attempt_at = ?, gave_up_at = ? WHERE id = ?", [
     toDbTime(first), error.slice(0, 300), toDbTime(new Date(now.getTime() + RETRY_EVERY_MS)), gaveUp ? toDbTime(now) : null, so.id,
   ]);
   if (!so.firstFailedAt) await enqueue(conn, "admin-alert", `supplier:${so.id}:failed`, { orderId: so.orderId, supplierOrderId: so.id, error: error.slice(0, 200) }, now);
-  if (gaveUp) await enqueue(conn, "admin-alert", `supplier:${so.id}:gave-up`, { orderId: so.orderId, supplierOrderId: so.id }, now);
+  if (!gaveUp) return null;
+  const cancelled = await cancelAfterGivingUp(conn, so.orderId, now);
+  await enqueue(conn, "admin-alert", `supplier:${so.id}:${cancelled ? "refunded" : "gave-up"}`, { orderId: so.orderId, supplierOrderId: so.id }, now);
+  return cancelled ? cancelled.refundId : null;
 }
 
-export type PurchaseOutcome = "placed" | "unknown" | "refused" | "blocked" | "waiting" | "skipped";
+/**
+ * Cancels the order and records a full refund, in the caller's transaction
+ * (docs/STATE_MACHINES.md: FULFILLMENT_PENDING -> CANCELLED by system). Only
+ * for an order still waiting to be purchased, without a hold, with nothing
+ * at the supplier (BigBuy cannot cancel, D-04): anything else is the owner's.
+ */
+async function cancelAfterGivingUp(conn: Connection, orderId: number, now: Date): Promise<{ refundId: string | null } | null> {
+  const order = await lockOrder(conn, orderId);
+  if (!order || order.status !== "FULFILLMENT_PENDING" || order.holdReason) return null;
+  if ((await supplierOrdersOf(conn, orderId, true)).some((s) => AT_SUPPLIER.includes(s.status))) return null;
+  await cancelOpenPurchases(conn, orderId, GAVE_UP_REASON, now, "system");
+  await transitionOrder(conn, { orderId, to: "CANCELLED", actor: "system", reason: GAVE_UP_REASON, now });
+  await appendAudit(conn, { actor: "system", action: "order.cancelled", objectType: "order", objectId: orderId, before: { status: order.status }, after: { status: "CANCELLED" }, reason: GAVE_UP_REASON }, now);
+  return { refundId: await requestFullRefund(conn, orderId, GAVE_UP_REASON, "system", now) };
+}
 
-/** One try for a DRAFT or REJECTED purchase order: check, record the intent, send. */
-async function attempt(ordering: SupplierOrdering, so: SupplierOrderRow, now: Date): Promise<PurchaseOutcome> {
+export type PurchaseOutcome = "placed" | "unknown" | "refused" | "refunded" | "blocked" | "waiting" | "skipped";
+
+/** One try for a DRAFT or REJECTED purchase order: check, record the intent, send. A refund it records goes into `refunds`. */
+async function attempt(ordering: SupplierOrdering, so: SupplierOrderRow, now: Date, refunds: string[]): Promise<PurchaseOutcome> {
   const request = await requestFor(getPool(), so);
   const check = await ordering.check(request);
   if (check.kind === "unknown") {
@@ -208,8 +238,12 @@ async function attempt(ordering: SupplierOrdering, so: SupplierOrderRow, now: Da
     return "waiting";
   }
   if (check.kind === "refused") {
-    await withTransaction((conn) => recordFailure(conn, so, `controle geweigerd (HTTP ${check.status}) ${check.message}`.trim(), now));
-    return "refused";
+    const refund = await withTransaction(async (conn) => {
+      // The order's row first, then the purchase order: the same order as everywhere else.
+      await lockOrder(conn, so.orderId);
+      return recordFailure(conn, so, `controle geweigerd (HTTP ${check.status}) ${check.message}`.trim(), now);
+    });
+    return refundOutcome(refund, refunds);
   }
   const accepted = so.priceAccepted !== null && check.products.amount <= so.priceAccepted.amount;
   if (!priceAcceptable(so.expectedCost.amount, check.products.amount) && !accepted) {
@@ -232,7 +266,7 @@ async function attempt(ordering: SupplierOrdering, so: SupplierOrderRow, now: Da
   if (!go) return "skipped";
 
   const placed = await ordering.place(request);
-  await withTransaction(async (conn) => {
+  const refund = await withTransaction(async (conn): Promise<string | null | false> => {
     // Always the order's row first, then the purchase order: the same order as a cancel, so the two never deadlock.
     await lockOrder(conn, so.orderId);
     if (placed.kind === "placed") {
@@ -241,12 +275,20 @@ async function attempt(ordering: SupplierOrdering, so: SupplierOrderRow, now: Da
     } else if (placed.kind === "refused") {
       const reason = `geweigerd (HTTP ${placed.status}) ${placed.message}`.trim();
       await transitionSupplierOrder(conn, { id: so.id, to: "REJECTED", actor: "system", reason, now });
-      await recordFailure(conn, so, reason, now);
+      return recordFailure(conn, so, reason, now);
     } else {
       await transitionSupplierOrder(conn, { id: so.id, to: "UNKNOWN", actor: "system", reason: "geen uitsluitsel van de leverancier", now, set: { next_attempt_at: toDbTime(new Date(now.getTime() + 2 * 60_000)) } });
     }
+    return false;
   });
-  return placed.kind;
+  return placed.kind === "refused" && refund !== false ? refundOutcome(refund, refunds) : placed.kind;
+}
+
+/** "refunded" when giving up recorded a refund (kept to send after the commit), otherwise "refused". */
+function refundOutcome(refundId: string | null, refunds: string[]): PurchaseOutcome {
+  if (!refundId) return "refused";
+  refunds.push(refundId);
+  return "refunded";
 }
 
 /** UNKNOWN: ask the supplier by our reference. Found: PLACED. Absent (a 404, proof): REJECTED, and tried again. */
@@ -289,9 +331,10 @@ export async function lookupPurchaseNow(ordering: SupplierOrdering, supplierOrde
  * purchase order that is due. Without ordering (SUPPLIER_ORDERING off) only
  * the drafts: the panel shows them as waiting.
  */
-export async function runPurchasing(ordering: SupplierOrdering | null, now: Date = new Date(), limit = 50): Promise<{ drafts: number; outcomes: PurchaseOutcome[] }> {
+export async function runPurchasing(ordering: SupplierOrdering | null, now: Date = new Date(), limit = 50): Promise<{ drafts: number; outcomes: PurchaseOutcome[]; refunds: string[] }> {
   const drafts = await createDrafts(now);
-  if (!ordering) return { drafts, outcomes: [] };
+  const refunds: string[] = [];
+  if (!ordering) return { drafts, outcomes: [], refunds };
   const due = (
     await selectRows<Raw>(
       getPool(),
@@ -302,8 +345,9 @@ export async function runPurchasing(ordering: SupplierOrdering | null, now: Date
     )
   ).map(toRow);
   const outcomes: PurchaseOutcome[] = [];
-  for (const so of due) outcomes.push(so.status === "UNKNOWN" ? await settleUnknown(ordering, so, now) : await attempt(ordering, so, now));
-  return { drafts, outcomes };
+  for (const so of due) outcomes.push(so.status === "UNKNOWN" ? await settleUnknown(ordering, so, now) : await attempt(ordering, so, now, refunds));
+  // `refunds`: recorded when giving up after 24 hours, for the caller to send to the payment provider.
+  return { drafts, outcomes, refunds };
 }
 
 // ------------------------------------------------------- the owner's choices
@@ -329,8 +373,8 @@ export async function retryPurchase(conn: Connection, input: { supplierOrderId: 
 }
 
 /** Cancelling the order: purchase orders that never reached the supplier are cancelled with it. Caller holds the order lock. */
-export async function cancelOpenPurchases(conn: Connection, orderId: number, reason: string, now: Date): Promise<void> {
+export async function cancelOpenPurchases(conn: Connection, orderId: number, reason: string, now: Date, actor: SupplierActor = "admin"): Promise<void> {
   for (const so of await supplierOrdersOf(conn, orderId, true)) {
-    if (so.status === "DRAFT" || so.status === "REJECTED") await transitionSupplierOrder(conn, { id: so.id, to: "CANCELLED", actor: "admin", reason, now });
+    if (so.status === "DRAFT" || so.status === "REJECTED") await transitionSupplierOrder(conn, { id: so.id, to: "CANCELLED", actor, reason, now });
   }
 }

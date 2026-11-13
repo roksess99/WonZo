@@ -17,13 +17,16 @@ export type InvoiceDocument = {
   /** A credit note for a return (D-09): its number, "R2026-00001". Absent on documents made before returns existed. */
   returnNumber?: string | null;
   orderReference: string;
+  /** The discount code of the order (D-08), as it was used; absent on documents made before codes existed. */
+  discountCode?: string | null;
   orderedAt: Date;
   paidAt: Date | null;
   paymentMethod: string | null;
   delivery: { minWorkingDays: number; maxWorkingDays: number };
   seller: { tradeName: string; legalName: string; address: string; email: string; kvk: string; vat: string; iban: string | null };
   customer: { name: string; street: string; postcodeCity: string; country: string; email: string; phone: string };
-  lines: { name: string; brand: string | null; sku: string; quantity: number; unitExcl: Money; unitIncl: Money; totalExcl: Money; totalIncl: Money; vatRateBp: number }[];
+  /** `discount`: the code's share in the line (incl. VAT); the totals are after it. Absent on older documents. */
+  lines: { name: string; brand: string | null; sku: string; quantity: number; unitExcl: Money; unitIncl: Money; discount?: Money; totalExcl: Money; totalIncl: Money; vatRateBp: number }[];
   shipping: VatBreakdown["shipping"];
   byRate: VatBreakdown["byRate"];
   totalExcl: Money;
@@ -40,7 +43,7 @@ export function invoiceNumber(kind: InvoiceKind, year: number, n: number): strin
 export function negate(doc: InvoiceDocument): Pick<InvoiceDocument, "lines" | "shipping" | "byRate" | "totalExcl" | "totalVat" | "totalIncl"> {
   const neg = (m: Money): Money => ({ amount: -m.amount, currency: m.currency });
   return {
-    lines: doc.lines.map((l) => ({ ...l, quantity: -l.quantity, totalExcl: neg(l.totalExcl), totalIncl: neg(l.totalIncl) })),
+    lines: doc.lines.map((l) => ({ ...l, quantity: -l.quantity, ...(l.discount ? { discount: neg(l.discount) } : {}), totalExcl: neg(l.totalExcl), totalIncl: neg(l.totalIncl) })),
     shipping: doc.shipping ? { ...doc.shipping, excl: neg(doc.shipping.excl), incl: neg(doc.shipping.incl), vat: neg(doc.shipping.vat) } : null,
     byRate: doc.byRate.map((r) => ({ ...r, base: neg(r.base), vat: neg(r.vat) })),
     totalExcl: neg(doc.totalExcl),

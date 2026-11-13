@@ -162,6 +162,12 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
               <dt>{m.order.subtotal}</dt>
               <dd>{formatMoney(order.subtotal)}</dd>
             </div>
+            {order.discount.amount > 0 ? (
+              <div className="flex justify-between gap-4">
+                <dt>{interpolate(m.order.discount, { code: order.discountCode ?? "" })}</dt>
+                <dd>−{formatMoney(order.discount)}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4">
               <dt>{m.order.shipping}</dt>
               <dd>{formatMoney(order.shippingStandard)}</dd>

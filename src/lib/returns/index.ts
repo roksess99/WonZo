@@ -47,7 +47,7 @@ async function orderOfInvoice(db: Queryable, key: { email: string; invoice: stri
   return row ? Number(row.id) : null;
 }
 
-export type ReturnFormLine = { lineNo: number; name: string; sku: string; bought: number; returned: number; unitPrice: Money; largeShipping: Money | null };
+export type ReturnFormLine = { lineNo: number; name: string; sku: string; bought: number; returned: number; unitPrice: Money; codeDiscount: Money; largeShipping: Money | null };
 
 /** What the return form shows and computes with: the customer's own order, no address. */
 export type ReturnForm = {
@@ -67,9 +67,9 @@ async function returnableOrder(db: Queryable, orderId: number): Promise<{ order:
   if (!o || o.currency !== "EUR") return null;
   const closed = RETURN_CLOSED.filter((s) => s !== "REFUNDED");
   const marks = closed.map(() => "?").join(", ");
-  const rows = await selectRows<{ line_no: number | string; name: string; sku: string; quantity: number | string; unit_price_cents: number | string; large_shipping_cents: number | string | null; returned: number | string }>(
+  const rows = await selectRows<{ line_no: number | string; name: string; sku: string; quantity: number | string; unit_price_cents: number | string; code_discount_cents: number | string; large_shipping_cents: number | string | null; returned: number | string }>(
     db,
-    `SELECT l.line_no, l.name, l.sku, l.quantity, l.unit_price_cents, l.large_shipping_cents,
+    `SELECT l.line_no, l.name, l.sku, l.quantity, l.unit_price_cents, l.code_discount_cents, l.large_shipping_cents,
             (SELECT COALESCE(SUM(rl.quantity), 0) FROM return_lines rl JOIN returns r ON r.id = rl.return_id
               WHERE r.order_id = l.order_id AND rl.line_no = l.line_no AND r.status NOT IN (${marks})) AS returned
        FROM order_lines l WHERE l.order_id = ? ORDER BY l.line_no`,
@@ -83,13 +83,14 @@ async function returnableOrder(db: Queryable, orderId: number): Promise<{ order:
     bought: Number(r.quantity),
     returned: Number(r.returned),
     unitPrice: money(Number(r.unit_price_cents)),
+    codeDiscount: money(Number(r.code_discount_cents)),
     largeShipping: r.large_shipping_cents === null ? null : money(Number(r.large_shipping_cents)),
   }));
   return {
     reference: o.reference,
     lines,
     order: {
-      lines: lines.map((l) => ({ lineNo: l.lineNo, bought: l.bought, returned: l.returned, unitPrice: l.unitPrice, largeShipping: l.largeShipping })),
+      lines: lines.map((l) => ({ lineNo: l.lineNo, bought: l.bought, returned: l.returned, unitPrice: l.unitPrice, codeDiscount: l.codeDiscount, largeShipping: l.largeShipping })),
       shippingStandard: money(Number(o.shipping_standard_cents)),
       earlierShipping: money(Number(earlier?.s ?? 0)),
       deliveredAt: o.delivered_at ? fromDbTime(o.delivered_at) : null,
@@ -179,7 +180,7 @@ export async function requestReturn(input: { email?: unknown; invoice?: unknown;
       throw err;
     }
     for (const l of lines.filter((x) => x.quantity > 0)) {
-      await conn.query("INSERT INTO return_lines (return_id, line_no, quantity, reason) VALUES (?, ?, ?, ?)", [returnId, l.lineNo, l.quantity, l.reason]);
+      await conn.query("INSERT INTO return_lines (return_id, line_no, quantity, code_discount_cents, reason) VALUES (?, ?, ?, ?, ?)", [returnId, l.lineNo, l.quantity, quote.codeShares[l.lineNo] ?? 0, l.reason]);
     }
     await conn.query("INSERT INTO return_events (return_id, from_status, to_status, actor, at) VALUES (?, NULL, 'REQUESTED', 'customer', ?)", [returnId, toDbTime(now)]);
     await appendAudit(conn, { actor: "customer", action: "return.requested", objectType: "order", objectId: orderId, after: { returnNumber: number, pieces: lines.reduce((s, l) => s + l.quantity, 0), maxCents: quote.total.amount }, reason: note ? "met opmerking van de klant" : null }, now);

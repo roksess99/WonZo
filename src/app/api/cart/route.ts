@@ -6,9 +6,22 @@
 // only what the product pages already show. Read-only: it changes nothing, so
 // it needs no CSRF check, and it calls no external service. POST because the
 // cart travels in the body, never in a URL.
+//
+// With a discount code (docs/SCHERMEN.md: the code can go in the cart
+// already) it reads the code from the database, so code lookups have a rate
+// limit per visitor against guessing (.claude/rules/beveiliging.md § Rate
+// limiting). "Once per customer" waits for the address, at checkout.
 
-import { parseQuoteRequest, quoteCart } from "@/lib/cart/quote";
+import { parseQuoteRequest, quoteCart, type QuoteCode } from "@/lib/cart/quote";
 import { getCatalogOrUnavailable } from "@/lib/catalog/provider";
+import { getPool, hasDatabase } from "@/lib/db";
+import { allowHit } from "@/lib/db/rate-limit";
+import { codeFloors, lookupCode } from "@/lib/discounts/codes";
+import type { CodeLookup } from "@/lib/pricing/codes";
+import { visitorKey } from "@/lib/http";
+
+/** Quotes with a code per visitor (each change in the cart is one): plenty for a customer, too few to guess codes. */
+const CODE_RATE = { max: 60, windowMs: 10 * 60_000 };
 
 /** 50 lines of a few dozen bytes fit many times over. */
 const MAX_BODY_BYTES = 16 * 1024;
@@ -35,5 +48,25 @@ export async function POST(request: Request): Promise<Response> {
   const catalog = await getCatalogOrUnavailable(parsed.request.locale);
   // docs/SUPPLIER_RESILIENCE.md: an honest "not now", which the cart page shows as such.
   if (!catalog) return json(503, { error: "supplier-unavailable" });
-  return json(200, quoteCart(parsed.request.lines, catalog));
+
+  const codeText = (body as { code?: unknown }).code;
+  let code: QuoteCode | undefined;
+  if (typeof codeText === "string" && codeText.trim() !== "") {
+    if (codeText.length > 64) return json(400, { error: "code" });
+    if (!hasDatabase) {
+      code = { lookup: { kind: "refused", code: codeText.trim().toUpperCase(), reason: "unknown" }, floors: new Map() };
+    } else {
+      // Over the limit, or the database briefly out of reach: the cart still shows, without the code
+      // and with the reason at the field (docs/SUPPLIER_RESILIENCE.md: an honest "not now").
+      const later: CodeLookup = { kind: "refused", code: codeText.trim().toUpperCase().slice(0, 32), reason: "try-later" };
+      let lookup: CodeLookup = later;
+      try {
+        if (await allowHit(`code:${visitorKey(request)}`, CODE_RATE.max, CODE_RATE.windowMs)) lookup = await lookupCode(getPool(), codeText, new Date());
+      } catch (err) {
+        console.error("[api/cart] code", (err as { code?: unknown }).code ?? (err instanceof Error ? err.name : "unknown"));
+      }
+      code = { lookup, floors: lookup.kind === "ok" ? await codeFloors(parsed.request.locale) : new Map() };
+    }
+  }
+  return json(200, quoteCart(parsed.request.lines, catalog, undefined, code));
 }

@@ -6,14 +6,17 @@ import type { Locale } from "@/lib/i18n/config";
 import { localizePath } from "@/lib/i18n/paths";
 import { formatMoney } from "@/lib/money";
 import type { CustomerField, FieldError } from "@/lib/orders/customer";
+import type { CodeRefusal } from "@/lib/pricing/codes";
 import { interpolate } from "@/lib/text";
 import { TruckIcon } from "../icons";
 import { StateMessage } from "../ui";
-import { useCart } from "../cart/store";
+import { codeMessage, type CodeLabels } from "../cart/CodeField";
+import { codeActions, useCart, useCode } from "../cart/store";
 import { useQuote } from "../cart/useQuote";
 import { CustomerFields, EMPTY_CUSTOMER, errorText, FIELD_ORDER, validate, type CustomerFieldLabels, type CustomerValues } from "./CustomerFields";
 
-export type CheckoutLabels = CustomerFieldLabels & {
+export type CheckoutLabels = CustomerFieldLabels & CodeLabels & {
+  codeProblem: string;
   detailsTitle: string;
   errorSummaryOne: string;
   errorSummary: string;
@@ -53,7 +56,7 @@ export type CheckoutLabels = CustomerFieldLabels & {
   countries: Record<string, string>;
 };
 
-type Problem = "changed" | "conflict" | "error" | "rateLimited" | "unavailable" | "off";
+type Problem = "changed" | "conflict" | "error" | "rateLimited" | "unavailable" | "off" | { code: CodeRefusal; text: string };
 
 /** A key per checkout attempt, made when the page opens (docs/IDEMPOTENCY.md § Checkout). */
 const newAttempt = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "");
@@ -67,7 +70,8 @@ const newAttempt = () => (typeof crypto !== "undefined" && "randomUUID" in crypt
  */
 export function CheckoutView({ locale, labels }: { locale: Locale; labels: CheckoutLabels }) {
   const lines = useCart();
-  const { quote, current, busy } = useQuote(lines, locale);
+  const code = useCode();
+  const { quote, current, busy } = useQuote(lines, locale, code);
   const [values, setValues] = useState<CustomerValues>(EMPTY_CUSTOMER);
   const [touched, setTouched] = useState<Partial<Record<CustomerField, boolean>>>({});
   const [serverErrors, setServerErrors] = useState<Partial<Record<CustomerField, FieldError>>>({});
@@ -94,6 +98,7 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
   const shownErrors: Partial<Record<CustomerField, FieldError>> = { ...serverErrors };
   for (const f of FIELD_ORDER) if ((showAll || touched[f]) && clientErrors[f]) shownErrors[f] = clientErrors[f];
   const errorList = FIELD_ORDER.filter((f) => shownErrors[f]);
+  const codeNote = code && !busy ? codeMessage(quote, labels) : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,9 +119,10 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ checkoutAttemptId: attempt, locale, lines, customer: values, expectedTotalCents: quote.total.amount }),
+        // The code only when the overview showed it applied: a refused code is shown above, and the total without it is what the customer saw.
+        body: JSON.stringify({ checkoutAttemptId: attempt, locale, lines, customer: values, expectedTotalCents: quote.total.amount, ...(quote.code?.kind === "applied" ? { discountCode: quote.code.code } : {}) }),
       });
-      const body = (await res.json().catch(() => ({}))) as { kind?: string; url?: string; statusUrl?: string; fields?: Partial<Record<CustomerField, FieldError>> };
+      const body = (await res.json().catch(() => ({}))) as { kind?: string; url?: string; statusUrl?: string; reason?: CodeRefusal; fields?: Partial<Record<CustomerField, FieldError>> };
       if (body.kind === "pay" && body.url) {
         setSending("payment");
         window.location.assign(body.url);
@@ -131,6 +137,9 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
         setServerErrors(body.fields);
         setShowAll(true);
         requestAnimationFrame(() => summaryRef.current?.focus());
+      } else if (body.kind === "code-refused" && body.reason && quote.code) {
+        // E.g. used before by this address: known only now. Nothing was placed; the customer chooses.
+        setProblem({ code: body.reason, text: interpolate(labels.codeRefused[body.reason], { code: quote.code.code, amount: "" }) });
       } else if (body.kind === "not-ready") setProblem("changed");
       else if (body.kind === "conflict") {
         // The key belongs to an order with other details: this is a new attempt.
@@ -146,7 +155,7 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
     }
   }
 
-  const problemText: Record<Problem, string> = {
+  const problemText: Record<Exclude<Problem, object>, string> = {
     changed: labels.changedText,
     conflict: labels.conflict,
     error: labels.error,
@@ -212,6 +221,12 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
             <dt>{quote.itemCount === 1 ? labels.subtotalOne : interpolate(labels.subtotal, { count: quote.itemCount })}</dt>
             <dd>{formatMoney(quote.subtotal)}</dd>
           </div>
+          {quote.discount.amount > 0 && quote.code?.kind === "applied" ? (
+            <div className="flex justify-between gap-4">
+              <dt>{interpolate(labels.discount, { code: quote.code.code })}</dt>
+              <dd>−{formatMoney(quote.discount)}</dd>
+            </div>
+          ) : null}
           {quote.shipping.standard.kind !== "none" ? (
             <div className="flex justify-between gap-4">
               <dt>{labels.shipping}</dt>
@@ -230,6 +245,17 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
           </div>
         </dl>
         <p className="text-body-sm text-muted">{labels.inclVat}</p>
+        {codeNote ? (
+          // A code that does not apply is said here, before the button: the total above is without it (docs/PRIJZEN.md § 3).
+          <div role={codeNote.tone === "error" ? "alert" : undefined} className={`flex flex-col gap-2 text-body-sm ${codeNote.tone === "error" ? "rounded-md bg-warning-soft p-3 text-warning" : "text-muted"}`}>
+            <p>{codeNote.text}</p>
+            {codeNote.tone === "error" ? (
+              <button type="button" onClick={() => codeActions.clear()} className="min-h-11 self-start font-medium underline underline-offset-4">
+                {labels.codeRemove}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {quote.delivery ? (
           <p className="flex items-start gap-2 text-body-sm">
             <TruckIcon className="mt-0.5 size-4 shrink-0" />
@@ -254,11 +280,23 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
         </div>
         {problem ? (
           <div role="alert" className="flex flex-col gap-2 rounded-md bg-warning-soft p-3 text-body-sm text-warning">
-            <p>{problemText[problem]}</p>
+            <p>{typeof problem === "object" ? interpolate(labels.codeProblem, { reason: problem.text }) : problemText[problem]}</p>
             {problem === "changed" ? (
               <Link href={cartHref} className="font-medium underline underline-offset-4">
                 {labels.changedAction}
               </Link>
+            ) : null}
+            {typeof problem === "object" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  codeActions.clear();
+                  setProblem(null);
+                }}
+                className="min-h-11 self-start font-medium underline underline-offset-4"
+              >
+                {labels.codeRemove}
+              </button>
             ) : null}
           </div>
         ) : null}

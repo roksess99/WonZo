@@ -6,14 +6,15 @@
 
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { cancelAndRefund, acceptPurchasePrice, retryPurchaseAction } from "@/lib/admin/order-actions";
+import { cancelAndRefund, acceptPurchasePrice, releaseHold, retryPurchaseAction } from "@/lib/admin/order-actions";
 import { attentionItems } from "@/lib/admin/orders";
-import { getPool, selectRows } from "@/lib/db";
+import { getPool, selectRows, withTransaction } from "@/lib/db";
 import { placeOrder, releaseClosedWindows } from "@/lib/orders";
 import { runPurchasing, supplierOrdersOf } from "@/lib/orders/purchasing";
 import { CANCEL_WINDOW_MS } from "@/lib/orders/states";
+import { setHold } from "@/lib/orders/store";
 import { RETRY_EVERY_MS, RETRY_FOR_MS } from "@/lib/orders/supplier-states";
-import { handleWebhook, startPayment } from "@/lib/payments";
+import { handleWebhook, startPayment, submitRefund } from "@/lib/payments";
 import { FakeBigBuy } from "./fake-bigbuy";
 import { FakeMollie } from "./fake-mollie";
 
@@ -110,7 +111,7 @@ describe("the price at the supplier (D-04: up to 10 % more is ordered)", () => {
   });
 });
 
-describe("a refusal (D-04: alert at once, try again for 24 hours with the same reference)", () => {
+describe("a refusal (D-04: alert at once, try again for 24 hours with the same reference, then pay back)", () => {
   it("alerts at once, waits 30 minutes, tries again with the same reference, and is placed", async () => {
     const o = await released();
     bigbuy.steer(o.reference, { place: ["refuse"] });
@@ -129,23 +130,56 @@ describe("a refusal (D-04: alert at once, try again for 24 hours with the same r
     expect(await attentionFor(o.orderId, new Date(o.at.getTime() + RETRY_EVERY_MS + 2_000))).toEqual([]);
   });
 
-  it("after 24 hours of refusals it stops; the owner tries again or cancels and pays back", async () => {
+  it("after 24 hours of refusals: cancelled and paid back in full, by itself (user 2026-11-13)", async () => {
     const o = await released();
     // First the check is refused; the next try, 24 hours later, gets as far as placing, which is refused too.
     bigbuy.steer(o.reference, { check: ["refuse"], place: ["refuse"] });
-    await runPurchasing(bigbuy, o.at);
+    expect((await runPurchasing(bigbuy, o.at)).refunds).toEqual([]);
+    // Within the 24 hours: the owner is asked to top up, the order still waits.
+    expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");
+    expect(await attentionFor(o.orderId, o.at)).toEqual(["purchase-failing"]);
+
     const late = new Date(o.at.getTime() + RETRY_FOR_MS + 1_000);
-    await runPurchasing(bigbuy, late);
+    const run = await runPurchasing(bigbuy, late);
+    expect(run.outcomes).toEqual(["refunded"]);
+    expect(run.refunds).toHaveLength(1);
+    expect(await orderStatus(o.orderId)).toBe("CANCELLED");
     const p = await purchase(o.orderId);
-    expect(p.gaveUpAt).not.toBeNull();
-    expect(await alerts(o.orderId)).toContain(`supplier:${p.id}:gave-up`);
-    expect(await attentionFor(o.orderId, late)).toEqual(["purchase-gave-up"]);
-    // Nothing more by itself.
+    expect(p.status).toBe("CANCELLED");
+    const sent = await alerts(o.orderId);
+    expect(sent).toContain(`supplier:${p.id}:failed`);
+    expect(sent).toContain(`supplier:${p.id}:refunded`);
+    expect(sent).not.toContain(`supplier:${p.id}:gave-up`);
+
+    // The whole amount, recorded before anything goes to Mollie (intent first), by the system.
+    const [refund] = await selectRows<{ id: string; status: string; amount_cents: number | string; requested_by: string }>(getPool(), "SELECT id, status, amount_cents, requested_by FROM refunds WHERE order_id = ?", [o.orderId]);
+    expect(refund).toMatchObject({ id: run.refunds[0], status: "REQUESTED", requested_by: "system" });
+    expect(Number(refund!.amount_cents)).toBe(await totalOf(o.orderId));
+    // As the orders job does: sent to Mollie with its own id as the key.
+    await submitRefund(run.refunds[0]!, mollie, late);
+    expect([...mollie.refunds.values()].map((r) => [r.refundId, r.amount.amount])).toEqual([[run.refunds[0], await totalOf(o.orderId)]]);
+    // Nothing more by itself, and nothing left for the owner to do.
     await runPurchasing(bigbuy, minutes(late, 60));
     expect(bigbuy.callsFor(o.reference, "check")).toBe(2);
+    expect(await attentionFor(o.orderId, minutes(late, 60))).toEqual([]);
+  });
 
+  it("a held order is never paid back by itself: after 24 hours the owner chooses, e.g. try again", async () => {
+    const o = await released();
+    bigbuy.steer(o.reference, { check: ["refuse"], place: ["refuse"] });
+    await runPurchasing(bigbuy, o.at);
+    await withTransaction((conn) => setHold(conn, o.orderId, "FRAUD_REVIEW", "admin:test", o.at));
+    const late = new Date(o.at.getTime() + RETRY_FOR_MS + 1_000);
+    expect((await runPurchasing(bigbuy, late)).refunds).toEqual([]);
+    const p = await purchase(o.orderId);
+    expect(p.gaveUpAt).not.toBeNull();
+    expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");
+    expect(await alerts(o.orderId)).toContain(`supplier:${p.id}:gave-up`);
+    expect(await selectRows(getPool(), "SELECT id FROM refunds WHERE order_id = ?", [o.orderId])).toEqual([]);
+
+    expect(await releaseHold({ orderId: o.orderId, expectedHold: "FRAUD_REVIEW", reason: "gecontroleerd", actor, now: late })).toEqual({ ok: true, refund: "none" });
     expect(await retryPurchaseAction({ orderId: o.orderId, supplierOrderId: p.id, reason: "tegoed opgewaardeerd", actor, now: late })).toEqual({ ok: true, refund: "none" });
-    await runPurchasing(bigbuy, minutes(late, 61));
+    await runPurchasing(bigbuy, minutes(late, 1));
     expect((await purchase(o.orderId)).status).toBe("PLACED");
   });
 

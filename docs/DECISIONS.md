@@ -175,10 +175,10 @@ mogelijk zijn. Een andere leverancier is niet onderzocht — dat is het
 verworpen alternatief, en het blijft de uitweg als het lage voorraadpercentage
 (vraag 6 in `docs/api/VRAGEN.md`) de winkel te klein maakt.
 
-**Nog open, niet blokkerend:** of de adviesprijs incl. of excl. btw is — de
-inkoopprijs is excl. btw (`GEMETEN 2026-10-05`, schermafdruk V0710266), de
-adviesprijs vermoedelijk ook, te bevestigen door BigBuy
-(`docs/api/LEVERANCIER.md`); energielabel bij een artikel dat er een heeft; `order/check` en
+**Beantwoord (BigBuy, 2026-11-02, ticket A):** inkoopprijs én adviesprijs
+zijn exclusief btw (`docs/api/VRAGEN.md` vraag 1).
+
+**Nog open, niet blokkerend:** energielabel bij een artikel dat er een heeft; `order/check` en
 bestellen testen (de sandbox heeft geen catalogus); voorraad per variant;
 stabiliteit van de taxonomie-id's over de tijd.
 
@@ -260,8 +260,9 @@ deze regels blijven er rond de 740 artikelen over (2026-10-05), waarvan ruim
 
 ## D-03 · Van inkoopprijs naar verkoopprijs
 
-- **Status:** BLOCKED
+- **Status:** DECIDED
 - **Depends on:** D-01, D-16
+- **Decided:** 2026-11-02
 
 De beslissing waar het meeste geld in zit. Inkoop is meestal excl. btw en
 advies meestal incl. (`EERDER WAARGENOMEN`: weken 21 % te hoge prijzen) —
@@ -271,12 +272,59 @@ dan één percentage; de sleutel van de opslag moet overal gelijk zijn.
 **Te beantwoorden:** vaste opslag of per groep; waar de regel aan hangt; wat er
 gebeurt zonder adviesprijs; minimummarge.
 
+**Antwoord (gebruiker, 2026-11-02): opslag op de inkoopprijs.** Een
+standaardopslag voor het hele assortiment, met per subcategorie een
+afwijkende opslag; de regel hangt aan de subcategorie van het artikel zelf
+(`docs/PRIJZEN.md` § 1). Zonder standaardopslag geldt de adviesprijs plus
+btw. Altijd: nooit onder de ondergrens (D-16). Een opslag onder 0 of boven
+1000 % wordt geweigerd. De percentages stelt de eigenaar in het paneel in
+(`/beheer/prijzen`). Verworpen: de adviesprijs als basis met een percentage
+per groep, en één opslag zonder uitzonderingen. Bevestigd door de
+gebruiker (2026-11-02), samen met D-16.
+
+**Gebouwd (2026-11-02):** `src/lib/pricing/rules.ts` (rekenwerk, puur),
+`src/lib/discounts/store.ts` (opslaan, met de versie en het logboek),
+`/beheer/prijzen`, migratie 0012. De tussenafspraak hieronder geldt zolang
+er geen standaardopslag is ingevuld.
+
 **Afspraak tot deze beslissing** (eigenaar, 2026-10-06): de echte catalogus
 wordt gebouwd en lokaal getest, maar de BigBuy-sleutel komt pas op de live
 site als de prijsregel vaststaat — anders staan echte artikelen met
 mogelijk 21 % te lage prijzen op een vindbare site (de adviesprijs is
 vermoedelijk excl. btw, `docs/api/LEVERANCIER.md` § 6). Eerst het antwoord
 van BigBuy op vraag 1 (`docs/api/VRAGEN.md`).
+
+**BigBuy (2026-10-22):** vraag 1 en 3 niet beantwoord; BigBuy wil een eigen
+ticket met schermafdrukken (ticket A in `docs/api/VRAGEN.md`). Hun uitleg over
+de MIP ("de prijzen in de kostenanalyse zijn inclusief btw") gaat over hun
+eigen verkoopplatform, niet over de API: geen antwoord op onze vraag.
+
+**BigBuy (2026-11-02, ticket A): `wholesalePrice` én `retailPrice` zijn
+exclusief btw.** De btw-vraag uit de afspraak hierboven is daarmee beantwoord;
+D-03 blijft BLOCKED op D-16. Gevolg tot de prijsregel er is: `sellingPrice`
+(`src/lib/pricing/index.ts`) neemt de adviesprijs nu als prijs incl. btw, dus
+de lokale winkel met de echte catalogus stond 21 % te laag. Live staat de
+catalogus op mock. Wat `inShopsPrice` is: niet beantwoord.
+
+**Tussenafspraak (gebruiker, 2026-11-02), tot de prijsregel:** de
+verkoopprijs is de adviesprijs plus btw (`docs/PRIJZEN.md` § 1: "geen
+prijsregel betekent de adviesprijs"), één keer afgerond, half naar boven
+(`sellingPrice`, `src/lib/pricing/index.ts`). Het tarief is dat van het
+artikel (`vatRateBasisPoints`, uit het `taxRate` van BigBuy). Geen opslag, geen ondergrens: dat blijft deze beslissing. De
+voorbeeldproducten hebben nu een adviesprijs exclusief btw, zo gekozen dat
+de getoonde prijs gelijk blijft (29,99 en vier andere kunnen dat niet in hele
+centen en staan een cent lager). De afspraak "sleutel pas live na de
+prijsregel" blijft staan.
+
+`AANNAME`: het `taxRate` van BigBuy is het Spaanse tarief (BigBuy zit in
+Spanje); het Nederlandse tarief voor dit assortiment is 21 % (`WETTELIJK`,
+te bevestigen door de boekhouder, D-15). GEMETEN 2026-10-05 (de verkenning in
+`tmp/catalog-explore`, de vier hoofdgroepen): `taxRate` 21 bij 132.086
+artikelen, 10 bij 457 en 4 bij 39 — de Spaanse tarieven; Nederland kent geen
+10 of 4 %. Daarom komt een artikel met een ander tarief dan 21 % niet in de
+winkel (`src/lib/catalog/bigbuy/map.ts`), met de reden in het oordeel: de
+eigenaar kijkt eerst. Hoeveel verkoopbare artikelen dat raakt, is niet
+gemeten (de volgende ronde van de catalogus laat het zien).
 
 ---
 
@@ -349,10 +397,44 @@ Wat er nog beantwoord moet worden binnen die keuze:
 - **Prijsverschil: tot 10 %** hoger dan de bevroren inkoopprijs wordt er
   doorbesteld; daarboven blijft de bestelling staan voor de eigenaar.
 
+**BigBuy (2026-10-22):** bevestigd dat de API niet kan annuleren; annuleren
+via een ticket zolang de bestelling niet in voorbereiding is. BigBuy wijst op
+**"Schedule your orders"**: bestellingen inplannen en vóór de verwerking zelf
+annuleren. Onze eigen 30 minuten blijven; of hun inplannen er iets aan
+toevoegt (en of het via de API werkt) wordt gevraagd. Keuze voor de eigenaar
+zodra dat antwoord er is.
+
 **Gebouwd (2026-10-12, fase 6):** `src/lib/orders/purchasing.ts`. Opnieuw
 proberen na een weigering is een overgang `REJECTED → SUBMITTING` die in
 `docs/STATE_MACHINES.md` nog niet stond; D-04 gaat voor, de tabel is
 aangepast. Inkopen staat uit tot `SUPPLIER_ORDERING=live` in productie.
+
+**Gebruiker (2026-11-13): na 24 uur weigeren automatisch terugbetalen.**
+Dit vervangt "daarna kiest de eigenaar" hierboven voor een weigering. Lukt
+inkopen bij BigBuy 24 uur lang niet, dan annuleert de winkel de bestelling
+zelf en betaalt het hele bedrag terug via Mollie. De klant krijgt de gewone
+annuleringsmail, en was er al een factuur, dan volgt de creditnota zoals bij
+elke annulering. In de tussentijd krijgt de beheerder bij de eerste
+weigering een mail: het tegoed bij BigBuy opwaarderen, met de waarschuwing
+dat er na 24 uur vanzelf wordt terugbetaald; na de terugbetaling volgt een
+tweede mail. **Prijs meer dan 10 % hoger: de eigenaar blijft kiezen**
+(gebruiker, 2026-11-13). Verworpen: meteen bij de eerste weigering
+terugbetalen (een te laag tegoed is binnen een dag op te lossen), en een
+kortere termijn.
+
+Uitwerking, te bevestigen: nooit automatisch terugbetalen als een deel van
+de bestelling (mogelijk) al bij BigBuy is (`SUBMITTING`, `UNKNOWN`,
+`PLACED` …) — BigBuy kan niet annuleren, dus dan betaalt de winkel voor iets
+dat toch geleverd wordt; ook niet bij een bestelling met een hold. In die
+gevallen blijft het zoals het was: na 24 uur kiest de eigenaar. Een
+uitblijvend antwoord (`UNKNOWN`) leidt nooit tot terugbetalen.
+
+Let op: D-07 zegt "terugbetalen blijft altijd bij de eigenaar"; dat gaat over
+wie in het paneel mag terugbetalen. Deze automatische terugbetaling is een
+keuze van de gebruiker en staat los van dat recht. De eigenaar weet het nog
+niet: voorleggen. Gebouwd in `src/lib/orders/purchasing.ts`
+(`cancelAfterGivingUp`), verstuurd door de geplande taak
+(`src/app/api/cron/orders/route.ts`).
 
 ---
 
@@ -371,6 +453,8 @@ iDEAL € 0,32, kaarten 1,80 % + € 0,25 (consumentenkaart in de EER) per
 geslaagde betaling. Met kaarten kan een terugboeking (`CHARGED_BACK`)
 voorkomen; die route staat in `docs/STATE_MACHINES.md`. Het account komt na
 de zakelijke rekening; de eigenaar zet de testsleutel zelf in `.env`.
+**De zakelijke rekening is er** (opgave eigenaar, 2026-10-31): het
+Mollie-account kan worden aangevraagd.
 
 **Waarom dit en niet het alternatief.** Nederlands, iDEAL als kern, geen vaste
 kosten, en een webhook die alleen het id stuurt — de status komt altijd van
@@ -426,8 +510,49 @@ vragen hierboven voor Mollie:
   (mollie.com; een bron van januari 2026 noemde € 0,29 — op de prijspagina
   controleren).
 
-Nog te meten in testmodus (zodra er een account is): werkelijke vervaltijd,
-volgorde van webhooks, gedrag bij een dubbele sleutel. Nog uit te zoeken:
+GEMETEN 2026-11-13 — testmodus, testsleutel van de eigenaar,
+`scripts/measure-mollie.mjs` (door de eigenaar gedraaid), met precies de
+inhoud die de winkel stuurt:
+
+- **Methodes:** iDEAL, Apple Pay en creditcard staan op `activated`; ook
+  Klarna, Riverty en Pay by Bank. Die laatste drie biedt de winkel niet aan:
+  ze vraagt alleen om de methodes van D-05 (`METHODS`,
+  `src/lib/payments/mollie.ts`). Een betaling met die lijst wordt
+  aangenomen (HTTP 201).
+- **Vervaltijd:** een betaling met de drie methodes, nog zonder gekozen
+  methode, verloopt na **15 minuten** (`expiresAt` − `createdAt`).
+- **Dubbele sleutel:** dezelfde `Idempotency-Key` met dezelfde inhoud geeft
+  dezelfde betaling terug (HTTP 201, 73 ms). Dezelfde sleutel met een ander
+  bedrag wordt geweigerd: HTTP 400, "idempotency key that you used before
+  with different parameters". De winkel gebruikt een sleutel maar één keer,
+  met een bedrag uit de snapshot; de nagebootste Mollie in de tests doet nu
+  hetzelfde (`tests/integration/fake-mollie.ts`).
+- **Snelheid:** eerste aanmaak 1,4 s, daarna onder 0,2 s; ruim binnen de
+  timeout van 10 s.
+- **Betaald:** op de testbetaalpagina "Paid" gekozen (eigenaar); Mollie meldt
+  daarna `status: paid`, `method: ideal`, `paidAt` 82 s na het aanmaken.
+  Een betaalde betaling heeft geen `expiresAt` meer.
+
+GEMETEN 2026-11-13 — een hele bestelling, lokaal (`pnpm dev`, dev-database,
+testsleutel, `CHECKOUT_ENABLED=true` alleen lokaal), in de browser door
+Claude, met testgegevens: WZ-2026-00024, € 14,90 + € 5,95 = € 20,85. De
+winkel stuurt de klant naar Mollie; daar staat € 20,85, "R.M.A. Marketing"
+en "WonZo WZ-2026-00024". Mollie toont Apple Pay en Google Pay bovenaan
+("Express Checkout werkt niet in testmodus"), daaronder iDEAL | Wero en
+Kaart. iDEAL → testbank → "Betaald" → terug op de statuspagina: "Bedankt, je
+betaling is binnen", met het annuleervenster tot 30 minuten later. In het
+paneel: bestelling en betaling `Betaald`, "Betaald door reconciliation" (de
+statuspagina vroeg het Mollie zelf, zonder webhook), en de melding "Mollie
+staat in testmodus". Daarna binnen het venster geannuleerd op de
+statuspagina ("Je krijgt € 20,85 terug"): de bestelling staat op
+`Geannuleerd` en de terugbetaling van € 20,85 op "Verstuurd naar Mollie",
+met een regel in het logboek. Dat ze op "terugbetaald" komt, is nog niet
+gezien (dat doet de geplande taak).
+
+Nog te meten: of de vervaltijd verandert als de klant een methode kiest
+(kaart: 30 minuten volgens de documentatie), de volgorde van de webhooks
+(vraagt een adres dat Mollie van buiten bereikt), en wanneer een
+terugbetaling in testmodus op "refunded" komt. Nog uit te zoeken:
 de rol van Mollie onder de AVG (`docs/PRIVACY.md`) en de toegankelijkheid
 van de betaalpagina.
 
@@ -597,14 +722,41 @@ Nog open: wie mag terugbetalen en tot welk bedrag zonder tweede persoon.
 
 ## D-08 · Kortingen en acties
 
-- **Status:** BLOCKED
+- **Status:** DECIDED
 - **Depends on:** D-03
+- **Decided:** 2026-11-02
 
 Regels en rekenvolgorde: `docs/PRIJZEN.md`. De "van"-prijs vraagt een
 prijsgeschiedenis die loopt vóór een actie begint — begin vroeg met meten.
 
 **Te beantwoorden:** niveau van acties (artikel, groep, soort); komen er
 kortingscodes; "één keer per klant" op welke sleutel.
+
+**Antwoord (gebruiker, 2026-11-02):**
+
+- **Acties** op een hoofdcategorie, een subcategorie of een los artikel, met
+  een percentage en een looptijd. Twee acties op één artikel: de hoogste
+  wint, niet stapelen (`docs/PRIJZEN.md` § 2). De ondergrens (D-16) begrenst
+  per artikel, en het paneel zegt waar dat gebeurt.
+- **Kortingscodes: ja**, met percentage, minimumbedrag, looptijd en een
+  maximum aantal keer; **"één keer per klant" hangt aan het mailadres**,
+  opgeslagen als hash, met een unieke sleutel; afgetekend pas na de betaling
+  (`docs/PRIJZEN.md` § 3).
+
+Verworpen: alleen categorie en subcategorie (zonder losse artikelen); codes
+zonder "één keer per klant"; nog geen acties of codes. Bevestigd door de
+gebruiker (2026-11-02).
+
+**Gebouwd (2026-11-02): de acties**, in `/beheer/kortingen`; de winkel toont
+het toegepaste percentage; de bestelregel bewaart de prijs vóór de actie en
+de actie zelf; de prijsgeschiedenis loopt vanaf nu (een rij per wijziging).
+**Gebouwd (2026-11-02): de codes**, in `/beheer/kortingen`, de winkelwagen en
+het afrekenen, met de verdeling uit D-15 en aftekenen pas na de betaling
+(`docs/PRIJZEN.md` § Gebouwd (2026-11-02, D-08, D-15)). Daarbij gekozen als
+uitwerking van de regels in `docs/PRIJZEN.md` § 3, te bevestigen: het minimum telt alle artikelen; een
+code respecteert de ondergrens per regel; een code die nog niet begonnen is
+heet "onbekend"; is een code door een andere betaalde bestelling al
+verbruikt, dan gaat de bestelling naar "vraagt aandacht".
 
 ---
 
@@ -661,6 +813,14 @@ al vóór aflevering (de wet laat dat toe); zolang de aflevering niet bekend is,
 blijft het formulier open. Een retour kan vanaf het moment dat er een factuur
 is (na het annuleervenster). Bij de terugbetaling volgt een creditnota voor de
 teruggestuurde artikelen; een waardevermindering staat er als eigen regel op.
+
+**BigBuy (2026-10-22, vraag 16):** verzendkosten heen en terug worden nooit
+terugbetaald, ook niet bij een defect; zijn ze hoger dan de waarde van het
+artikel, dan geen terugbetaling. Geweigerd pakket: terugbetaling na ontvangst,
+met aftrek per geval. Defect: via Returns, op het tegoed. Gevolg: bij elke
+herroeping draagt WonZo het artikel én de verzendkosten (de klant krijgt ze
+wettelijk terug), en bij een defect de verzendkosten — hoort in het
+retourrisico van D-16. Het retourlabel (vraag 24) is nog niet beantwoord.
 
 **Gebouwd (2026-10-13):** `src/lib/returns/`, `/retour` en `/beheer/retouren`,
 de verzendstatus via `src/lib/orders/tracking.ts`; zie `docs/RETOUREN.md`.
@@ -823,6 +983,15 @@ winkelwagen en afrekenscherm.
 
 Laten bevestigen door de boekhouder; daarna één functie overal.
 
+**Verdeling van een kortingscode (gebruiker, 2026-11-02):** proportioneel
+naar het regeltotaal incl. btw van de regels waarop de code geldt, elk
+aandeel naar beneden afgerond; de resterende centen gaan één voor één naar
+de regels met de grootste rest, bij gelijke rest naar de eerste regel
+(volgorde van de bestelling). De verdeling gebeurt vóór de btw, en de btw
+gaat daarna uit het regeltotaal min het aandeel. Verworpen: de hele rest op
+de eerste of de duurste regel. De status blijft OPEN: de boekhouder bevestigt
+de rekenwijze nog, en de verzendkosten bij twee tarieven staan open.
+
 **Tot deze beslissing** (eigenaar, 2026-10-05): de winkelwagen toont
 "Prijzen inclusief btw" zonder apart btw-bedrag. `docs/SCHERMEN.md` vraagt
 het btw-bedrag in het totaal; dat komt erbij zodra de rekenwijze vastligt.
@@ -835,14 +1004,25 @@ de rest); btw op verzendkosten bij gemengde tarieven.
 
 ## D-16 · Kostprijs (landedCost) en ondergrens
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** D-01
+- **Decided:** 2026-11-02
 
 Tot deze beslissing is `landedCost = supplierCost` een benoemde aanname.
 
 **Te beantwoorden:** wat telt mee in de kostprijs (inkomende verzending,
 betaalkosten per transactie, toeslagen, retourrisico); per artikel of als
 opslag; wat de ondergrens voor acties is.
+
+**Antwoord (gebruiker, 2026-11-02):** de kostprijs is de **inkoopprijs plus
+de betaalkosten**: een vast bedrag per stuk, exclusief btw, dat de eigenaar
+in het paneel instelt (Mollie: iDEAL € 0,32, kaart 1,80 % + € 0,25, D-05).
+De ondergrens is die kostprijs plus btw. Verworpen: het verzendverlies op
+een klein pakket meetellen, en een opslag voor retourrisico — allebei
+voorgesteld, niet gekozen. Bevestigd door de gebruiker (2026-11-02).
+Gevolg: `landedCost = supplierCost + betaalkosten`, niet langer een
+aanname; een verzendverlies of retour blijft dus buiten de ondergrens, en
+een actie kan dat verlies niet goedmaken.
 
 ---
 
@@ -1405,6 +1585,15 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-11-13 | D-04 | Gebruiker: na 24 uur weigeringen bij BigBuy vanzelf annuleren en volledig terugbetalen, met een mail aan de beheerder om op te waarderen; prijs boven 10 % blijft de keuze van de eigenaar. Gebouwd |
+| 2026-11-13 | D-05 | Gemeten in testmodus: methodes actief, vervaltijd 15 minuten, dezelfde sleutel geeft dezelfde betaling, met een ander bedrag HTTP 400; een hele bestelling lokaal betaald met iDEAL en als betaald vastgelegd |
+| 2026-11-02 | D-08 | Kortingscodes gebouwd (migratie 0013): winkelwagen, afrekenen, factuur, retour en beheer; uitwerkingen te bevestigen bij D-08 |
+| 2026-11-02 | D-03, D-08, D-15, D-16 | Bevestigd door de gebruiker: D-16, D-03 en D-08 `DECIDED`. D-15: een code wordt proportioneel verdeeld, de rest naar de grootste rest, bij gelijkstand de eerste regel (D-15 blijft OPEN voor de boekhouder) |
+| 2026-11-02 | D-03, D-08, D-16 | Antwoorden (gebruiker): opslag op inkoop, standaard plus per subcategorie (D-03); kostprijs = inkoop + betaalkosten per stuk (D-16); acties op categorie, subcategorie of artikel, codes met één keer per mailadres (D-08). Statussen nog niet `DECIDED` |
+| 2026-11-02 | D-03 | Tussenafspraak (gebruiker): verkoopprijs = adviesprijs + btw tot de prijsregel; gebouwd, voorbeeldprijzen omgezet naar excl. btw zonder zichtbaar verschil (op vijf na een cent). D-03 blijft BLOCKED op D-16 |
+| 2026-11-02 | D-01, D-03 | BigBuy (ticket A): inkoop- én adviesprijs exclusief btw. De lokale prijzen (adviesprijs als prijs incl. btw) staan daardoor 21 % te laag; de prijsregel blijft D-03 (BLOCKED op D-16). Ticket C: geen filter op voorraad (`docs/api/VRAGEN.md`) |
+| 2026-10-31 | D-05 | Eigenaar: zakelijke rekening geregeld; het Mollie-account kan worden aangevraagd. BigBuy-tickets A, B, C en de herhaling ingediend (`docs/api/VRAGEN.md`) |
+| 2026-10-22 | D-03, D-04, D-09 | Antwoord BigBuy vastgelegd (`docs/api/VRAGEN.md`): btw op adviesprijs en verzendkosten niet beantwoord, eigen tickets gevraagd (D-03 blijft BLOCKED); annuleren alleen via ticket bevestigd, "Schedule your orders" als optie (D-04); retourverzending nooit terugbetaald (D-09, D-16) |
 | 2026-10-19 | D-07 | Eigenaar: sessie 30 minuten inactief en 12 uur maximaal; lokale doorgang blijft (alleen `pnpm dev` op localhost); QR-code met uqr 0.1.3 (toestemming). Inloggen met 2FA, herstelcodes, opzetpagina, uitnodigingen en het scherm Beheerders gebouwd |
 | 2026-10-15 | D-02 | Eigenaar: thuis sporten in een eigen hoofdcategorie Sport, niet onder Buitenleven; oud adres leidt om. Buiten sporten nog niet: gemeten 2026-10-05 is er vrijwel niets leverbaar, keuze aan de eigenaar |
 | 2026-10-15 | D-12, D-35 | Eigenaar: beoordelingen nu al, eigen systeem, winkel én artikelen, uitnodiging 7 dagen na aflevering met afmeldlink (D-12); uit "later" gehaald (D-35) |

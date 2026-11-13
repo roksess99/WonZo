@@ -136,7 +136,9 @@
       "close": "Sluiten"
     },
     "unavailableTitle": "Dit product is even niet te laden",
-    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw."
+    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw.",
+    "promotionFlag": "{percent}% korting",
+    "promotionUntil": "Actie tot {date}"
   },
   "cart": {
     "title": "Winkelwagen",
@@ -169,6 +171,23 @@
     "summaryTitle": "Overzicht",
     "subtotal": "Subtotaal ({count} artikelen)",
     "subtotalOne": "Subtotaal (1 artikel)",
+    "discount": "Kortingscode {code}",
+    "codeLabel": "Kortingscode",
+    "codeApply": "Toepassen",
+    "codeRemove": "Code verwijderen",
+    "codeApplied": "Code {code}: {percent} korting op de artikelen.",
+    "codeLimited": "Bij sommige artikelen is de korting kleiner: lager kan hun prijs niet.",
+    "codeSkipped": "Artikelen die al in de actie zijn, tellen niet mee.",
+    "codeChecking": "Code wordt gecontroleerd…",
+    "codeRefused": {
+      "unknown": "Code {code} kennen we niet. Controleer de schrijfwijze.",
+      "ended": "Code {code} is verlopen.",
+      "exhausted": "Code {code} is al zo vaak gebruikt als kon.",
+      "used": "Je hebt code {code} al eens gebruikt. Hij geldt één keer per klant.",
+      "min-subtotal": "Code {code} geldt vanaf {amount} aan artikelen.",
+      "promoted-only": "Code {code} geldt niet voor artikelen die al in de actie zijn.",
+      "try-later": "De code kan nu niet worden gecontroleerd. Probeer het over een paar minuten opnieuw."
+    },
     "shipping": "Verzendkosten",
     "shippingLarge": "Verzendkosten grote artikelen",
     "shippingFree": "Gratis",
@@ -230,7 +249,8 @@
     "rateLimited": "Te veel pogingen achter elkaar. Probeer het over een paar minuten opnieuw.",
     "unavailable": "We kunnen de producten nu even niet controleren. Probeer het over een paar minuten opnieuw.",
     "backToCart": "Terug naar je winkelwagen",
-    "termsLink": "algemene voorwaarden"
+    "termsLink": "algemene voorwaarden",
+    "codeProblem": "Je bestelling is nog niet geplaatst: {reason}"
   },
   "order": {
     "metaTitle": "Je bestelling",
@@ -348,6 +368,7 @@
     "line": "{quantity} × {name}",
     "lineSub": "{price} per stuk · artikelnummer {sku}",
     "subtotal": "Subtotaal",
+    "discount": "Kortingscode {code}",
     "shipping": "Verzendkosten",
     "shippingFree": "Gratis",
     "shippingLarge": "Verzending grote artikelen",

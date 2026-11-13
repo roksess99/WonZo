@@ -2,7 +2,7 @@
 
 import type { Locale } from "@/lib/i18n/config";
 import { fromDecimal, MoneyError } from "@/lib/money";
-import { sellingPrice } from "@/lib/pricing";
+import { NO_RULES, priceProduct, type PriceInput, type PriceOutcome, type PriceRules, type Promotion } from "@/lib/pricing/rules";
 import { htmlToParagraphs, slugify } from "@/lib/text";
 import { chooseOffer, deliveryFor } from "../delivery";
 import { select, type Verdict } from "../selection";
@@ -22,9 +22,14 @@ export type SupplierRecord = {
   brand: string | null;
 };
 
-export type MapResult = { product: Product; verdict: Verdict } | { product: null; verdict: Verdict };
+/** `priceInput` is server-side only (D-16: the purchase price never reaches the shop's browser). */
+export type MapResult = { product: Product; verdict: Verdict; pricing: PriceOutcome; priceInput: PriceInput } | { product: null; verdict: Verdict };
 
-export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
+/** What the price rule needs (src/lib/pricing/rules.ts). Without it: no rule, no promotion — the advised price. */
+export type PricingContext = { rules: PriceRules; promotions: readonly Promotion[]; now: Date };
+const NO_PRICING: PricingContext = { rules: NO_RULES, promotions: [], now: new Date(0) };
+
+export function toProduct(locale: Locale, r: SupplierRecord, pricingContext: PricingContext = NO_PRICING): MapResult {
   const offer = chooseOffer(r.stock?.stocks ?? []);
   const manufacturer = r.compliance?.generalProductSafetyRegulations?.[0] ?? null;
   const names = Object.values(r.info).map((i) => i!.name);
@@ -41,11 +46,32 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
   });
   const info = r.info[locale];
   if (!verdict.allowed || !offer || !info || !r.shipping) return { product: null, verdict };
+  // BigBuy's taxRate is its Spanish rate: 21, 10 and 4 in the assortment's groups
+  // (GEMETEN 2026-10-05, tmp/catalog-explore). The Dutch rate for this assortment is
+  // 21 % (AANNAME until the bookkeeper confirms, D-15). Another rate is not shown,
+  // priced or invoiced: the owner looks first (D-03).
+  if (r.product.taxRate !== 21) return { product: null, verdict: { allowed: false, reasons: [`btw-tarief van de leverancier ${r.product.taxRate} %, niet 21 %`] } };
 
-  let price;
+  const vatRateBasisPoints = Math.round(r.product.taxRate * 100);
+  let pricing: PriceOutcome;
+  let priceInput: PriceInput;
   let shippingAlone;
   try {
-    price = sellingPrice(fromDecimal(r.product.retailPrice));
+    // The purchase price is in view here and nowhere after (docs/PRIJZEN.md § 2): the floor is guarded in this one place.
+    priceInput = {
+      productId: String(r.product.id),
+      categoryKey: verdict.categoryKey,
+      subcategoryKey: verdict.subcategoryKey,
+      costExcl: fromDecimal(r.product.wholesalePrice),
+      advisedExcl: fromDecimal(r.product.retailPrice),
+      vatRateBp: vatRateBasisPoints,
+    };
+    pricing = priceProduct(
+      priceInput,
+      pricingContext.rules,
+      pricingContext.promotions,
+      pricingContext.now,
+    );
     shippingAlone = fromDecimal(r.shipping.cost);
   } catch (err) {
     if (err instanceof MoneyError) return { product: null, verdict: { allowed: false, reasons: [`ongeldige prijs: ${err.message}`] } };
@@ -67,6 +93,8 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
 
   return {
     verdict,
+    pricing,
+    priceInput,
     product: {
       id: String(r.product.id),
       source: "bigbuy",
@@ -75,8 +103,9 @@ export function toProduct(locale: Locale, r: SupplierRecord): MapResult {
       brand: r.brand,
       sku: r.product.sku,
       ean: r.product.ean13 || null,
-      price,
-      vatRateBasisPoints: Math.round(r.product.taxRate * 100),
+      price: pricing.price,
+      promotion: pricing.promotion ? { id: pricing.promotion.id, listPrice: pricing.listPrice, shownPercent: pricing.promotion.shownPercent, endsAt: pricing.promotion.endsAt.toISOString() } : null,
+      vatRateBasisPoints,
       availability: "in_stock",
       stock: offer.quantity,
       offerId: `${r.product.id}:${offer.warehouse}:${offer.minHandlingDays}-${offer.maxHandlingDays}`,

@@ -70,9 +70,12 @@ prijs, en een link naar de bestelling in het beheerpaneel.
 **De melding dat een inkoop mislukte of onbekend is** is de belangrijke: daar
 moet een mens iets mee. Ze zegt welke bestelling, wat de leverancier
 antwoordde (of dat er geen antwoord kwam), of de klant al betaald heeft, en
-een link naar de bestelling. Wat de beheerder daarna kan doen (D-04): de
-prijs goedkeuren, opnieuw proberen na 24 uur, of annuleren en terugbetalen —
-in het beheerpaneel.
+een link naar de bestelling. Bij een weigering zegt ze ook wat te doen: het
+tegoed bij BigBuy opwaarderen, want na 24 uur wordt de bestelling vanzelf
+geannuleerd en terugbetaald; daarna volgt een mail dat dat gebeurd is (D-04,
+gebruiker 2026-11-13). Wat de beheerder verder kan doen: de prijs goedkeuren,
+of — waar niet vanzelf wordt terugbetaald — opnieuw proberen of annuleren en
+terugbetalen, in het beheerpaneel.
 
 ---
 

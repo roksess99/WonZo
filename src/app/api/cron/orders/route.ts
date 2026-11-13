@@ -4,7 +4,8 @@
 // (src/lib/orders/tracking.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
 // (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
-// (src/lib/mail/worker.ts), and tidying the rate limit and the admin
+// (src/lib/mail/worker.ts), recording our selling prices
+// (src/lib/discounts/history.ts), and tidying the rate limit and the admin
 // sessions past their time (.claude/rules/beveiliging.md § Sessies). Bearer
 // JOB_TOKEN; one run at a time (GET_LOCK), so two calls never work double
 // (.claude/rules/beveiliging.md § Geplande taken).
@@ -20,9 +21,10 @@ import { runTracking } from "@/lib/orders/tracking";
 import { runInvoicing } from "@/lib/invoices";
 import { settleReturns } from "@/lib/returns";
 import { runReviewInvites } from "@/lib/reviews";
+import { recordPrices } from "@/lib/discounts/history";
 import { defaultMail } from "@/lib/mail";
 import { sendDueMail } from "@/lib/mail/worker";
-import { expireUnpaidOrders, reconcile } from "@/lib/payments";
+import { expireUnpaidOrders, reconcile, submitRefund } from "@/lib/payments";
 import { defaultProvider } from "@/lib/payments/mollie";
 
 export async function POST(request: Request): Promise<Response> {
@@ -42,6 +44,9 @@ export async function POST(request: Request): Promise<Response> {
       const released = await releaseClosedWindows(now);
       // Purchasing at the supplier (D-04); with SUPPLIER_ORDERING off only the drafts.
       const purchasing = await runPurchasing(defaultOrdering(), now);
+      // Orders BigBuy refused for 24 hours were cancelled (D-04, user 2026-11-13): their refunds go to Mollie now.
+      // Without a key they stay REQUESTED; submitRefund itself handles no answer (UNKNOWN) and a refusal (alert).
+      if (provider) for (const id of purchasing.refunds) await submitRefund(id, provider, now);
       // Where the parcels are: shipped, delivered (D-09: the withdrawal window runs from the delivery).
       const tracked = await runTracking(defaultOrdering(), now);
       // Invitations to review, 7 days after the delivery (D-12); sent below with the other mail.
@@ -61,6 +66,11 @@ export async function POST(request: Request): Promise<Response> {
         console.error("[cron/orders] mail: bad config");
       }
       const mailed = await sendDueMail(mail?.sender ?? null, mail?.config ?? null, now);
+      // Our selling prices over time, for a "was" price later (docs/PRIJZEN.md § 2): a row only when one changed.
+      const prices = await recordPrices(now).catch((err: unknown) => {
+        console.error("[cron/orders] prices", (err as { code?: unknown }).code ?? (err instanceof Error ? err.name : "unknown"));
+        return 0;
+      });
       const pruned = await pruneRateLimits(now);
       const sessionsPruned = await pruneAdminSessions(now);
       return json(200, {
@@ -68,6 +78,7 @@ export async function POST(request: Request): Promise<Response> {
         released: released.released.length,
         purchaseDrafts: purchasing.drafts,
         purchased: purchasing.outcomes.filter((o) => o === "placed").length,
+        purchaseRefunded: purchasing.refunds.length,
         shipped: tracked.shipped,
         delivered: tracked.delivered,
         invoices: invoicing.invoices,
@@ -76,6 +87,7 @@ export async function POST(request: Request): Promise<Response> {
         reviewInvites: invites,
         cancelled: expired.cancelled.length,
         ...reconciled,
+        pricesRecorded: prices,
         mailSent: mailed.sent,
         mailFailed: mailed.failed,
         pruned,

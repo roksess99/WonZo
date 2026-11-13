@@ -240,7 +240,9 @@ Waarneming:
   ((55,79 − 18,22) / 55,79 = 67 %); als de adviesprijs incl. 21 % btw was,
   zou de echte marge 60 % zijn. Wat ertegen pleit: een adviesprijs voor de
   consument is gebruikelijk incl. btw, en de voetnoot zegt het niet per
-  bedrag. **Laten bevestigen door BigBuy** (`docs/api/VRAGEN.md` vraag 1).
+  bedrag. **Bevestigd door BigBuy (2026-11-02, ticket A): `wholesalePrice`
+  en `retailPrice` zijn allebei exclusief btw** (`docs/api/VRAGEN.md`
+  vraag 1).
 - Gevolg zolang het niet bevestigd is: een verkoopprijs afleiden van
   `retailPrice` kan 21 % te laag uitvallen — precies de fout uit het vorige
   project, andersom. Raakt D-03.

@@ -45,6 +45,9 @@ const REQUIRED_FILES = [
 const DECISION_STATUSES = ['OPEN', 'BLOCKED', 'READY', 'DECIDED', 'SUPERSEDED'];
 const META_PLACEHOLDERS = new Set(['NAAM']); // notation examples, not fill-ins
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.next', 'dist', 'build', 'coverage']);
+// Vendored claude-seo (MIT, upstream AgriciDaniel/claude-seo): kept identical to
+// upstream so an update is a plain copy; its prose follows its own conventions.
+const VENDORED = /^\.claude\/(skills\/(seo(-[a-z-]+)?\/|CLAUDE-SEO-LICENSE$)|agents\/seo-[a-z-]+\.md$)/;
 
 // ---------------------------------------------------------------- reporting
 
@@ -96,7 +99,10 @@ function existsExact(relPath) {
   return true;
 }
 
-const ALL_FILES = walk(ROOT).map(rel).sort();
+const ALL_FILES = walk(ROOT)
+  .map(rel)
+  .filter((f) => !VENDORED.test(f))
+  .sort();
 const MD_FILES = ALL_FILES.filter((f) => f.endsWith('.md'));
 const TEXT_FILES = ALL_FILES.filter((f) => /\.(md|json|ya?ml|example)$/.test(f) || f === '.gitignore');
 

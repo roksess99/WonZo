@@ -37,7 +37,7 @@ const order = (o: Partial<ReturnableOrder> = {}): ReturnableOrder => ({
 
 describe("what a return gives back at most (docs/RETOUREN.md § De vier redenen)", () => {
   it("part of the order without a reason: the pieces, no shipping — € 18,50", () => {
-    expect(quoteReturn(order(), [{ lineNo: 1, quantity: 1, reason: "none" }], now)).toEqual({ ok: true, lines: money(1850), shipping: money(0), total: money(1850), wholeOrder: false });
+    expect(quoteReturn(order(), [{ lineNo: 1, quantity: 1, reason: "none" }], now)).toMatchObject({ ok: true, lines: money(1850), shipping: money(0), total: money(1850), wholeOrder: false });
   });
   it("a large item that arrived damaged: its own shipping back too — € 117,96", () => {
     expect(quoteReturn(order(), [{ lineNo: 2, quantity: 1, reason: "damaged" }], now)).toMatchObject({ ok: true, lines: money(9999), shipping: money(1797), total: money(11796) });
@@ -47,11 +47,11 @@ describe("what a return gives back at most (docs/RETOUREN.md § De vier redenen)
   });
   it("everything back: all shipping of the order — € 154,96", () => {
     const q = quoteReturn(order(), [{ lineNo: 1, quantity: 2, reason: "none" }, { lineNo: 2, quantity: 1, reason: "none" }], now);
-    expect(q).toEqual({ ok: true, lines: money(13699), shipping: money(1797), total: money(15496), wholeOrder: true });
+    expect(q).toMatchObject({ ok: true, lines: money(13699), shipping: money(1797), total: money(15496), wholeOrder: true });
   });
   it("the rest after an earlier return: shipping that one counted is not given twice — € 37,00", () => {
     const after = order({ lines: [order().lines[0]!, { ...order().lines[1]!, returned: 1 }], earlierShipping: money(1797) });
-    expect(quoteReturn(after, [{ lineNo: 1, quantity: 2, reason: "none" }], now)).toEqual({ ok: true, lines: money(3700), shipping: money(0), total: money(3700), wholeOrder: true });
+    expect(quoteReturn(after, [{ lineNo: 1, quantity: 2, reason: "none" }], now)).toMatchObject({ ok: true, lines: money(3700), shipping: money(0), total: money(3700), wholeOrder: true });
   });
   it("the € 24,45 order, all back: € 18,50 + € 5,95", () => {
     const small: ReturnableOrder = { lines: [{ lineNo: 1, bought: 1, returned: 0, unitPrice: money(1850), largeShipping: null }], shippingStandard: money(595), earlierShipping: money(0), deliveredAt: null };

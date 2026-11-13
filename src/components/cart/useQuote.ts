@@ -9,23 +9,24 @@ export type QuoteResult = { kind: "ok"; quote: CartQuote } | { kind: "error" } |
 
 /**
  * What the cart costs now, from the server (POST /api/cart), recalculated on
- * every change. Shared by the cart and the checkout, so both show the same
+ * every change, with the discount code when there is one. Shared by the cart and the checkout, so both show the same
  * amount. While a change is recalculated the last good quote stays, so the
  * page does not jump.
  */
-export function useQuote(lines: CartLine[] | null, locale: Locale) {
+export function useQuote(lines: CartLine[] | null, locale: Locale, code: string | null = null) {
   const [result, setResult] = useState<{ key: string; value: QuoteResult } | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const key = lines ? JSON.stringify(lines) : "";
+  const key = lines ? JSON.stringify([lines, code ?? ""]) : "";
 
   useEffect(() => {
     if (!lines || lines.length === 0) return;
     const controller = new AbortController();
-    const requestKey = JSON.stringify(lines);
+    const requestKey = JSON.stringify([lines, code ?? ""]);
     fetch("/api/cart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locale, lines }),
+      // The code text only; what it is worth, the server says (.claude/rules/geld.md).
+      body: JSON.stringify({ locale, lines, ...(code ? { code } : {}) }),
       signal: controller.signal,
     })
       .then(async (res) => {
@@ -38,7 +39,7 @@ export function useQuote(lines: CartLine[] | null, locale: Locale) {
         setResult({ key: requestKey, value: { kind: "error" } });
       });
     return () => controller.abort();
-  }, [lines, locale, attempt]);
+  }, [lines, locale, code, attempt]);
 
   const current = result?.key === key ? result.value : null;
   const quote = current?.kind === "ok" ? current.quote : result?.value.kind === "ok" ? result.value.quote : null;

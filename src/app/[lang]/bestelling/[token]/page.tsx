@@ -168,6 +168,12 @@ export default async function OrderPage({ params }: PageProps<"/[lang]/bestellin
               <dt>{itemCount === 1 ? m.cart.subtotalOne : interpolate(m.cart.subtotal, { count: itemCount })}</dt>
               <dd>{formatMoney(o.subtotal)}</dd>
             </div>
+            {o.discount.amount > 0 ? (
+              <div className="flex justify-between gap-4">
+                <dt>{interpolate(m.cart.discount, { code: o.discountCode ?? "" })}</dt>
+                <dd>−{formatMoney(o.discount)}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4">
               <dt>{m.cart.shipping}</dt>
               <dd>{o.shippingStandard.amount === 0 ? m.cart.shippingFree : formatMoney(o.shippingStandard)}</dd>

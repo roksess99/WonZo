@@ -9,6 +9,7 @@ import { fromDbTime, selectRows, toDbTime, type Connection, type Queryable } fro
 import type { Locale } from "@/lib/i18n/config";
 import { money, type Money } from "@/lib/money";
 import type { CustomerDetails } from "./customer";
+import { redeemOrderCode } from "@/lib/discounts/codes";
 import { enqueue } from "./outbox";
 import type { Snapshot } from "./snapshot";
 import { blockedByHold, canTransition, CANCEL_WINDOW_MS, EFFECTS, insideCancelWindow, isOrderStatus, SNAPSHOT_VALID_MS, type Actor, type OrderStatus } from "./states";
@@ -38,12 +39,12 @@ export async function insertOrder(
   const [result] = await conn.query(
     `INSERT INTO orders (reference, checkout_attempt_id, request_hash, status, locale, currency,
        email, phone, first_name, last_name, street, house_number, postcode, city, country,
-       subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents, snapshot_expires_at, created_at)
-     VALUES (?, ?, ?, 'PENDING_PAYMENT', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       subtotal_cents, discount_code_id, discount_code, discount_cents, shipping_standard_cents, shipping_large_cents, total_cents, snapshot_expires_at, created_at)
+     VALUES (?, ?, ?, 'PENDING_PAYMENT', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       o.reference, o.checkoutAttemptId, o.requestHash, o.locale, s.currency,
       c.email, c.phone, c.firstName, c.lastName, c.street, c.houseNumber, c.postcode, c.city, c.country,
-      s.subtotal.amount, s.shippingStandard.amount, s.shippingLarge.amount, s.total.amount,
+      s.subtotal.amount, s.code?.id ?? null, s.code?.text ?? null, s.discount.amount, s.shippingStandard.amount, s.shippingLarge.amount, s.total.amount,
       toDbTime(new Date(o.now.getTime() + SNAPSHOT_VALID_MS)), toDbTime(o.now),
     ],
   );
@@ -51,12 +52,12 @@ export async function insertOrder(
   for (const l of s.lines) {
     await conn.query(
       `INSERT INTO order_lines (order_id, line_no, source, product_id, offer_id, name, brand, sku, quantity,
-         unit_price_cents, line_total_cents, vat_rate_bp, large_shipping_cents, supplier_cost_cents, supplier_cost_currency,
+         unit_price_cents, list_price_cents, promotion_id, line_total_cents, code_discount_cents, vat_rate_bp, large_shipping_cents, supplier_cost_cents, supplier_cost_currency,
          min_days, max_days, ships_from)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, l.lineNo, l.source, l.productId, l.offerId, l.name, l.brand, l.sku, l.quantity,
-        l.unitPrice.amount, l.lineTotal.amount, l.vatRateBasisPoints, l.largeShipping?.amount ?? null,
+        l.unitPrice.amount, l.listPrice.amount, l.promotionId, l.lineTotal.amount, l.codeDiscount.amount, l.vatRateBasisPoints, l.largeShipping?.amount ?? null,
         l.supplierCost.amount, l.supplierCost.currency, l.minDays, l.maxDays, l.shipsFrom,
       ],
     );
@@ -124,6 +125,12 @@ export async function transitionOrder(
   ]);
   for (const kind of EFFECTS[t.to] ?? []) {
     await enqueue(conn, kind, `order:${t.orderId}`, { orderId: t.orderId, reference: row.reference }, t.now);
+  }
+  if (t.to === "PAID") {
+    // The code is used only now that it is paid (docs/PRIJZEN.md § 3). Another paid order was first
+    // (the same customer, or the maximum reached): held for the owner, never a silent extra discount.
+    const code = await redeemOrderCode(conn, t.orderId, t.now);
+    if (code === "used" || code === "exhausted") await setHold(conn, t.orderId, code === "used" ? "CODE_USED" : "CODE_EXHAUSTED", t.actor, t.now);
   }
   return { changed: true, from };
 }

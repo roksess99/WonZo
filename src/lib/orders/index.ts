@@ -8,6 +8,8 @@ import { parseQuoteRequest, quoteCart, type CartQuote } from "@/lib/cart/quote";
 import { getCatalog, getSupplierCosts, SupplierUnavailableError } from "@/lib/catalog/provider";
 import { amsterdamYear, nextNumber, orderReference } from "@/lib/db/counters";
 import { getPool, isDuplicateKey, withTransaction } from "@/lib/db";
+import { codeFloors, lookupCode } from "@/lib/discounts/codes";
+import type { CodeRefusal } from "@/lib/pricing/codes";
 import { parseCustomer, type CustomerField, type FieldError } from "./customer";
 import { freeze, requestHash } from "./snapshot";
 import { ConcurrentChangeError, findByCheckoutAttempt, insertOrder, issueAccessToken, ordersWithClosedWindow, transitionOrder, TransitionError } from "./store";
@@ -19,6 +21,8 @@ export type PlaceOrderResult =
   | { kind: "invalid"; error?: string; fields?: Partial<Record<CustomerField, FieldError>> }
   /** Something changed since the cart page (sold out, less stock): show the quote, nothing stored. */
   | { kind: "not-ready"; quote: CartQuote }
+  /** The code does not apply (any more, or not for this customer): never paid without it unwarned (docs/PRIJZEN.md § 3). */
+  | { kind: "code-refused"; reason: CodeRefusal; quote: CartQuote }
   /** The same checkout key with other content (docs/IDEMPOTENCY.md): 409. */
   | { kind: "conflict" }
   | { kind: "unavailable" };
@@ -30,8 +34,10 @@ export const newCheckoutAttemptId = (): string => randomUUID();
 
 /**
  * Places an order from what the browser may send: the checkout key, the
- * cart lines (references only), the language and the customer details. Every
- * amount comes from the server's own quote (.claude/rules/geld.md).
+ * cart lines (references only), the language, the customer details and the
+ * text of a discount code. Every amount comes from the server's own quote
+ * (.claude/rules/geld.md); the code is checked again here, with the
+ * customer's address for "once per customer" (docs/PRIJZEN.md § 3).
  */
 export async function placeOrder(input: unknown, now: Date = new Date()): Promise<PlaceOrderResult> {
   const body = typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {};
@@ -43,7 +49,8 @@ export async function placeOrder(input: unknown, now: Date = new Date()): Promis
   const customer = parseCustomer(body.customer);
   if (!customer.ok) return { kind: "invalid", fields: customer.errors };
   const { locale, lines } = parsed.request;
-  const hash = requestHash(locale, lines, customer.customer);
+  const codeText = typeof body.discountCode === "string" && body.discountCode.trim() !== "" ? body.discountCode.trim().toUpperCase().slice(0, 64) : null;
+  const hash = requestHash(locale, lines, customer.customer, codeText);
 
   // The same key again (a double click, a retry after a lost answer): the
   // same order, without quoting again.
@@ -64,8 +71,10 @@ export async function placeOrder(input: unknown, now: Date = new Date()): Promis
     if (err instanceof SupplierUnavailableError) return { kind: "unavailable" };
     throw err;
   }
-  const quote = quoteCart(lines, products);
+  const code = codeText ? { lookup: await lookupCode(getPool(), codeText, now, customer.customer.email), floors: await codeFloors(locale) } : undefined;
+  const quote = quoteCart(lines, products, undefined, code);
   if (!quote.readyForCheckout) return { kind: "not-ready", quote };
+  if (quote.code?.kind === "refused") return { kind: "code-refused", reason: quote.code.reason, quote };
   // The total the customer saw, sent along only as a check: a price that
   // changed in between is shown before paying, never charged silently
   // (docs/SCHERMEN.md § Afrekenen). The amount itself is always ours.

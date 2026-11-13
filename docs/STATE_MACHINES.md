@@ -70,6 +70,7 @@ Daarnaast een **hold-vlag** (`holdReason`, bijv. `AMOUNT_MISMATCH`,
 | `PAID` | `FULFILLMENT_PENDING` | admin / system | geen hold; het annuleervenster van 30 minuten is voorbij (D-04) | outbox: inkoop, factuur (D-21: de factuur pas na het venster) |
 | `PAID` | `CANCELLED` | customer | binnen het annuleervenster (D-04); refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; mail — geen creditnota, want er is nog geen factuur |
 | `PAID`, `FULFILLMENT_PENDING` | `CANCELLED` | admin | refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; creditnota bij `SUCCEEDED` als er een factuur was; mail |
+| `FULFILLMENT_PENDING` | `CANCELLED` | system | inkopen 24 uur geweigerd, niets (mogelijk) bij de leverancier, geen hold (D-04, gebruiker 2026-11-13); refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; creditnota als er een factuur was; mail; melding aan de beheerder |
 | `FULFILLMENT_PENDING` | `PURCHASED` | admin / system | alle inkooporders `PLACED` | mail optioneel |
 | `FULFILLMENT_PENDING`, `PURCHASED` | `PARTIALLY_FULFILLED` | admin / system | één inkooporder `REJECTED` of deels verzonden | alert; beheerder kiest: vervangen of deel terugbetalen |
 | `PURCHASED`, `PARTIALLY_FULFILLED` | `SHIPPED` | admin / provider | alle inkooporders verzonden | mail "onderweg" |
@@ -223,7 +224,8 @@ uit D-04 (hogere autoriteit) en gemeld aan de eigenaar: `REJECTED →
 SUBMITTING` bestaat (opnieuw proberen met dezelfde referentie), en de order
 blijft `FULFILLMENT_PENDING` zolang er nog niets bij de leverancier is — pas
 als een deel geplaatst is en een ander deel niet, is hij `PARTIALLY_FULFILLED`.
-Zo kan de eigenaar na 24 uur nog annuleren en terugbetalen. Een order waarvan
+Zo kan er na 24 uur nog geannuleerd en terugbetaald worden (sinds 2026-11-13
+vanzelf, D-04). Een order waarvan
 een inkooporder (mogelijk) bij de leverancier is (`SUBMITTING`, `UNKNOWN`,
 `PLACED` …) annuleert het paneel niet. Is BigBuy meer dan 10 % duurder dan de
 bevroren inkoopprijs, dan blijft de inkooporder `DRAFT` met een reden en
@@ -234,5 +236,7 @@ beheerder kiest een andere aanbieding (nieuwe `DRAFT`, prijsverschil zichtbaar)
 of betaalt het deel terug (refund-flow). De klant krijgt bericht. Bij WonZo is
 de waarschijnlijke oorzaak te weinig tegoed bij de leverancier: dan krijgt de
 eigenaar meteen een melding en probeert de winkel het 24 uur opnieuw met
-dezelfde eigen referentie; daarna kiest de eigenaar tussen opnieuw proberen en
-terugbetalen (D-04).
+dezelfde eigen referentie; daarna annuleert de winkel de bestelling en betaalt
+hij alles terug (D-04, gebruiker 2026-11-13). Is er al iets bij de leverancier
+of staat er een hold op de bestelling, dan kiest de eigenaar tussen opnieuw
+proberen en terugbetalen.

@@ -93,6 +93,12 @@ wilt beantwoorden.
 de regels), zodat de vergoeding per btw-tarief klopt. **Verzendkosten** krijgen
 btw volgens D-15.
 
+Gebouwd (2026-11-02): de regeltotalen op de factuur zijn ná de code, en onder
+de naam van de regel staat het aandeel ("Kortingscode WELKOM10: −€ 3,00 incl.
+btw"); de btw gaat uit wat er voor de regel betaald is. Een creditnota voor
+een retour trekt het aandeel van de teruggestuurde stuks af, zoals het bij het
+aanmelden is vastgelegd.
+
 **Groepeer per btw-tarief.** Zelfs als je nu één tarief hebt: bouw het alsof er
 twee kunnen zijn. Een assortiment dat uitbreidt met iets van 9% breekt anders
 de hele factuur.

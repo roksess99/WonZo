@@ -39,7 +39,13 @@ export function ProductCard({ product, locale, m, priority }: Props) {
           <TruckIcon className="size-4" />
           {t(m.product.delivery, { min: product.delivery.minWorkingDays, max: product.delivery.maxWorkingDays })}
         </p>
-        <p className="pt-1 text-price font-bold tabular-nums">{formatMoney(product.price)}</p>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
+          <span className="text-price font-bold tabular-nums">{formatMoney(product.price)}</span>
+          {/* The discount actually given, rounded down (docs/PRIJZEN.md § 2); no "was" price without 30 days of history. */}
+          {product.promotion && product.promotion.shownPercent > 0 ? (
+            <span className="rounded-sm bg-brand-soft px-2 py-0.5 text-body-sm font-bold text-foreground ring-1 ring-border">{t(m.product.promotionFlag, { percent: product.promotion.shownPercent })}</span>
+          ) : null}
+        </p>
       </div>
     </article>
   );

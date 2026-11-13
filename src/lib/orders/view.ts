@@ -26,8 +26,12 @@ export type OrderView = {
   payment: PaymentStatus | null;
   refunds: { status: RefundStatus; amount: Money }[];
   customer: CustomerDetails;
-  lines: { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null; vatRateBp: number }[];
+  /** `discount`: the line's share of the discount code (D-15). */
+  lines: { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; discount: Money; largeShipping: Money | null; vatRateBp: number }[];
   subtotal: Money;
+  /** The discount code and what it took off; null and zero without one. */
+  discountCode: string | null;
+  discount: Money;
   shippingStandard: Money;
   shippingLarge: Money;
   total: Money;
@@ -39,14 +43,14 @@ export async function readOrderView(db: Queryable, orderId: number, now: Date = 
     db,
     `SELECT reference, status, hold_reason, locale, created_at, paid_at, snapshot_expires_at, cancel_window_ends_at,
             email, phone, first_name, last_name, street, house_number, postcode, city, country,
-            subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents
+            subtotal_cents, discount_code, discount_cents, shipping_standard_cents, shipping_large_cents, total_cents
        FROM orders WHERE id = ?`,
     [orderId],
   );
   if (!o || typeof o.status !== "string" || !isOrderStatus(o.status)) return null;
   const lines = await selectRows<Record<string, string | number | null>>(
     db,
-    "SELECT name, sku, quantity, unit_price_cents, line_total_cents, large_shipping_cents, vat_rate_bp, min_days, max_days, ships_from FROM order_lines WHERE order_id = ? ORDER BY line_no",
+    "SELECT name, sku, quantity, unit_price_cents, line_total_cents, code_discount_cents, large_shipping_cents, vat_rate_bp, min_days, max_days, ships_from FROM order_lines WHERE order_id = ? ORDER BY line_no",
     [orderId],
   );
   const [payment] = await selectRows<{ status: string }>(db, "SELECT status FROM payments WHERE order_id = ? ORDER BY created_at DESC, id DESC LIMIT 1", [orderId]);
@@ -80,10 +84,13 @@ export async function readOrderView(db: Queryable, orderId: number, now: Date = 
       quantity: Number(l.quantity),
       unitPrice: money(Number(l.unit_price_cents)),
       lineTotal: money(Number(l.line_total_cents)),
+      discount: money(Number(l.code_discount_cents)),
       largeShipping: l.large_shipping_cents === null ? null : money(Number(l.large_shipping_cents)),
       vatRateBp: Number(l.vat_rate_bp),
     })),
     subtotal: money(Number(o.subtotal_cents)),
+    discountCode: o.discount_code === null ? null : String(o.discount_code),
+    discount: money(Number(o.discount_cents)),
     shippingStandard: money(Number(o.shipping_standard_cents)),
     shippingLarge: money(Number(o.shipping_large_cents)),
     total: money(Number(o.total_cents)),

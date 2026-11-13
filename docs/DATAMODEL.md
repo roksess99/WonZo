@@ -40,8 +40,8 @@ OrderLine {
   productId, source, supplierOfferId,        // welke aanbieding — voor de inkoop
   name, brand, sku, supplierSku,
   quantity,
-  unitPriceCents,                            // incl. btw, vóór korting
-  discountCents, discountRuleId?,            // toegepast, niet gevraagd
+  unitPriceCents,                            // incl. btw, wat de klant betaalde (na een actie)
+  listPriceCents, promotionId?,              // de prijs vóór de actie, en welke actie (gebouwd 2026-11-02)
   allocatedOrderDiscountCents,               // aandeel van een kortingscode (D-15)
   vatRateBasisPoints, vatCents,              // 2100 = 21,00 %
   lineTotalCents,
@@ -190,37 +190,66 @@ het document. Een creditnota bij elke terugbetaling, met verwijzing naar de
 oorspronkelijke factuur. Inhoud, nummerbeleid en wettelijke status:
 `docs/FACTUUR.md`. Een uitgereikte factuur wordt nooit gewijzigd.
 
-### DiscountRule en DiscountCode
+### PriceRules, Promotion en DiscountCode
 
-Een regel wijst een **groep** aan, geen lijst artikelen.
+**Prijsregel** (D-03, D-16; gebouwd 2026-11-02, migratie 0012):
+`price_settings` (één rij: standaardopslag of leeg, betaalkosten per stuk,
+een versienummer dat bij elke wijziging aan regels of acties omhoog gaat) en
+`price_markups` (een opslag per subcategorie, sleutel
+`categorie/subcategorie`). Rekenwerk: `src/lib/pricing/rules.ts`.
+
+**Actie** (`promotions`, D-08): wijst een categorie, een subcategorie of één
+artikel aan.
 
 | Veld | Opmerking |
 |---|---|
-| `scope`, `target` | product / groep / soort / familie, en welke |
-| `percent` | geldig bereik 1–95; daarbuiten geweigerd |
-| `startsAt`, `endsAt` | |
-| `disabledAt` | **stoppen is niet weggooien** |
+| `target_kind`, `target_key` | `category` / `subcategory` / `product`, en welke |
+| `percent_bp` | geldig bereik 1–95 %; daarbuiten geweigerd |
+| `starts_at`, `ends_at` | het einde hoort er niet meer bij |
+| `stopped_at`, `stopped_by` | **stoppen is niet weggooien**: het einde wordt "nu", de rij blijft |
 
-Codes: zie `docs/PRIJZEN.md` § Kortingscodes; gebruik in
-`discount_redemptions` met een unieke sleutel.
+**Kortingscode** (`discount_codes`, D-08; gebouwd 2026-11-02, migratie 0013):
+
+| Veld | Opmerking |
+|---|---|
+| `code` | hoofdletters, uniek — ook na het einde |
+| `percent_bp` | 1–95 % |
+| `min_subtotal_cents` | over de artikelen incl. btw; 0 is geen minimum |
+| `max_uses` | NULL is onbeperkt |
+| `starts_at`, `ends_at`, `stopped_at`, `stopped_by` | zoals bij een actie |
+
+**Gebruik** (`discount_redemptions`): één rij per betaalde bestelling met een
+code, uniek op (`code_id`, `email_hash`) — "één keer per klant" — en op
+`order_id`. Geschreven bij de overgang naar `PAID`, nooit eerder.
+
+In de bestelling: `orders.discount_code_id`, `discount_code` (de tekst),
+`discount_cents`; per regel `order_lines.code_discount_cents` (het aandeel,
+D-15; `line_total_cents` blijft vóór de code); per retourregel
+`return_lines.code_discount_cents`. Het totaal is subtotaal − korting +
+verzending.
 
 ### PriceHistory
 
 De basis voor de "van"-prijs en voor het reconstrueren van een prijs achteraf.
 Het gaat om **onze verkoopprijs**, niet de inkoopprijs van de leverancier.
 
+Gebouwd (2026-11-02, `price_history`, `src/lib/discounts/history.ts`): **een
+rij per wijziging**, niet per dag. De geplande taak vergelijkt elke ronde de
+prijzen met de laatste rij per artikel, en na elke wijziging in het paneel
+ook meteen.
+
 | Veld | Opmerking |
 |---|---|
-| `productId`, `source` | |
-| `priceCents`, `currency` | de verkoopprijs incl. btw zoals de klant hem zag, vóór actie |
-| `market` | land/kanaal als prijzen per markt verschillen (D-14) |
-| `observedAt` | tijdstip van de meting (UTC) |
-| `sourceOfObservation` | `scheduled_snapshot` / `price_rule_change` / `order` |
-| `ruleVersion?` | welke prijsregel gold |
+| `source`, `product_id` | |
+| `from_at` | vanaf wanneer deze prijs gold (UTC); sleutel met bron en artikel |
+| `price_cents`, `currency` | wat de klant betaalde, incl. btw (na een actie) |
+| `list_price_cents` | de prijs vóór een actie |
+| `basis` | `markup` of `advised` |
+| `promotion_id` | de actie, als die meedeed |
 
-Unieke sleutel `(productId, source, market, observedAt::date, sourceOfObservation)`
-voor de dagelijkse meting. Bewaartermijn: D-24 (minimaal de referentieperiode
-plus marge, langer als bewijs bij een geschil gewenst is).
+Eén markt (D-14), dus geen kolom voor de markt. Bewaartermijn: D-24
+(minimaal de referentieperiode plus marge, langer als bewijs bij een geschil
+gewenst is).
 
 ### Return
 

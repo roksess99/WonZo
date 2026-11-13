@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { connection } from "next/server";
 import { AddToCart } from "@/components/cart/AddToCart";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
@@ -44,6 +45,10 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/product/[s
   return pageMetadata(lang, paths, p.name, p.description[0] ?? p.name);
 }
 
+/** The end of a promotion as the visitor reads it: Dutch time, in the page's language. */
+const promotionEnd = (locale: Locale, iso: string) =>
+  new Intl.DateTimeFormat(locale === "nl" ? "nl-NL" : "en-GB", { timeZone: "Europe/Amsterdam", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
 function countryName(m: Messages, code: string) {
   return (m.countries as Record<string, string>)[code] ?? code;
 }
@@ -79,6 +84,8 @@ function productJsonLd(p: Product, url: string) {
 
 /** The product page: take away doubt (docs/SCHERMEN.md § Productpagina). */
 export default async function ProductPage({ params }: PageProps<"/[lang]/product/[slug]">) {
+  // Per request, never prerendered: price, stock and a promotion that starts or ends must be those of now (D-08).
+  await connection();
   const { lang, slug } = await params;
   if (!isLocale(lang)) notFound();
   const m = getMessages(lang);
@@ -133,9 +140,15 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
 
           {/* The buy block: price, stock, delivery, shipping and the button together (docs/SCHERMEN.md). */}
           <section aria-label={m.product.addToCart} className="flex flex-col gap-4 rounded-md bg-surface p-6 ring-1 ring-line">
-            <p className="flex flex-col">
-              <span className="text-h1 font-bold tabular-nums">{formatMoney(p.price)}</span>
+            <p className="flex flex-col gap-1">
+              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-h1 font-bold tabular-nums">{formatMoney(p.price)}</span>
+                {p.promotion && p.promotion.shownPercent > 0 ? (
+                  <span className="rounded-sm bg-brand-soft px-2 py-0.5 font-bold text-foreground ring-1 ring-border">{t(m.product.promotionFlag, { percent: p.promotion.shownPercent })}</span>
+                ) : null}
+              </span>
               <span className="text-body-sm text-muted">{m.product.inclVat}</span>
+              {p.promotion && p.promotion.shownPercent > 0 ? <span className="text-body-sm">{t(m.product.promotionUntil, { date: promotionEnd(lang, p.promotion.endsAt) })}</span> : null}
             </p>
             <ul className="flex flex-col gap-2">
               <li className="flex items-center gap-2 text-in-stock">

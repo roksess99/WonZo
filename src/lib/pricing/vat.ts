@@ -6,6 +6,8 @@
 // excl. Per line total, not per piece × quantity: 4 × € 2,97 = € 11,88 incl.
 // gives € 9,82 excl. (not 4 × € 2,45 = € 9,80). Shipping gets the rate of the
 // products; with more than one rate that is still open (D-15) and refused.
+// A discount code is spread over the lines first (src/lib/pricing/codes.ts):
+// each line's VAT comes out of what was paid for it.
 // Pure: order page, mail and invoice all call this.
 
 import { money, type Money } from "@/lib/money";
@@ -24,9 +26,11 @@ export function exclusive(incl: number, rateBp: number): number {
   return incl < 0 ? -abs : abs;
 }
 
-export type VatInputLine = { quantity: number; unitPrice: Money; lineTotal: Money; vatRateBp: number };
+/** `discount`: the line's share of a discount code (D-15), taken off the line total before the VAT comes out. */
+export type VatInputLine = { quantity: number; unitPrice: Money; lineTotal: Money; vatRateBp: number; discount?: Money };
 
-export type VatLine = { unitExcl: Money; unitIncl: Money; totalExcl: Money; totalIncl: Money; vat: Money; vatRateBp: number };
+/** `totalIncl` is what was paid for the line: the line total minus its code share (`discount`). */
+export type VatLine = { unitExcl: Money; unitIncl: Money; discount: Money; totalExcl: Money; totalIncl: Money; vat: Money; vatRateBp: number };
 
 export type VatBreakdown = {
   lines: VatLine[];
@@ -40,13 +44,18 @@ export type VatBreakdown = {
 
 export function vatBreakdown(lines: VatInputLine[], shippingIncl: Money): VatBreakdown {
   const out: VatLine[] = lines.map((l) => {
-    const totalExcl = exclusive(l.lineTotal.amount, l.vatRateBp);
+    const discount = l.discount?.amount ?? 0;
+    // A share larger than the line (or of the other sign, on a credit) can only be a bug in the data.
+    if (discount !== 0 && (Math.sign(discount) !== Math.sign(l.lineTotal.amount) || Math.abs(discount) > Math.abs(l.lineTotal.amount))) throw new Error(`code share ${discount} on a line of ${l.lineTotal.amount}`);
+    const paid = l.lineTotal.amount - discount;
+    const totalExcl = exclusive(paid, l.vatRateBp);
     return {
       unitIncl: l.unitPrice,
       unitExcl: money(exclusive(l.unitPrice.amount, l.vatRateBp)),
-      totalIncl: l.lineTotal,
+      discount: money(discount),
+      totalIncl: money(paid),
       totalExcl: money(totalExcl),
-      vat: money(l.lineTotal.amount - totalExcl),
+      vat: money(paid - totalExcl),
       vatRateBp: l.vatRateBp,
     };
   });

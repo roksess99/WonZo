@@ -12,7 +12,8 @@ import { interpolate } from "@/lib/text";
 import { block, companyLines, layout, textLayout, type RenderedMail } from "./layout";
 import { escapeHtml, link } from "./style";
 
-export type MailLine = { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; largeShipping: Money | null; vatRateBp: number };
+/** `discount`: the line's share of a discount code (D-15); the VAT is over what was paid. */
+export type MailLine = { name: string; sku: string; quantity: number; unitPrice: Money; lineTotal: Money; discount?: Money; largeShipping: Money | null; vatRateBp: number };
 
 export type OrderMailData = {
   locale: Locale;
@@ -20,6 +21,9 @@ export type OrderMailData = {
   createdAt: Date;
   lines: MailLine[];
   subtotal: Money;
+  /** A discount code and what it took off (D-08); absent or zero without one. */
+  discountCode?: string | null;
+  discount?: Money;
   shippingStandard: Money;
   shippingLarge: Money;
   total: Money;
@@ -63,6 +67,7 @@ function amounts(o: OrderMailData, m: Messages["mail"]) {
   }));
   const totals = [
     { left: m.subtotal, right: formatMoney(o.subtotal) },
+    ...(o.discount && o.discount.amount > 0 ? [{ left: interpolate(m.discount, { code: o.discountCode ?? "" }), right: `−${formatMoney(o.discount)}` }] : []),
     { left: m.shipping, right: o.shippingStandard.amount === 0 ? m.shippingFree : formatMoney(o.shippingStandard) },
     ...(o.shippingLarge.amount > 0 ? [{ left: m.shippingLarge, right: formatMoney(o.shippingLarge) }] : []),
     { left: m.total, right: formatMoney(o.total), bold: true },
@@ -208,6 +213,7 @@ export function alertKind(dedupeKey: string): AlertWhat {
   if (/^refund:.+:failed$/.test(dedupeKey)) return "refundFailed";
   if (/^supplier:.+:failed$/.test(dedupeKey)) return "supplierFailed";
   if (/^supplier:.+:gave-up$/.test(dedupeKey)) return "supplierGaveUp";
+  if (/^supplier:.+:refunded$/.test(dedupeKey)) return "supplierRefunded";
   if (/^supplier:.+:price:/.test(dedupeKey)) return "supplierPrice";
   if (/^supplier:.+:unknown$/.test(dedupeKey)) return "supplierUnknown";
   return "other";
@@ -220,10 +226,15 @@ export function adminAlert(a: { reference: string; kind: AlertWhat; detail: { re
   const subject = interpolate(m.alertSubject, { reference: a.reference, what });
   const intro = interpolate(m.alertIntro, { reference: a.reference, what });
   const paid = a.paid ? m.alertPaid : m.alertNotPaid;
+  // What to do, for the alerts that have a clear next step (e.g. top up the balance at BigBuy).
+  const todo = (m.alertTodo as Partial<Record<AlertWhat, string>>)[a.kind] ?? null;
   const footer = footerOf(m);
   return {
     subject,
-    html: layout({ lang: "nl", title: subject, preheader: intro, logoUrl, footer, body: [block.h1(m.alertTitle), block.p(escapeHtml(intro)), block.p(escapeHtml(paid)), block.button(adminUrl, m.open)].join("\n") }),
-    text: textLayout([m.alertTitle, "", intro, paid, "", `${m.open}: ${adminUrl}`], footer),
+    html: layout({
+      lang: "nl", title: subject, preheader: intro, logoUrl, footer,
+      body: [block.h1(m.alertTitle), block.p(escapeHtml(intro)), block.p(escapeHtml(paid)), ...(todo ? [block.p(escapeHtml(todo))] : []), block.button(adminUrl, m.open)].join("\n"),
+    }),
+    text: textLayout([m.alertTitle, "", intro, paid, ...(todo ? ["", todo] : []), "", `${m.open}: ${adminUrl}`], footer),
   };
 }

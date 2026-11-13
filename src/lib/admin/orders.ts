@@ -269,6 +269,9 @@ export type AdminOrder = {
     supplierCost: Money;
   }[];
   subtotal: Money;
+  /** The discount code and what it took off (D-08); spread over the lines (D-15). */
+  discountCode: string | null;
+  discount: Money;
   shippingStandard: Money;
   shippingLarge: Money;
   total: Money;
@@ -303,7 +306,7 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
     db,
     `SELECT id, reference, status, hold_reason, locale, currency, created_at, paid_at, snapshot_expires_at, cancel_window_ends_at, shipped_at, delivered_at,
             email, phone, first_name, last_name, street, house_number, postcode, city, country,
-            subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents
+            subtotal_cents, discount_code, discount_cents, shipping_standard_cents, shipping_large_cents, total_cents
        FROM orders WHERE id = ?`,
     [orderId],
   );
@@ -360,6 +363,8 @@ export async function readAdminOrder(db: Queryable, orderId: number): Promise<Ad
       };
     }),
     subtotal: money(n(o, "subtotal_cents")),
+    discountCode: o.discount_code === null ? null : s(o, "discount_code"),
+    discount: money(n(o, "discount_cents")),
     shippingStandard: money(n(o, "shipping_standard_cents")),
     shippingLarge: money(n(o, "shipping_large_cents")),
     total: money(n(o, "total_cents")),

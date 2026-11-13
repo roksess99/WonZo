@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { add, formatMoney, formatMoneyShort, fromDecimal, money, MoneyError } from "@/lib/money";
+import { sellingPrice } from "@/lib/pricing";
 
 describe("fromDecimal — exact conversion to cents", () => {
   it("converts numbers and strings the supplier sends (GEMETEN 2026-10-05: numbers; documented: strings)", () => {
@@ -41,5 +42,22 @@ describe("formatMoney — Dutch notation on every page (D-14)", () => {
   it("drops ,00 only for round amounts in running text", () => {
     expect(formatMoneyShort(money(5000)).replace(/\s/g, " ")).toBe("€ 50");
     expect(formatMoneyShort(money(595)).replace(/\s/g, " ")).toBe("€ 5,95");
+  });
+});
+
+describe("sellingPrice (until D-03): the advised price excluding VAT plus VAT", () => {
+  it("adds the VAT once, rounded half up to a cent", () => {
+    // By hand: € 15,29 × 1,21 = € 18,5009 → € 18,50; € 18,50 × 1,21 = € 22,385 → € 22,39 (half up);
+    // € 10,00 at 9 % = € 10,90; € 0,00 stays € 0,00.
+    expect(sellingPrice(money(1529), 2100)).toEqual(money(1850));
+    expect(sellingPrice(money(1850), 2100)).toEqual(money(2239));
+    expect(sellingPrice(money(1000), 900)).toEqual(money(1090));
+    expect(sellingPrice(money(0), 2100)).toEqual(money(0));
+  });
+  it("refuses what is not an amount or a rate", () => {
+    expect(() => sellingPrice({ amount: -1, currency: "EUR" }, 2100)).toThrow();
+    expect(() => sellingPrice({ amount: 12.5, currency: "EUR" }, 2100)).toThrow();
+    expect(() => sellingPrice(money(1000), -100)).toThrow();
+    expect(() => sellingPrice(money(1000), 21.5)).toThrow();
   });
 });

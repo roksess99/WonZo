@@ -51,6 +51,17 @@ describe("database rows → the same Product as the mock (one mapping, D-31)", (
     for (const id of [1300111, 1300125, 1300129]) expect(toProduct("nl", toSupplierRecord(rowsFor(id))).product).toBeNull();
   });
 
+  it("refuses a product with another VAT rate than 21 % (BigBuy also gives Spain's 10 and 4)", () => {
+    const rows = rowsFor(1300118);
+    rows.product = { ...rows.product, tax_rate: "10.00" };
+    expect(toProduct("nl", toSupplierRecord(rows))).toEqual({ product: null, verdict: { allowed: false, reasons: ["btw-tarief van de leverancier 10 %, niet 21 %"] } });
+  });
+
+  it("prices the advised price excluding VAT plus 21 %", () => {
+    // By hand: advised € 24,78 excl. × 1,21 = € 29,9838 → € 29,98.
+    expect(toProduct("nl", toSupplierRecord(rowsFor(1300118))).product?.price).toEqual({ amount: 2998, currency: "EUR" });
+  });
+
   it("converts cents back to the exact decimal", () => {
     expect(centsToDecimal(1822)).toBe("18.22");
     expect(centsToDecimal(5)).toBe("0.05");
