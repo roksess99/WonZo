@@ -409,6 +409,7 @@
     "examples": "Voorbeeld",
     "confirmation": "Bevestiging aan de klant",
     "cancelled": "Annulering aan de klant",
+    "cancelledUndeliverable": "Annulering aan de klant: niet leverbaar",
     "newOrder": "Melding nieuwe bestelling",
     "alert": "Melding: er vraagt iets aandacht",
     "subject": "Onderwerp",

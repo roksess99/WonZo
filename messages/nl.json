@@ -398,7 +398,13 @@
       "title": "Je bestelling is geannuleerd",
       "intro": "Je bestelling {reference} is geannuleerd.",
       "refund": "Je krijgt {amount} terug op de rekening of kaart waarmee je betaalde. Dat duurt meestal een paar werkdagen.",
-      "questions": "Vragen? Mail ons op {email}."
+      "questions": "Vragen? Mail ons op {email}.",
+      "undeliverable": {
+        "subject": "Bestelling {reference} geannuleerd: we konden niet leveren",
+        "preheader": "We konden je bestelling niet leveren. Je krijgt {amount} terug.",
+        "title": "We konden je bestelling niet leveren",
+        "intro": "Het spijt ons: we konden je bestelling {reference} niet bij onze leverancier bestellen. Daarom hebben we hem geannuleerd. Je hoeft zelf niets te doen."
+      }
     },
     "returnLink": "Iets terugsturen: {url}",
     "shipped": {

@@ -10,7 +10,7 @@ import { cancelAndRefund, acceptPurchasePrice, releaseHold, retryPurchaseAction 
 import { attentionItems } from "@/lib/admin/orders";
 import { getPool, selectRows, withTransaction } from "@/lib/db";
 import { placeOrder, releaseClosedWindows } from "@/lib/orders";
-import { runPurchasing, supplierOrdersOf } from "@/lib/orders/purchasing";
+import { cancelledAsUndeliverable, runPurchasing, supplierOrdersOf } from "@/lib/orders/purchasing";
 import { CANCEL_WINDOW_MS } from "@/lib/orders/states";
 import { setHold } from "@/lib/orders/store";
 import { RETRY_EVERY_MS, RETRY_FOR_MS } from "@/lib/orders/supplier-states";
@@ -162,6 +162,9 @@ describe("a refusal (D-04: alert at once, try again for 24 hours with the same r
     await runPurchasing(bigbuy, minutes(late, 60));
     expect(bigbuy.callsFor(o.reference, "check")).toBe(2);
     expect(await attentionFor(o.orderId, minutes(late, 60))).toEqual([]);
+    // The customer hears that we could not deliver (not a plain "cancelled").
+    expect(await selectRows(getPool(), "SELECT id FROM outbox WHERE kind = 'order-cancelled' AND dedupe_key = ?", [`order:${o.orderId}`])).toHaveLength(1);
+    expect(await cancelledAsUndeliverable(getPool(), o.orderId)).toBe(true);
   });
 
   it("a held order is never paid back by itself: after 24 hours the owner chooses, e.g. try again", async () => {
@@ -176,6 +179,7 @@ describe("a refusal (D-04: alert at once, try again for 24 hours with the same r
     expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");
     expect(await alerts(o.orderId)).toContain(`supplier:${p.id}:gave-up`);
     expect(await selectRows(getPool(), "SELECT id FROM refunds WHERE order_id = ?", [o.orderId])).toEqual([]);
+    expect(await cancelledAsUndeliverable(getPool(), o.orderId)).toBe(false);
 
     expect(await releaseHold({ orderId: o.orderId, expectedHold: "FRAUD_REVIEW", reason: "gecontroleerd", actor, now: late })).toEqual({ ok: true, refund: "none" });
     expect(await retryPurchaseAction({ orderId: o.orderId, supplierOrderId: p.id, reason: "tegoed opgewaardeerd", actor, now: late })).toEqual({ ok: true, refund: "none" });

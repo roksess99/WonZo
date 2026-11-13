@@ -227,6 +227,20 @@ async function cancelAfterGivingUp(conn: Connection, orderId: number, now: Date)
   return { refundId: await requestFullRefund(conn, orderId, GAVE_UP_REASON, "system", now) };
 }
 
+/**
+ * Whether the shop itself cancelled this order after it was released for
+ * purchasing: only when BigBuy would not take it for 24 hours
+ * (docs/STATE_MACHINES.md, D-04). The customer's mail then says we could not deliver.
+ */
+export async function cancelledAsUndeliverable(db: Queryable, orderId: number): Promise<boolean> {
+  const [row] = await selectRows<{ n: number | string }>(
+    db,
+    "SELECT COUNT(*) AS n FROM order_events WHERE order_id = ? AND to_status = 'CANCELLED' AND from_status = 'FULFILLMENT_PENDING' AND actor = 'system'",
+    [orderId],
+  );
+  return Number(row?.n) > 0;
+}
+
 export type PurchaseOutcome = "placed" | "unknown" | "refused" | "refunded" | "blocked" | "waiting" | "skipped";
 
 /** One try for a DRAFT or REJECTED purchase order: check, record the intent, send. A refund it records goes into `refunds`. */

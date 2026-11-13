@@ -398,7 +398,13 @@
       "title": "Your order has been cancelled",
       "intro": "Your order {reference} has been cancelled.",
       "refund": "You will get {amount} back on the account or card you paid with. This usually takes a few working days.",
-      "questions": "Questions? Email us at {email}."
+      "questions": "Questions? Email us at {email}.",
+      "undeliverable": {
+        "subject": "Order {reference} cancelled: we could not deliver",
+        "preheader": "We could not deliver your order. You will get {amount} back.",
+        "title": "We could not deliver your order",
+        "intro": "We are sorry: we could not order {reference} from our supplier, so we have cancelled it. You do not need to do anything."
+      }
     },
     "returnLink": "Sending something back: {url}",
     "shipped": {

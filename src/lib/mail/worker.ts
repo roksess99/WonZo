@@ -14,6 +14,7 @@ import { getPool, selectRows, toDbTime, withTransaction } from "@/lib/db";
 import { getMessages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
 import { add, money } from "@/lib/money";
+import { cancelledAsUndeliverable } from "@/lib/orders/purchasing";
 import { issueAccessToken } from "@/lib/orders/store";
 import { readOrderView } from "@/lib/orders/view";
 import { siteUrl } from "@/lib/seo";
@@ -94,7 +95,10 @@ async function compose(row: Row, config: MailConfig, now: Date): Promise<Compose
       // An unpaid order that simply expired gets no mail: the customer stopped before paying.
       if (!order.paidAt) return { kind: "skip", reason: "niet betaald: geen mail bij een verlopen bestelling" };
       const refund = order.refunds.filter((r) => r.status !== "FAILED").reduce((s, r) => add(s, r.amount), money(0));
-      return { kind: "mail", intended: order.customer.email, mail: orderCancelled({ locale: order.locale, reference: order.reference, refund }, await customerLinks(), getMessages(order.locale)) };
+      // Cancelled by the shop itself after it was released for purchasing: that is only when BigBuy would not take
+      // it for 24 hours (docs/STATE_MACHINES.md, D-04). The customer is told we could not deliver.
+      const why = (await cancelledAsUndeliverable(getPool(), orderId)) ? ("undeliverable" as const) : undefined;
+      return { kind: "mail", intended: order.customer.email, mail: orderCancelled({ locale: order.locale, reference: order.reference, refund, why }, await customerLinks(), getMessages(order.locale)) };
     }
     case "admin-new-order":
       return { kind: "mail", intended: config.ordersTo, mail: adminNewOrder(order, adminUrl, url(LOGO), adminMessages()) };

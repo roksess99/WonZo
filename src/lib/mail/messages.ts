@@ -157,9 +157,14 @@ export function orderConfirmation(o: OrderMailData, links: Links, all: Messages)
 }
 
 /** Cancelled, with what is paid back (docs/MAIL.md § Retour terugbetaald: the amount, back to how it was paid, a few working days). */
-export function orderCancelled(o: { locale: Locale; reference: string; refund: Money }, links: Links, all: Messages): RenderedMail {
+/**
+ * The order is cancelled and paid back. "undeliverable": the shop cancelled it
+ * because the supplier would not take it for 24 hours (D-04, user 2026-11-13),
+ * so the customer hears why and that they need not do anything.
+ */
+export function orderCancelled(o: { locale: Locale; reference: string; refund: Money; why?: "undeliverable" }, links: Links, all: Messages): RenderedMail {
   const m = all.mail;
-  const c = m.cancelled;
+  const c = o.why === "undeliverable" ? { ...m.cancelled, ...m.cancelled.undeliverable } : m.cancelled;
   const subject = interpolate(c.subject, { reference: o.reference });
   const footer = footerOf(m);
   const refund = interpolate(c.refund, { amount: formatMoney(o.refund) });

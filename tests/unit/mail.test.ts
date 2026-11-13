@@ -99,6 +99,19 @@ describe("the messages", () => {
     const mail = orderCancelled({ locale: "nl", reference: "WZ-2026-00012", refund: money(6195) }, links, getMessages("nl"));
     expect(mail.subject).toBe("Bestelling WZ-2026-00012 geannuleerd");
     expect(mail.text).toContain(`${formatMoney(money(6195))} terug`);
+    expect(mail.text).not.toContain("leverancier");
+  });
+
+  it("cancelled because BigBuy would not take it (D-04): says we could not deliver, and the amount", () => {
+    const nl = orderCancelled({ locale: "nl", reference: "WZ-2026-00012", refund: money(6195), why: "undeliverable" }, links, getMessages("nl"));
+    expect(nl.subject).toBe("Bestelling WZ-2026-00012 geannuleerd: we konden niet leveren");
+    expect(nl.text).toContain("We konden je bestelling niet leveren");
+    expect(nl.text).toContain("niet bij onze leverancier bestellen");
+    expect(nl.text).toContain(`${formatMoney(money(6195))} terug`);
+    expect(nl.html).toContain("We konden je bestelling niet leveren");
+    const en = orderCancelled({ locale: "en", reference: "WZ-2026-00012", refund: money(6195), why: "undeliverable" }, links, getMessages("en"));
+    expect(en.subject).toBe("Order WZ-2026-00012 cancelled: we could not deliver");
+    expect(en.text).toContain(`${formatMoney(money(6195))} back`);
   });
 
   it("for the owner: the number and amount in the subject, the supplier's numbers, a link to the panel", () => {
