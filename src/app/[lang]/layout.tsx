@@ -7,6 +7,7 @@ import { PageViewCounter } from "@/components/layout/PageViewCounter";
 import { isLocale, locales } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { siteUrl } from "@/lib/seo";
+import { THEME_SCRIPT } from "@/lib/theme";
 import "../globals.css";
 
 // Self-hosted at build time: no request to Google from the visitor's browser
@@ -34,7 +35,13 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   if (!isLocale(lang)) notFound();
   const m = getMessages(lang);
   return (
-    <html lang={lang} className={`${display.variable} ${sans.variable}`}>
+    // data-theme: "system" from the server; the script below sets the visitor's own choice before the first
+    // paint (D-33), so the DOM differs from the server's on purpose (suppressHydrationWarning).
+    <html lang={lang} data-theme="system" suppressHydrationWarning className={`${display.variable} ${sans.variable}`}>
+      <head>
+        {/* A fixed string of our own, no data from outside (.claude/rules/beveiliging.md § XSS). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-dvh flex-col text-body antialiased">
         <a
           href="#inhoud"

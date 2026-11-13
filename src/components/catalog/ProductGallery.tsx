@@ -22,7 +22,7 @@ export type GalleryLabels = {
 
 type Props = { urls: string[]; name: string; labels: GalleryLabels };
 
-const thumbClass = "relative size-16 shrink-0 overflow-hidden rounded-md bg-surface ring-1 ring-line";
+const thumbClass = "relative size-16 shrink-0 overflow-hidden rounded-md bg-photo ring-1 ring-line";
 const iconButton = "inline-flex size-11 items-center justify-center rounded-md bg-surface ring-1 ring-line";
 
 /**
@@ -105,7 +105,7 @@ export function ProductGallery({ urls, name, labels }: Props) {
               </button>
             </div>
             {/* The square fits the width and the height of the screen. */}
-            <div className="relative aspect-square w-[min(56rem,calc(100vw-4rem),calc(100svh-10rem))]">
+            <div className="relative aspect-square w-[min(56rem,calc(100vw-4rem),calc(100svh-10rem))] rounded-md bg-photo">
               <Image src={current} alt={name} fill sizes="(min-width: 960px) 56rem, 100vw" className="object-contain" unoptimized={current.endsWith(".svg")} />
             </div>
             {total > 1 ? (

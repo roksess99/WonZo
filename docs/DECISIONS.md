@@ -1448,6 +1448,33 @@ zodat een donkere modus later op één plek kan worden toegevoegd.
 beheer); wie levert de kleuren (met een eigen contrasttabel); volgt hij de
 systeeminstelling of een schakelaar.
 
+**Antwoord (gebruiker, namens de eigenaar, 2026-11-13): ja, een donker
+thema voor de webshop.**
+
+- **Waar:** alleen de winkel; het beheerpaneel blijft licht (D-07).
+- **Kiezen:** standaard de instelling van het apparaat, met een knop
+  "Donker" in de kop waarmee de klant zelf kiest; die keuze wordt in de
+  browser onthouden (`docs/PRIVACY.md`). De knop zegt waar hij heen gaat:
+  "Donker" op een lichte pagina, "Licht" op een donkere (gebruiker
+  2026-11-13: een knop die altijd "Donker" zei, maakte een donkere pagina
+  licht).
+- **Kleuren:** voorgesteld door Claude, afgeleid van de huisstijl, met een
+  contrasttabel (`docs/BRAND.md` § Donkere modus); **de eigenaar keurt ze
+  goed in de browser** voordat het live gaat.
+
+Verworpen: alleen de systeeminstelling (geen eigen keuze), alleen een
+schakelaar (de instelling van het apparaat genegeerd), ook het beheerpaneel,
+en wachten op kleuren van de eigenaar.
+
+**Gebouwd (2026-11-13, branch `feature/donker-thema`):** elke token is
+`light-dark(licht, donker)` in `src/app/globals.css`; `data-theme` op
+`<html>` (`src/lib/theme.ts`), gezet vóór de eerste weergave; de knop in
+`src/components/layout/ThemeToggle.tsx`. Productfoto's blijven op wit.
+Bekeken in de browser (2026-11-13, 375 px en breed): startpagina,
+productpagina, winkelwagen, afrekenen, focusring en foutmelding; het
+beheerpaneel blijft licht. Blijft OPEN tot de eigenaar de kleuren heeft
+goedgekeurd.
+
 ---
 
 ## D-34 · Wettelijke productinformatie voor elektronica
@@ -1585,6 +1612,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-11-13 | D-33 | Gebruiker namens de eigenaar: donker thema voor de webshop (niet het beheer), apparaat + knop, kleuren voorgesteld door Claude. Gebouwd; de eigenaar keurt de kleuren nog goed |
 | 2026-11-13 | D-04 | Gebruiker: na 24 uur weigeringen bij BigBuy vanzelf annuleren en volledig terugbetalen, met een mail aan de beheerder om op te waarderen; prijs boven 10 % blijft de keuze van de eigenaar. Gebouwd |
 | 2026-11-13 | D-05 | Gemeten in testmodus: methodes actief, vervaltijd 15 minuten, dezelfde sleutel geeft dezelfde betaling, met een ander bedrag HTTP 400; een hele bestelling lokaal betaald met iDEAL en als betaald vastgelegd |
 | 2026-11-02 | D-08 | Kortingscodes gebouwd (migratie 0013): winkelwagen, afrekenen, factuur, retour en beheer; uitwerkingen te bevestigen bij D-08 |

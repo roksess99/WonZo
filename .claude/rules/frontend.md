@@ -58,7 +58,10 @@ je erover weet** (o.a. `proxy.ts` in plaats van `middleware.ts`, getypeerde
 `node_modules/next/dist/docs/` voordat je routing, data of configuratie
 schrijft, en volg de meldingen over verouderde API's. Tailwind gebruikt de
 CSS-variabelen uit `docs/BRAND.md`; geen UI-kit. Talen: Nederlands en Engels
-(D-32). Geen donkere modus in de eerste versie (D-33).
+(D-32). Donker thema alleen voor de winkel (D-33): elke kleurtoken is
+`light-dark(licht, donker)` in `globals.css`, dus een nieuwe kleur krijgt
+twee waarden en een regel in `tests/unit/theme.test.ts`; wat geen token kan
+zijn (het logo) gaat met `only-light`/`only-dark`. Het beheer blijft licht.
 
 - Server-rendered tenzij er interactie nodig is.
 - Componenten importeren domeintypes alleen uit `src/lib/catalog/types.ts` en
