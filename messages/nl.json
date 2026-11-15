@@ -300,6 +300,10 @@
     "vat": "Btw {vat}",
     "language": "Taal"
   },
+  "credit": {
+    "text": "Website door {name}",
+    "url": "https://nixlo.nl/?utm_source=wonzo&utm_medium=referral&utm_campaign=footer-credit"
+  },
   "notFound": {
     "title": "Deze pagina bestaat niet",
     "text": "Misschien is het product niet meer leverbaar, of is het adres veranderd.",
