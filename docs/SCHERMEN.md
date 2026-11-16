@@ -47,6 +47,25 @@ uitgang.
 - Beweegt er iets automatisch? Dan stoppen bij hover en focus, een pauzeknop
   die bereikbaar is, en stilstand bij `prefers-reduced-motion`.
 
+**Gebouwd (2026-11-16, gebruiker: "een hero die de winkel aantrekkelijker
+maakt en de aanbiedingen toont; zonder aanbiedingen blijft de hero"):**
+`src/components/home/Hero.tsx`, keuze in `src/lib/catalog/showcase.ts`.
+Links de hoofdgroepen op één regel, de titel, de korte uitleg en het grote
+zoekveld (de primaire actie). Rechts één paneel met drie producten:
+
+- **Lopen er acties** (D-08): "Nu in de aanbieding", de diepste korting
+  eerst, met het label "X% korting" — geen doorgestreepte van-prijs zonder
+  30 dagen prijsgeschiedenis (`docs/PRIJZEN.md` § 2).
+- **Lopen ze niet:** "Uitgelicht", de drie producten die het ruimst op
+  voorraad zijn. Geen leeg blok en geen "binnenkort aanbiedingen". Die drie
+  staan dan niet nog eens in "Altijd leverbaar" eronder.
+- **Catalogus onbereikbaar:** alleen de linkerkant; de hero blijft.
+
+Niets beweegt vanzelf (geen carrousel). Het paneel laadt in een eigen grens
+met een skelet van dezelfde maat. Bekeken in de browser (2026-11-16):
+licht en donker, 375 px en 1280 px, met en zonder actie (een testactie van
+een uur in de dev-database, daarna gestopt), focus met Tab.
+
 ## Categorie en zoekresultaat
 
 **Taak:** kiezen mogelijk maken zonder te verbergen.

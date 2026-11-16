@@ -69,6 +69,10 @@
     "title": "Clever things for home",
     "intro": "A clear range for in and around the house. Every product shows straight away what it costs and when it arrives.",
     "categoriesTitle": "Choose a category",
+    "dealsTitle": "On offer now",
+    "dealsIntro": "Discounted while the promotion runs.",
+    "featuredTitle": "Featured",
+    "featuredIntro": "Well stocked at our supplier.",
     "popularTitle": "Always in stock"
   },
   "listing": {
