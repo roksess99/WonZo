@@ -4,12 +4,13 @@ type Props = { src: string | undefined; alt: string; noImageText: string; priori
 
 /**
  * Product photos sit on a fixed white square with object-fit: contain, so the
- * page does not jump per photo (docs/BRAND.md § Beeld). No photo: our own
- * muted placeholder with the mark, never a broken image.
+ * page does not jump per photo (docs/BRAND.md § Beeld) — white in the dark
+ * theme too (bg-photo). No photo: our own muted placeholder with the mark on
+ * the surface, never a broken image.
  */
 export function ProductImage({ src, alt, noImageText, priority, sizes }: Props) {
   return (
-    <div className="relative aspect-square overflow-hidden rounded-md bg-surface">
+    <div className={`relative aspect-square overflow-hidden rounded-md ${src ? "bg-photo" : "bg-surface"}`}>
       {src ? (
         <Image
           src={src}

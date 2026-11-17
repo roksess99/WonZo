@@ -3,31 +3,72 @@
 /*
  * Design tokens from docs/BRAND.md. Components use the semantic tokens only
  * (bg-background, text-foreground, border-border, …), never the brand hex
- * values, so a dark mode (D-33, later) touches this file and nothing else.
+ * values, so the dark theme (D-33) lives in this file and nowhere else.
+ *
+ * Every token is light-dark(light, dark): the browser picks by the page's
+ * color-scheme. The shop's <html> carries data-theme (src/lib/theme.ts):
+ * "system" follows the device, "light" and "dark" are the visitor's own
+ * choice. Without data-theme (the admin panel, D-07: light) it is always
+ * light. Contrast of both columns: docs/BRAND.md § Donkere modus, and
+ * tests/unit/theme.test.ts recomputes it from this file.
  */
 :root {
+  color-scheme: light;
   /* Semantic */
-  --background: #faf6f0;
-  --foreground: #1d1a17;
-  --surface: #ffffff;
-  --muted: #6b635a;
-  --border: #8c8276;
-  --line: #e6ded3;
-  --in-stock: #1f7a3a;
-  --danger: #a11d33;
-  --danger-soft: #fbe8eb;
-  --success: #3a6b35;
-  --success-soft: #eaf1e4;
-  --warning: #8a5300;
-  --warning-soft: #fcf0d9;
-  --focus: #4b2e2b;
+  --background: light-dark(#faf6f0, #1d1a17);
+  --foreground: light-dark(#1d1a17, #f5ece3);
+  --surface: light-dark(#ffffff, #28241f);
+  --muted: light-dark(#6b635a, #b5aa9d);
+  --border: light-dark(#8c8276, #8c8276);
+  --line: light-dark(#e6ded3, #3d3731);
+  --in-stock: light-dark(#1f7a3a, #6cc684);
+  --danger: light-dark(#a11d33, #ff8f9f);
+  --danger-soft: light-dark(#fbe8eb, #3d1d23);
+  --success: light-dark(#3a6b35, #9ccb8f);
+  --success-soft: light-dark(#eaf1e4, #22301f);
+  --warning: light-dark(#8a5300, #e8b45c);
+  --warning-soft: light-dark(#fcf0d9, #3a2c12);
+  --focus: light-dark(#4b2e2b, #f5ece3);
   --focus-on-dark: #f5ece3;
+  /* Product photos stay on white in both themes: BigBuy's photos are white, and a
+     white square reads as deliberate where dark edges around it would not. */
+  --photo: #ffffff;
   /* Brand */
-  --accent: #c8440c;
-  --accent-contrast: #ffffff; /* white on accent 4.90:1; ink on accent fails (3.54:1) */
-  --brand-soft: #fce3d3;
+  --accent: light-dark(#c8440c, #f0773a);
+  /* Light: white on accent 4.90:1 (ink fails, 3.54:1). Dark: the lighter orange takes ink, 6.11:1. */
+  --accent-contrast: light-dark(#ffffff, #1d1a17);
+  --brand-soft: light-dark(#fce3d3, #4a2c1e);
   --petrol: #0e4d4a;
   --on-petrol: #ffffff; /* 9.64:1 */
+}
+:root[data-theme="system"] {
+  color-scheme: light dark;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/*
+ * The few things that cannot be a colour token, such as the logo (a light
+ * wordmark on the dark header): both are in the page, one is hidden.
+ * Same rule as the tokens: the visitor's choice, else the device.
+ */
+.only-dark {
+  display: none;
+}
+:root[data-theme="dark"] .only-light {
+  display: none;
+}
+:root[data-theme="dark"] .only-dark {
+  display: revert;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] .only-light {
+    display: none;
+  }
+  :root[data-theme="system"] .only-dark {
+    display: revert;
+  }
 }
 
 @theme inline {
@@ -49,6 +90,7 @@
   --color-brand-soft: var(--brand-soft);
   --color-petrol: var(--petrol);
   --color-on-petrol: var(--on-petrol);
+  --color-photo: var(--photo);
 
   --font-sans: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-bricolage), var(--font-dm-sans), system-ui, sans-serif;

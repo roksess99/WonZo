@@ -8,6 +8,7 @@ import { CartLink } from "../cart/CartLink";
 import { CheckIcon, SearchIcon } from "../icons";
 import { Container } from "../ui";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function SearchForm({ locale, m, big = false, defaultValue }: { locale: Locale; m: Messages; big?: boolean; defaultValue?: string }) {
   const id = big ? "search-hero" : "search-header";
@@ -51,12 +52,15 @@ export function Header({ locale, m }: { locale: Locale; m: Messages }) {
       <div className="border-b border-line bg-surface">
         <Container className="flex flex-wrap items-center gap-x-4 gap-y-3 py-3">
           <Link href={localizePath(locale, "/")} aria-label={m.a11y.home} className="inline-flex min-h-11 items-center">
-            <Image src="/brand/wonzo-wordmark.svg" alt="" width={125} height={32} priority unoptimized />
+            {/* Ink wordmark on the light header, the cream one on the dark (D-33): one of the two is hidden. */}
+            <Image src="/brand/wonzo-wordmark.svg" alt="" width={125} height={32} priority unoptimized className="only-light" />
+            <Image src="/brand/wonzo-wordmark-light.svg" alt="" width={125} height={32} priority unoptimized className="only-dark" />
           </Link>
           <div className="order-last w-full md:order-none md:flex-1">
             <SearchForm locale={locale} m={m} />
           </div>
           <div className="ms-auto flex items-center gap-1 md:ms-0">
+            <ThemeToggle dark={m.header.themeDark} light={m.header.themeLight} hidden={m.header.themeDarkHidden} />
             <LanguageSwitch locale={locale} label={m.header.language} title={m.header.languageLabel} />
             <CartLink href={localizePath(locale, "/winkelwagen")} label={m.header.cart} countLabel={m.header.cartCount} />
           </div>

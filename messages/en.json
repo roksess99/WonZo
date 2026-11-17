@@ -24,7 +24,10 @@
     "cartCount": "number of items: {count}",
     "language": "Nederlands",
     "languageLabel": "Overschakelen naar Nederlands",
-    "categories": "Categories"
+    "categories": "Categories",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeDarkHidden": " theme"
   },
   "categories": {
     "wonen": {

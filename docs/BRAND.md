@@ -71,9 +71,7 @@ in tweehonderd componenten.
   --warning-soft: #FCF0D9;
 }
 
-.dark {
-  /* nog niet aangeleverd — zie § Donkere modus */
-}
+/* Donker: elke token is light-dark(licht, donker) in src/app/globals.css — zie § Donkere modus */
 ```
 
 **`--muted` is niet het merkgrijs.** `--grey`/`--line` (1,24:1 op het
@@ -152,9 +150,63 @@ brandbook zelf noemt (4,9 / 16 / 5,5 / 5,9 / 1,2 / 3,5 / 14 / 9,6 / 5) kloppen.
 
 ### Donkere modus
 
-De eerste versie heeft geen donkere modus (D-33; later beslissen). Het
-brandbook kent alleen een licht thema. Komt er een, dan krijgt hij een eigen
-set waarden voor dezelfde tokens en een eigen contrasttabel.
+**Voor de winkel, voorstel van Claude (2026-11-13, D-33), goed te keuren door
+de eigenaar in de browser.** Alleen de winkel; het beheerpaneel blijft licht
+(D-07). Het brandbook kent geen donker thema: deze waarden zijn afgeleid van
+het palet — ink als paginavlak, Soft Cream als tekst, een lichter oranje
+voor het accent — en elke waarde is per paar nagerekend.
+
+Hoe het werkt: elke token is `light-dark(licht, donker)` in
+`src/app/globals.css`. De `<html>` van de winkel draagt `data-theme`:
+`system` volgt het apparaat, `light` of `dark` is de keuze van de bezoeker
+met de knop in de kop: "Donker" met een maan op een lichte pagina, "Licht"
+met een zon op een donkere (`src/lib/theme.ts`, bewaard in de browser).
+Een klein script in `<head>` zet die keuze vóór de eerste weergave, zodat
+er niets licht oplicht.
+
+| Token | Licht | Donker | Waarom zo |
+|---|---|---|---|
+| `--background` | `#FAF6F0` | `#1D1A17` | ink als paginavlak: het merk zelf, warm, niet zwart |
+| `--foreground` | `#1D1A17` | `#F5ECE3` | Soft Cream uit het palet |
+| `--surface` | `#FFFFFF` | `#28241F` | een tint lichter dan het vlak: kaarten blijven kaarten |
+| `--muted` | `#6B635A` | `#B5AA9D` | |
+| `--border` | `#8C8276` | `#8C8276` | dezelfde: haalt in beide thema's 3:1 |
+| `--line` | `#E6DED3` | `#3D3731` | decoratief, zoals in licht |
+| `--accent` | `#C8440C` | `#F0773A` | het merkoranje haalt op ink maar 3,54:1; lichter haalt 6,11:1 |
+| `--accent-contrast` | `#FFFFFF` | `#1D1A17` | op het lichtere oranje is donkere tekst leesbaar (6,11:1), wit niet |
+| `--brand-soft` | `#FCE3D3` | `#4A2C1E` | |
+| `--in-stock` | `#1F7A3A` | `#6CC684` | |
+| `--danger` / `-soft` | `#A11D33` / `#FBE8EB` | `#FF8F9F` / `#3D1D23` | |
+| `--success` / `-soft` | `#3A6B35` / `#EAF1E4` | `#9CCB8F` / `#22301F` | |
+| `--warning` / `-soft` | `#8A5300` / `#FCF0D9` | `#E8B45C` / `#3A2C12` | |
+| `--focus` | `#4B2E2B` | `#F5ECE3` | op donker de lichte ring |
+| `--petrol`, `--on-petrol` | `#0E4D4A`, `#FFFFFF` | dezelfde | |
+| `--photo` | `#FFFFFF` | `#FFFFFF` | productfoto's blijven op wit: de foto's van BigBuy zijn wit, een wit vlak leest als bedoeld |
+
+GEMETEN 2026-11-13 — berekend met de formule uit WCAG 2.2 op de hexwaarden
+(geen schermmeting); `tests/unit/theme.test.ts` rekent het bij elke
+testronde opnieuw uit `globals.css`.
+
+| Combinatie (donker) | Ratio | Toegestaan? |
+|---|---|---|
+| foreground op background / op surface | 14,84:1 / 13,20:1 | ja |
+| muted op background / op surface | 7,59:1 / 6,75:1 | ja |
+| border op background / op surface | 4,59:1 / 4,09:1 | ja, als rand van een bedieningselement |
+| line op background / op surface | 1,48:1 / 1,31:1 | **nee** als rand; alleen decoratief |
+| accent op background / op surface | 6,11:1 / 5,44:1 | ja, ook normale tekst |
+| accent-contrast (ink) op accent | 6,11:1 | ja, knoptekst |
+| accent-contrast (ink) op danger | 7,99:1 | ja (de bevestigknop annuleren) |
+| foreground op brand-soft | 10,77:1 | ja |
+| in-stock op background / op surface | 8,29:1 / 7,38:1 | ja |
+| danger op background / surface / danger-soft | 7,99 / 7,11 / 6,92:1 | ja |
+| success op background / surface / success-soft | 9,36 / 8,33 / 7,52:1 | ja |
+| warning op background / surface / warning-soft | 9,17 / 8,16 / 7,18:1 | ja |
+| focus op background / op surface | 14,84:1 / 13,20:1 | ja |
+| petrol tegen background | 1,80:1 | geen eis (een vlak, geen bedieningselement); de tekst erop haalt 9,64:1 |
+
+Het logo: op de donkere kop het lichte woordmerk
+(`/brand/wonzo-wordmark-light.svg`), via de klassen `only-light` en
+`only-dark`. De mail en de PDF's blijven licht (eigen opmaak, `docs/MAIL.md`).
 
 Twee dingen die altijd misgaan, ook nu al:
 

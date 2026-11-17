@@ -69,7 +69,7 @@ export function CategoryTiles({ locale, m, covers = {} }: { locale: Locale; m: M
               {/* Decorative: the name below says where the tile goes. */}
               {photo ? (
                 // A product photo on white, whole (object-contain), like everywhere in the shop (docs/BRAND.md § Beeld).
-                <span className={`relative block ${shape} w-full bg-surface`}>
+                <span className={`relative block ${shape} w-full bg-photo`}>
                   <Image src={photo} alt="" fill sizes={wide ? "(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 100vw" : "(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"} priority={i < 2} className="object-contain p-4" />
                 </span>
               ) : (

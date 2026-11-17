@@ -64,6 +64,15 @@ bladeren.
 | Sleutel | Soort | Geschreven door | Noodzakelijk? |
 |---|---|---|---|
 | `wonzo.cart.v1` | localStorage: welke producten en hoeveel (product-id, bron, aantal — geen prijs, geen persoonsgegeven) | `src/components/cart/store.ts` | ja: de winkelwagen die de bezoeker zelf vult |
+| `wonzo.code.v1` | localStorage: de tekst van een kortingscode die de bezoeker zelf intypte (geen persoonsgegeven) | `src/components/cart/store.ts` | ja: de code die de bezoeker zelf toepast (D-08); weg bij "Code verwijderen" en na de bestelling |
+| `wonzo.theme.v1` | localStorage: `light` of `dark`, alleen als de bezoeker op de knop "Donker" of "Licht" drukte (geen persoonsgegeven) | `src/components/layout/ThemeToggle.tsx`, gelezen door `src/lib/theme.ts` | ja: een instelling die de bezoeker zelf kiest (D-33); zonder keuze wordt er niets opgeslagen |
+
+Aangevuld 2026-11-13 (`wonzo.code.v1` uit D-08 en `wonzo.theme.v1` uit
+D-33), weer door `src/` te doorzoeken op `localStorage`. `AANNAME`, te
+bevestigen: een keuze die de bezoeker zelf maakt en die alleen in zijn
+browser blijft, valt onder de uitzondering "strikt noodzakelijk voor een
+dienst waar de gebruiker om vraagt" (Telecommunicatiewet art. 11.7a) — geen
+toestemmingsbanner.
 
 Vastgesteld 2026-10-05 door `src/` te doorzoeken (fase 2):
 **sessionStorage en cookies worden nergens gebruikt**, ook geen

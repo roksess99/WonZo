@@ -149,7 +149,7 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Werkt zonder JavaScript voor het belangrijkste pad? Minstens: zoeken en
       bladeren.
 - [ ] Getest op een echte telefoon, niet alleen in een versmald venster.
-- [ ] Donkere modus doorlopen — alleen als D-33 er een kiest.
+- [ ] Donker thema doorlopen (D-33): elk winkelscherm in donker, op telefoon en breed; de eigenaar heeft de kleuren goedgekeurd.
 - [ ] Toetsenbord: van het begin tot het afrekenen, zonder muis.
 - [ ] Een trage verbinding nagebootst en gekeken wat er dan op het scherm staat.
 
