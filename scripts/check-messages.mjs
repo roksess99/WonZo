@@ -37,6 +37,14 @@ for (const [file, map] of sets) {
   }
 }
 
+// The admin panel is Dutch only (D-07): its own file, checked for empty texts.
+const ADMIN = path.join(DIR, 'beheer', 'nl.json');
+if (fs.existsSync(ADMIN)) {
+  for (const [key, value] of flatten(JSON.parse(fs.readFileSync(ADMIN, 'utf8')))) {
+    if (typeof value !== 'string' || value.trim() === '') problems.push(`beheer/nl.json: "${key}" is empty or not text`);
+  }
+}
+
 const unique = [...new Set(problems)];
 if (unique.length) {
   console.error(`Message check FAILED (${files.join(', ')}):`);

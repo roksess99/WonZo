@@ -18,7 +18,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Not for Next internals, API routes, or files (anything with an extension:
+  // Not for Next internals, API routes, the admin panel (one language, its
+  // own root layout in app/beheer/), or files (anything with an extension:
   // /brand/*.svg, /mock/*.svg, /icon.svg, robots.txt).
-  matcher: ["/((?!_next/|api/|.*\\..*).*)"],
+  matcher: ["/((?!_next/|api/|beheer(?:/|$)|.*\\..*).*)"],
 };

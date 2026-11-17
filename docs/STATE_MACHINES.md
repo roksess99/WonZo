@@ -64,7 +64,8 @@ Daarnaast een **hold-vlag** (`holdReason`, bijv. `AMOUNT_MISMATCH`,
 | `PENDING_PAYMENT` | `PAID` | provider / reconciliation | payment `PAID`, bedrag en valuta = snapshot | annuleervenster van 30 minuten begint (D-04); outbox: orderbevestiging, melding beheerder; codegebruik vastleggen |
 | `PENDING_PAYMENT` | `PAYMENT_FAILED` | provider / reconciliation | laatste payment `FAILED`/`CANCELED`/`EXPIRED` | — |
 | `PAYMENT_FAILED` | `PENDING_PAYMENT` | customer | nieuwe betaalpoging, snapshot nog geldig (anders nieuwe quote) | nieuwe payment `CREATED` |
-| `PENDING_PAYMENT`, `PAYMENT_FAILED` | `CANCELLED` | system / customer | snapshot verlopen of klant breekt af, **en** provider bevestigt dat geen payment geslaagd is | reservering vrijgeven |
+| `PENDING_PAYMENT`, `PAYMENT_FAILED` | `CANCELLED` | system / customer | snapshot verlopen of klant breekt af, **en** provider bevestigt dat geen payment geslaagd is (een te laat betaalde payment pas als hij is terugbetaald) | reservering vrijgeven |
+| `PENDING_PAYMENT`, `PAYMENT_FAILED` | `CANCELLED` | admin | alleen met een hold (ander bedrag betaald) en geen open payment; refund van elke betaalde payment in dezelfde transactie `REQUESTED` (eigenaar, 2026-10-13) | hold eraf met auditregel; refund-flow |
 | `PENDING_PAYMENT` | `PAID` (bedrag 0) | system | totaal is exact 0 en D-05 staat dit toe | als bij `PAID` |
 | `PAID` | `FULFILLMENT_PENDING` | admin / system | geen hold; het annuleervenster van 30 minuten is voorbij (D-04) | outbox: inkoop, factuur (D-21: de factuur pas na het venster) |
 | `PAID` | `CANCELLED` | customer | binnen het annuleervenster (D-04); refund voor het volledige bedrag in dezelfde transactie `REQUESTED` | refund-flow; mail — geen creditnota, want er is nog geen factuur |
@@ -90,7 +91,7 @@ Daarnaast een **hold-vlag** (`holdReason`, bijv. `AMOUNT_MISMATCH`,
 | Situatie | Herstel |
 |---|---|
 | Blijft in `PENDING_PAYMENT` | Reconciliatie (`docs/PAYMENTS.md`); daarna verloop → `CANCELLED` |
-| Betaald na `CANCELLED` | Alert; beheerder heropent (nieuwe order met dezelfde snapshot) of betaalt terug. Nooit automatisch |
+| Betaald na `CANCELLED` | De payment wordt `PAID` (op het antwoord van de provider); alert, en de beheerder betaalt terug (eigenaar, 2026-10-13). Nooit automatisch, nooit heropenen |
 | Hold gezet | Beheerder lost op, haalt hold weg met reden (auditregel) |
 | Blijft in `FULFILLMENT_PENDING` | Dashboardtegel "inkoop vastgelopen" (`docs/BEHEER.md`); alert na X minuten |
 
@@ -121,12 +122,11 @@ de mapping staat bij D-05.
 | `PENDING` | `AUTHORIZED` | provider | — |
 | `PENDING`, `AUTHORIZED` | `PAID` | provider / reconciliation | bedrag en valuta = snapshot, anders hold op de order |
 | `CREATED`, `PENDING`, `AUTHORIZED` | `FAILED` / `CANCELED` / `EXPIRED` | provider / reconciliation | order → `PAYMENT_FAILED` als dit de laatste poging was |
+| `FAILED` / `CANCELED` / `EXPIRED` | `PAID` | provider / reconciliation | alleen op een nieuwe opvraging bij de provider (een zeer late bank); de order neemt hem niet: alert, en de beheerder betaalt terug (eigenaar, 2026-10-13) |
 | `PAID` | `CHARGED_BACK` | provider | alert, auditregel; order krijgt hold |
 
 **Verboden:** `PAID → FAILED`, `FAILED → PAID` zonder nieuwe opvraging bij de
-provider (een laat "paid"-event op een `FAILED` payment gaat via
-reconciliatie en geeft een alert), elke transitie op basis van alleen de
-webhook-body.
+provider, elke transitie op basis van alleen de webhook-body.
 
 Terugbetalingen veranderen de payment-status niet; ze zijn eigen records.
 
@@ -175,7 +175,7 @@ hetzelfde doel (eerst opvragen); een bedrag uit de browser overnemen.
 | `REQUESTED`, `RECEIVED` | `REJECTED` | admin | reden verplicht; mail |
 | `REQUESTED` | `WITHDRAWN` | customer / admin | — |
 | `RECEIVED` | `REFUNDING` | admin | refund `REQUESTED` met server-side bedrag (verzendkostenregels `docs/RETOUREN.md`) |
-| `REQUESTED` | `REFUNDING` | admin | alleen als de klant een verzendbewijs gaf en het beleid dat toestaat (`docs/RETOUREN.md`) |
+| `REQUESTED` | `REFUNDING` | admin | alleen als de klant een verzendbewijs gaf en het beleid dat toestaat (`docs/RETOUREN.md`) — **niet gebouwd**: D-09 (eigenaar, 2026-10-12) betaalt pas terug nadat de beheerder het product heeft bekeken |
 | `REFUNDING` | `REFUNDED` | system | refund `SUCCEEDED` |
 | `REFUNDING` | `RECEIVED` | system | refund `FAILED` én de retour kwam uit `RECEIVED` (volgens de eventlog); alert |
 | `REFUNDING` | `REQUESTED` | system | refund `FAILED` én de retour kwam uit `REQUESTED` (verzendbewijs, pakket nog niet binnen); alert |
@@ -194,7 +194,7 @@ bestaan maar wordt niet gebruikt zolang D-04 automatisch is.
 | `SUBMITTING` | Intent vastgelegd, call loopt (alleen automatisch) | nee |
 | `UNKNOWN` | Call gaf geen uitsluitsel | nee |
 | `PLACED` | Leverancier bevestigde, met `supplierOrderRef` | nee |
-| `REJECTED` | Leverancier weigerde (voorraad, prijs, adres) | ja |
+| `REJECTED` | Leverancier weigerde (voorraad, prijs, adres, te weinig tegoed) | ja, na 24 uur opnieuw proberen (D-04) |
 | `PARTIALLY_SHIPPED` / `SHIPPED` / `DELIVERED` | Leverstatus | `DELIVERED` ja |
 | `CANCELLED` | Bij de leverancier geannuleerd | ja |
 
@@ -205,15 +205,29 @@ bestaan maar wordt niet gebruikt zolang D-04 automatisch is.
 | `DRAFT` | `SUBMITTING` | system (automatisch) | sleutel = supplierOrder.id, meegestuurd als eigen referentie bij de leverancier (`docs/api/LEVERANCIER.md` § 10) |
 | `SUBMITTING` | `PLACED` / `REJECTED` | system | antwoord leverancier |
 | `SUBMITTING` | `UNKNOWN` | system | timeout |
-| `UNKNOWN` | `PLACED` / `REJECTED` | admin / reconciliation | **eerst bij de leverancier opvragen op de eigen referentie**; nooit blind opnieuw versturen |
+| `UNKNOWN` | `PLACED` / `REJECTED` | admin / reconciliation | **eerst bij de leverancier opvragen op de eigen referentie**; nooit blind opnieuw versturen. Alleen een 404 bewijst dat er niets aankwam (`GEMETEN` 2026-10-05: de sandbox geeft 500) — dan `REJECTED` |
+| `REJECTED` | `SUBMITTING` | system (24 uur, elk half uur) / admin (daarna) | D-04: opnieuw met **dezelfde** eigen referentie. Veilig: een weigering of een 404 betekent dat er niets is aangemaakt |
 | `PLACED` | `PARTIALLY_SHIPPED` / `SHIPPED` | admin / provider | tracking |
 | `PARTIALLY_SHIPPED` | `SHIPPED` | admin / provider | — |
 | `SHIPPED` | `DELIVERED` | admin / provider / system | — |
-| `DRAFT`, `PLACED` | `CANCELLED` | admin | bij `PLACED` alleen na bevestiging van de leverancier |
+| `DRAFT`, `REJECTED` | `CANCELLED` | admin / system | de order wordt geannuleerd voordat er iets bij de leverancier is |
+| `PLACED` | `CANCELLED` | — | BigBuy heeft geen annuleerfunctie (D-04): alleen via een ticket bij BigBuy, niet vanuit de winkel |
 
 **Verboden:** `UNKNOWN → SUBMITTING` (een tweede verzending zonder te weten of
 de eerste aankwam is een tweede factureerbare bestelling); een inkooporder
 plaatsen voor een order die niet `FULFILLMENT_PENDING` is.
+
+**Gebouwd (fase 6, 2026-10-12):** `src/lib/orders/supplier-states.ts` en
+`src/lib/orders/purchasing.ts`. Afwijkingen van de tabel hierboven, gevolgd
+uit D-04 (hogere autoriteit) en gemeld aan de eigenaar: `REJECTED →
+SUBMITTING` bestaat (opnieuw proberen met dezelfde referentie), en de order
+blijft `FULFILLMENT_PENDING` zolang er nog niets bij de leverancier is — pas
+als een deel geplaatst is en een ander deel niet, is hij `PARTIALLY_FULFILLED`.
+Zo kan de eigenaar na 24 uur nog annuleren en terugbetalen. Een order waarvan
+een inkooporder (mogelijk) bij de leverancier is (`SUBMITTING`, `UNKNOWN`,
+`PLACED` …) annuleert het paneel niet. Is BigBuy meer dan 10 % duurder dan de
+bevroren inkoopprijs, dan blijft de inkooporder `DRAFT` met een reden en
+beslist de eigenaar (D-04).
 
 **Herstel bij `REJECTED`:** de order gaat naar `PARTIALLY_FULFILLED`; de
 beheerder kiest een andere aanbieding (nieuwe `DRAFT`, prijsverschil zichtbaar)

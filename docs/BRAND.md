@@ -115,6 +115,7 @@ brandbook zelf noemt (4,9 / 16 / 5,5 / 5,9 / 1,2 / 3,5 / 14 / 9,6 / 5) kloppen.
 | focus `#4B2E2B` tegen accent / tegen petrol | 2,49:1 / 1,26:1 | **nee** — daarom een ring mét tussenruimte, en op petrol de lichte focuskleur |
 | focus-on-dark `#F5ECE3` op petrol / op ink | 8,26:1 / 14,84:1 | ja |
 | danger `#A11D33` op paginavlak / op wit / op danger-soft | 7,12:1 / 7,67:1 / 6,51:1 | ja |
+| wit op danger (de bevestigknop die geld terugbetaalt, beheer) | 7,67:1 | ja |
 | success `#3A6B35` op paginavlak / op wit / op success-soft | 5,85:1 / 6,30:1 / 5,46:1 | ja |
 | warning `#8A5300` op paginavlak / op wit / op warning-soft | 5,88:1 / 6,33:1 / 5,61:1 | ja |
 | de drie soft-vlakken tegen het paginavlak | 1,05–1,09:1 | **niet** als enige begrenzing: een melding krijgt een rand of balk in de tekstkleur |

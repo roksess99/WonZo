@@ -39,7 +39,7 @@ geen "nvt".
 | Applicatie → database | naam, adres, mail, telefoon, bestelling | levering, administratie | b; c (fiscale bewaarplicht) | `docs/DATAMODEL.md` § Bewaren | eigen (hosting = verwerker) | `<<HOSTING_LOCATIE>>` | TLS naar database; at rest: `<<DB_ENCRYPTIE>>` |
 | Applicatie → betaaldienst (Mollie, D-05) | bedrag, ordernummer, order-id en betaal-id (metadata), taal; de klant geeft zijn betaalgegevens rechtstreeks aan Mollie (hosted checkout) | betaling | b | volgens de betaaldienst | doorgaans zelfstandig verwerkingsverantwoordelijke voor de betaling — nog te bevestigen bij Mollie (D-05) | `<<BETAALDIENST_LOCATIE>>` | TLS |
 | Applicatie → leverancier (BigBuy) | naam, afleveradres, **mailadres en telefoonnummer** (verplichte velden bij bestellen — `docs/api/LEVERANCIER.md` § 10), artikelen | levering (dropship) | b | volgens de leverancier | verwerker of zelfstandig — vastleggen bij D-01 | `<<LEVERANCIER_LOCATIE>>` | TLS |
-| Applicatie → mailprovider | mailadres, naam, inhoud bericht | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS |
+| Applicatie → mailprovider (Hostinger, D-29) | mailadres, naam, afleveradres en de bestelling (in de bevestiging) | bevestiging, service | b | volgens de provider | verwerker | `<<MAIL_LOCATIE>>` | TLS (465) of STARTTLS (587), verplicht |
 | Applicatie → error tracking | technische context, **geen** persoonsgegevens (`docs/OBSERVABILITY.md`) | stabiliteit | f | `<<ERROR_RETENTIE>>` | verwerker | `<<ERROR_LOCATIE>>` | TLS |
 | Browser → analytics | alleen met toestemming of een privacyvriendelijke opzet zonder tracking — D-10 | | a of f | | | | |
 
@@ -92,6 +92,12 @@ aanwijzen.
 | `payments`, `refunds` en hun events (fase 5) | geen direct: bedrag, status, betaalmethode, id bij Mollie | b, c (de betaling hoort bij de administratie) | als de bestelling | ja |
 | `provider_events` | geen: id bij Mollie en een status | b | D-24 | nee — eigen termijn |
 | `rate_limits` | een **hash** van het IP-adres, niet het adres | f (misbruik van afrekenen tegengaan) | één dag; de dagelijkse taak ruimt op | n.v.t. |
+| `supplier_orders`, `supplier_order_events` (fase 6) | geen direct: het ordernummer en het nummer bij BigBuy; naam en adres gaan bij het bestellen uit `orders` naar BigBuy (zie de dataflow hierboven) | b | als de bestelling | ja |
+| `invoices` (fase 6) | naam, adres, mailadres en telefoon van de klant — in `snapshot` én in de opgeslagen PDF | c (fiscale bewaarplicht: de factuur) | 7 jaar (`WETTELIJK`, art. 52 AWR, te bevestigen); daarna verwijderen | nee — eigen termijn, langer dan de bestelling |
+| `invoice_vat` (fase 6) | geen | c | als de factuur | met de factuur |
+| `returns`, `return_lines`, `return_events` (fase 6, D-09) | geen direct, behalve `customer_note`: vrije tekst van de klant, kan van alles bevatten | b (de koop afwikkelen), c (de creditnota volgt eruit) | als de bestelling | ja |
+| `shipments` (fase 6) | het trackingnummer: daarmee is bij de vervoerder het adres te vinden | b (de klant laten volgen waar het pakket is) | als de bestelling | ja |
+| `service_checks` (fase 6) | geen: de stand van Mollie en BigBuy, en het tegoed | — | wordt overschreven bij elke meting | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):
 

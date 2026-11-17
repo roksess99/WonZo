@@ -8,12 +8,20 @@ describe("payment and refund state machines (docs/STATE_MACHINES.md)", () => {
   it("refuses the forbidden payment transitions", () => {
     for (const actor of ["customer", "system", "provider", "reconciliation"] as const) {
       expect(canTransitionPayment("PAID", "FAILED", actor)).toBe(false);
-      expect(canTransitionPayment("FAILED", "PAID", actor)).toBe(false);
-      expect(canTransitionPayment("EXPIRED", "PAID", actor)).toBe(false);
+      expect(canTransitionPayment("CHARGED_BACK", "PAID", actor)).toBe(false);
     }
     // Only the provider or reconciliation can say a payment is paid.
     expect(canTransitionPayment("PENDING", "PAID", "customer")).toBe(false);
     expect(canTransitionPayment("PENDING", "PAID", "system")).toBe(false);
+  });
+
+  it("paid after it failed or expired here: recorded as paid, on Mollie's answer only (owner 2026-10-13)", () => {
+    for (const from of ["FAILED", "CANCELED", "EXPIRED"] as const) {
+      expect(canTransitionPayment(from, "PAID", "provider")).toBe(true);
+      expect(canTransitionPayment(from, "PAID", "reconciliation")).toBe(true);
+      expect(canTransitionPayment(from, "PAID", "customer")).toBe(false);
+      expect(canTransitionPayment(from, "PAID", "system")).toBe(false);
+    }
   });
 
   it("never lets a refund succeed without the provider", () => {
@@ -26,7 +34,8 @@ describe("payment and refund state machines (docs/STATE_MACHINES.md)", () => {
     expect(pathTo("CREATED", "PAID", "provider")).toEqual(["PAID"]);
     expect(pathTo("UNKNOWN", "EXPIRED", "provider")).toEqual(["PENDING", "EXPIRED"]);
     expect(pathTo("PENDING", "CHARGED_BACK", "provider")).toEqual(["PAID", "CHARGED_BACK"]);
-    expect(pathTo("EXPIRED", "PAID", "provider")).toBeNull();
+    expect(pathTo("EXPIRED", "PAID", "provider")).toEqual(["PAID"]);
+    expect(pathTo("CHARGED_BACK", "PAID", "provider")).toBeNull();
   });
 
   it("maps Mollie's words onto ours (D-05)", () => {

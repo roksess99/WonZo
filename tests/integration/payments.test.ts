@@ -124,6 +124,9 @@ describe("the webhook", () => {
     await handleWebhook(tr, mollie);
     expect(await orderRow(orderId)).toEqual({ status: "PENDING_PAYMENT", hold_reason: "AMOUNT_MISMATCH" });
     expect(await outboxKinds(orderId)).toContain("admin-alert");
+    // What came in, not what was asked: a refund can give back only the € 1,00.
+    const [p] = await selectRows<{ amount_cents: number | string }>(getPool(), "SELECT amount_cents FROM payments WHERE order_id = ?", [orderId]);
+    expect(Number(p!.amount_cents)).toBe(100);
   });
 
   it("expired at the provider: order PAYMENT_FAILED; the customer pays again and the order is paid", async () => {
@@ -181,7 +184,9 @@ describe("the 30-minute window (D-04): the customer cancels", () => {
     mollie.settleRefunds();
     await reconcile(mollie, new Date(now.getTime() + 5 * 60_000));
     expect(await refundsOf(orderId)).toEqual([{ status: "SUCCEEDED", amount_cents: 2445 }]);
-    expect(mollie.calls.filter((c) => c.op === "createRefund")).toHaveLength(1);
+    // Only this order's refund: reconciliation also sends refunds other tests left REQUESTED on purpose.
+    const { id } = (await selectRows<{ id: string }>(getPool(), "SELECT id FROM refunds WHERE order_id = ?", [orderId]))[0]!;
+    expect(mollie.calls.filter((c) => c.op === "createRefund" && c.key === id)).toHaveLength(1);
   });
 });
 

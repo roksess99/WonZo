@@ -1,9 +1,9 @@
 // HTTP client for the supplier (docs/api/LEVERANCIER.md). Server-side only:
 // the token is a secret and the limits are shop-wide
 // (.claude/rules/catalogus.md § Server-side, altijd). Read-only: this client
-// refuses every order endpoint — ordering is fase 5, with its own rules.
+// refuses every order endpoint — ordering has its own file and rules (./ordering.ts).
 
-import type { Connection } from "@/lib/db";
+import type { Connection, Queryable } from "@/lib/db";
 import { LIMITS, withinLimit } from "../sync/schedule";
 import "./dto"; // its browser guard
 
@@ -34,7 +34,7 @@ export class BudgetExhausted extends Error {
   }
 }
 
-async function callsInWindow(conn: Connection, endpoint: string): Promise<number> {
+async function callsInWindow(conn: Queryable, endpoint: string): Promise<number> {
   const windowMs = LIMITS[endpoint]!.windowMs;
   const [rows] = await conn.query("SELECT COUNT(*) AS n FROM catalog_api_calls WHERE endpoint = ? AND called_at > NOW(3) - INTERVAL ? MICROSECOND", [
     endpoint,
@@ -43,7 +43,7 @@ async function callsInWindow(conn: Connection, endpoint: string): Promise<number
   return Number((rows as { n: number }[])[0]?.n ?? 0);
 }
 
-export async function hasBudget(conn: Connection, endpoint: string): Promise<boolean> {
+export async function hasBudget(conn: Queryable, endpoint: string): Promise<boolean> {
   return withinLimit(endpoint, await callsInWindow(conn, endpoint));
 }
 

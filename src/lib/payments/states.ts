@@ -22,6 +22,10 @@ const PAYMENT_RULES: readonly Rule<PaymentStatus>[] = [
   { from: ["CREATED", "PENDING", "AUTHORIZED"], to: "FAILED", actors: ["provider", "reconciliation"] },
   { from: ["CREATED", "PENDING", "AUTHORIZED"], to: "CANCELED", actors: ["provider", "reconciliation"] },
   { from: ["CREATED", "PENDING", "AUTHORIZED"], to: "EXPIRED", actors: ["provider", "reconciliation"] },
+  // Paid at Mollie after it failed or expired here (a very late bank). Owner 2026-10-13: record what
+  // was paid, and the admin pays it back. Only on Mollie's own answer to our query — every caller of
+  // applyProviderPayment asked Mollie first (docs/STATE_MACHINES.md § Payment: never on the body alone).
+  { from: ["FAILED", "CANCELED", "EXPIRED"], to: "PAID", actors: ["provider", "reconciliation"] },
   { from: ["PAID"], to: "CHARGED_BACK", actors: ["provider", "reconciliation"] },
 ];
 

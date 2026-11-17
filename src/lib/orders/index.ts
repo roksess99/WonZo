@@ -109,9 +109,3 @@ export async function releaseClosedWindows(now: Date = new Date()): Promise<{ re
   }
   return { released };
 }
-
-// TODO fase 5: verlopen onbetaalde orders annuleren (PENDING_PAYMENT →
-// CANCELLED na snapshot_expires_at, pas na controle bij de betaaldienst dat er
-// geen geslaagde betaling is — docs/PAYMENTS.md § Snapshot en verloop), en
-// annuleren door de klant binnen het venster (vraagt een terugbetaling in
-// dezelfde transactie, docs/STATE_MACHINES.md § Order).

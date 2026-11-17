@@ -120,6 +120,40 @@ idempotentiesleutel. Mollie heeft geen event-id: `provider_events` is uniek op
 (betaling, opgevraagde stand). Het terugbetaalde bedrag wordt afgeleid uit
 `refunds`, nooit los bijgehouden.
 
+**Gebouwd in fase 6** (`db/migrations/0004_service_checks.sql`):
+`service_checks`, de laatste uitkomst per controle van een externe dienst
+(werkt Mollie, wat is het tegoed bij BigBuy). Een cache, geen bedrijfsstaat;
+hij staat in de database omdat het tegoed maar één keer per uur opgevraagd
+mag worden en een herstart dat niet mag vergeten.
+
+Ook in fase 6 (`db/migrations/0005_supplier_orders.sql`): `supplier_orders`
+en `supplier_order_events`. Eén inkooporder per bestelling en bron; de regels
+zijn de bevroren bestelregels van die bron. `reference` (het ordernummer) gaat
+als eigen referentie mee naar de leverancier en is uniek per bron. Bewaard:
+de bevroren inkoopprijs, wat de leverancier bij de controle vroeg, wie een
+hogere prijs goedkeurde, en de pogingen (D-04).
+
+En (`db/migrations/0006_outbox_message_id.sql`): `outbox.message_id`, het
+kenmerk dat de mailserver teruggeeft. De outbox kent nu de standen `PENDING`,
+`SENT` (mail weg), `DONE` (afgehandeld zonder mail, of inkooporder gemaakt) en
+`FAILED` (mail kon niet weg; in "vraagt aandacht", opnieuw te versturen).
+
+En (`db/migrations/0008_returns_tracking.sql`): `returns` met `return_lines`
+en `return_events` (een aanvraag met per bestelregel aantal en reden, het
+maximum dat terug kan, en wat de beheerder terugbetaalde; één open retour per
+bestelling via een unieke sleutel op `open_order_id`), `shipments` (de
+pakketten die de leverancier meldt, met trackingnummer), `shipped_at` en
+`delivered_at` op bestelling en inkooporder (de herroepingstermijn loopt vanaf
+de aflevering), `refunds.return_id`, en op `invoices` een `doc_key`
+(`invoice`, `cancel` of `return:<id>`) en `return_id`: één creditnota per
+retour.
+
+En (`db/migrations/0007_invoices.sql`): `invoices` (factuur of creditnota,
+nummer, totalen, het document als `snapshot` en de PDF zelf) en `invoice_vat`
+(per tarief de grondslag en de btw, voor het maandoverzicht). Eén factuur en
+hoogstens één creditnota per bestelling. Een uitgereikt document wordt nooit
+gewijzigd.
+
 ### Payment, Refund, ProviderEvent
 
 | Entiteit | Kernvelden |

@@ -62,9 +62,12 @@ export class FakeMollie implements PaymentProvider {
     if (how === "refuse") throw new ProviderRefused(422, "refused");
     const existing = [...this.refunds.values()].find((r) => r.refundId === req.metadata.refundId);
     if (existing) return existing;
+    const p = this.payments.get(req.providerPaymentId);
+    // A payment of an earlier test (another stand-in), e.g. a refund left REQUESTED on purpose that
+    // reconciliation now sends: Mollie refuses a refund on a payment it does not know (404).
+    if (!p) throw new ProviderRefused(404, "no such payment");
     const r: StoredRefund = { id: `re_${randomBytes(6).toString("hex")}`, status: this.next.refundStatus ?? "pending", amount: req.amount, refundId: req.metadata.refundId, paymentId: req.providerPaymentId };
     this.refunds.set(r.id, r);
-    const p = this.payments.get(req.providerPaymentId)!;
     p.amountRefunded = add(p.amountRefunded ?? money(0), req.amount);
     if (how === "lost-after-create") throw new ProviderOutcomeUnknown("timeout after create");
     return r;

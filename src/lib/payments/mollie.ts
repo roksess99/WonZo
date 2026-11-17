@@ -234,6 +234,40 @@ export function mollieProvider(config: MollieConfig, fetchImpl: typeof fetch = f
   };
 }
 
+/**
+ * Which of a methods list (GET /v2/methods) can take a payment. GEDOCUMENTEERD
+ * (docs.mollie.com "List payment methods", 2026-10-12): live mode returns only
+ * fully enabled methods, test mode also pending ones, each with a `status`
+ * (activated, pending-boarding, pending-review, pending-external, rejected).
+ */
+export function parseActiveMethods(x: unknown): string[] | null {
+  const list = isObj(x) && isObj(x._embedded) && Array.isArray(x._embedded.methods) ? x._embedded.methods : null;
+  if (!list) return null;
+  return list.flatMap((m: unknown) => (isObj(m) && typeof m.id === "string" && (m.status === undefined || m.status === null || m.status === "activated") ? [m.id] : []));
+}
+
+export type MethodsAnswer = { kind: "ok"; active: string[] } | { kind: "refused"; status: number } | { kind: "unreachable" };
+
+/**
+ * Asks Mollie which methods work right now: a key that is filled in is not a
+ * till that works (docs/BEHEER.md). Never throws. Apple Pay is only listed
+ * when asked for (`includeWallets`).
+ */
+export async function activeMethods(config: MollieConfig, fetchImpl: typeof fetch = fetch): Promise<MethodsAnswer> {
+  try {
+    const res = await fetchImpl(`${API}/methods?includeWallets=applepay`, {
+      headers: { Authorization: `Bearer ${config.apiKey}` },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (res.status >= 500) return { kind: "unreachable" };
+    if (res.status >= 400) return { kind: "refused", status: res.status };
+    const active = parseActiveMethods(await res.json().catch(() => null));
+    return active ? { kind: "ok", active } : { kind: "unreachable" };
+  } catch {
+    return { kind: "unreachable" };
+  }
+}
+
 let configured: PaymentProvider | null | undefined;
 
 /** The shop's provider from MOLLIE_API_KEY; null when none is set. */

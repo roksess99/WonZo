@@ -39,6 +39,9 @@ const RULES: readonly Rule[] = [
   { from: ["PENDING_PAYMENT"], to: "PAYMENT_FAILED", actors: ["provider", "reconciliation"] },
   { from: ["PAYMENT_FAILED"], to: "PENDING_PAYMENT", actors: ["customer"] },
   { from: ["PENDING_PAYMENT", "PAYMENT_FAILED"], to: "CANCELLED", actors: ["system", "customer"] },
+  // Held before it was paid (a different amount was paid): the admin cancels and pays back what came in
+  // (D-07, owner 2026-10-13). Only for a held order — src/lib/admin/order-actions.ts checks that.
+  { from: ["PENDING_PAYMENT", "PAYMENT_FAILED"], to: "CANCELLED", actors: ["admin"] },
   // After the cancel window (D-04): purchasing starts.
   { from: ["PAID"], to: "FULFILLMENT_PENDING", actors: ["admin", "system"] },
   // Inside the window the customer may cancel (D-04, 2026-10-10); always with a full refund.
@@ -74,6 +77,8 @@ export const EFFECTS: Partial<Record<OrderStatus, readonly string[]>> = {
   PAID: ["order-confirmation", "admin-new-order"],
   FULFILLMENT_PENDING: ["supplier-order", "invoice"],
   CANCELLED: ["order-cancelled"],
+  // docs/MAIL.md § Verzonden: what is on its way, with the tracking number.
+  SHIPPED: ["order-shipped"],
 };
 
 /** Whether the customer may still cancel or change their details (D-04). */

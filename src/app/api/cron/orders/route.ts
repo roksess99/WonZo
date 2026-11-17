@@ -1,14 +1,24 @@
 // POST /api/cron/orders — the scheduled work on orders, every few minutes:
-// purchasing after the 30-minute window (D-04), cancelling unpaid orders
+// releasing orders after the 30-minute window, purchasing them at the
+// supplier (D-04, src/lib/orders/purchasing.ts) and following the parcels
+// (src/lib/orders/tracking.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
-// (docs/PAYMENTS.md § Reconciliatie) and tidying the rate limit. Bearer
+// (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
+// (src/lib/mail/worker.ts) and tidying the rate limit. Bearer
 // JOB_TOKEN; one run at a time (GET_LOCK), so two calls never work double
 // (.claude/rules/beveiliging.md § Geplande taken).
 
 import { getPool, hasDatabase } from "@/lib/db";
 import { pruneRateLimits } from "@/lib/db/rate-limit";
 import { json, refuseJob } from "@/lib/http";
+import { defaultOrdering } from "@/lib/catalog/ordering";
 import { releaseClosedWindows } from "@/lib/orders";
+import { runPurchasing } from "@/lib/orders/purchasing";
+import { runTracking } from "@/lib/orders/tracking";
+import { runInvoicing } from "@/lib/invoices";
+import { settleReturns } from "@/lib/returns";
+import { defaultMail } from "@/lib/mail";
+import { sendDueMail } from "@/lib/mail/worker";
 import { expireUnpaidOrders, reconcile } from "@/lib/payments";
 import { defaultProvider } from "@/lib/payments/mollie";
 
@@ -27,10 +37,42 @@ export async function POST(request: Request): Promise<Response> {
       const now = new Date();
       const provider = defaultProvider();
       const released = await releaseClosedWindows(now);
+      // Purchasing at the supplier (D-04); with SUPPLIER_ORDERING off only the drafts.
+      const purchasing = await runPurchasing(defaultOrdering(), now);
+      // Where the parcels are: shipped, delivered (D-09: the withdrawal window runs from the delivery).
+      const tracked = await runTracking(defaultOrdering(), now);
+      // Returns whose refund the provider settled: refunded (mail, credit note) or back to the admin (D-09).
+      const returns = await settleReturns(now);
+      // Invoices for what was released, credit notes for what was cancelled after invoicing or returned (D-21, D-09).
+      const invoicing = await runInvoicing(now);
       const expired = provider ? await expireUnpaidOrders(provider, now) : { cancelled: [] };
       const reconciled = provider ? await reconcile(provider, now) : { payments: 0, refunds: 0 };
+      // Last: the mail of everything above (confirmations, alerts) goes out in the same run.
+      // A wrong mail setting must not stop purchasing and reconciliation: the dashboard shows it.
+      let mail: ReturnType<typeof defaultMail> = null;
+      try {
+        mail = defaultMail();
+      } catch {
+        console.error("[cron/orders] mail: bad config");
+      }
+      const mailed = await sendDueMail(mail?.sender ?? null, mail?.config ?? null, now);
       const pruned = await pruneRateLimits(now);
-      return json(200, { status: "done", released: released.released.length, cancelled: expired.cancelled.length, ...reconciled, pruned });
+      return json(200, {
+        status: "done",
+        released: released.released.length,
+        purchaseDrafts: purchasing.drafts,
+        purchased: purchasing.outcomes.filter((o) => o === "placed").length,
+        shipped: tracked.shipped,
+        delivered: tracked.delivered,
+        invoices: invoicing.invoices,
+        creditNotes: invoicing.credits,
+        returnsRefunded: returns.refunded,
+        cancelled: expired.cancelled.length,
+        ...reconciled,
+        mailSent: mailed.sent,
+        mailFailed: mailed.failed,
+        pruned,
+      });
     } finally {
       await lock.query("SELECT RELEASE_LOCK('wonzo_orders_job')");
     }

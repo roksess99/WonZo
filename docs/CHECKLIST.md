@@ -62,6 +62,15 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 
 ## Mail
 
+- [ ] De boekhouder bevestigt de btw-berekening van D-15 (per product, half
+      naar boven); bevestiging en factuur gebruiken al dezelfde functie.
+- [ ] De bevestiging linkt naar het **modelformulier** voor herroeping (de
+      pagina bestaat nog niet; tot dan de contactpagina). Tekst over de
+      bedenktijd laten controleren.
+- [ ] `node --env-file=.env scripts/mail-test.mjs <adres>` komt aan, ook op
+      wonzo.nl zelf.
+- [ ] In productie: `MAIL_REDIRECT_TO` leeg, `MAIL_ORDERS_TO` het adres van de
+      eigenaar.
 - [ ] SPF, DKIM en DMARC ingesteld voor het domein.
 - [ ] Een echte mail ontvangen in Gmail én in Outlook, niet in de map
       ongewenst.
@@ -76,6 +85,13 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Een naam met accenten en een bedrag met een euroteken komen goed door
 - [ ] De btw op de factuur is gelijk aan die in de bevestigingsmail
 - [ ] De link naar de PDF is niet te raden
+- [ ] BigBuy bevestigt dat ons retourlabel in het pakket gaat (vraag 24); tot dan klopt "in je pakket zit een retourlabel" op de retourpagina niet
+- [ ] De statuswoorden van BigBuy-tracking gemeten bij de eerste echte zending (vraag 25); tot dan "als afgeleverd markeren" in het paneel
+- [ ] Een modelformulier voor herroeping (pagina of PDF), en de retourteksten door een adviseur bekeken
+- [ ] De uitwerking van het maximum bij een retour (verzendkosten, D-09) bevestigd door de eigenaar
+- [ ] Het IBAN van de zakelijke rekening op de factuur (`src/lib/invoices/index.ts`, nu leeg)
+- [ ] De voorbeeldfactuur (`/beheer/facturen/voorbeeld`) is door de boekhouder bekeken
+- [ ] De opgeslagen PDF's zitten in de backup (`docs/DISASTER_RECOVERY.md`)
 
 ## Beveiliging
 
@@ -83,6 +99,8 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Geen sleutel in Git, ook niet in de geschiedenis. Ooit toch gestaan?
       Roteren.
 - [ ] Beheerpaneel op noindex en uit de sitemap en robots.
+- [ ] `ADMIN_DEV_LOGIN` staat niet in de omgeving van productie, en
+      `/beheer` geeft daar 404 tot het inloggen gebouwd is (D-07).
 - [ ] Inloggen met tweede factor.
 - [ ] Beveiligingsheaders en CSP ingesteld (`.claude/rules/beveiliging.md`).
 - [ ] Een limiet op inloggen, codes en formulieren die mail of externe calls
@@ -122,6 +140,16 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Toetsenbord: van het begin tot het afrekenen, zonder muis.
 - [ ] Een trage verbinding nagebootst en gekeken wat er dan op het scherm staat.
 
+## Inkopen bij de leverancier
+
+- [ ] `SUPPLIER_ORDERING=live` pas bij de livegang; daarvoor `off`.
+- [ ] Gemeten in de sandbox (of met één kleine echte bestelling door de
+      eigenaar): wat BigBuy antwoordt bij te weinig tegoed, of een tweede
+      bestelling met dezelfde referentie geweigerd wordt, en of `carriers` weg
+      mag (`docs/api/LEVERANCIER.md` § 10, `AANNAME`).
+- [ ] Tegoed op de moneybox vóór de eerste bestelling (`GEMETEN` 2026-10-12:
+      € 0,00).
+
 ## Beheerpaneel
 
 - [ ] Een bestelling van begin tot eind afgehandeld: bekijken, controleren
@@ -133,6 +161,9 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Werkt op een telefoon voor de drie dingen die haast hebben: bestelling
       bekijken, zien of de inkoop gelukt is, retour afhandelen.
 - [ ] Het logboek toont wie wat deed.
+- [ ] De rode melding bovenaan verschijnt als Mollie de sleutel weigert of
+      een methode uitzet, en als BigBuy de sleutel weigert — één keer bewust
+      laten gebeuren (bijv. met een ongeldige testsleutel).
 
 ## Na de eerste echte bestelling
 

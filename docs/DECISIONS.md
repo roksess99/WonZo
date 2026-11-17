@@ -337,6 +337,11 @@ Wat er nog beantwoord moet worden binnen die keuze:
 - **Prijsverschil: tot 10 %** hoger dan de bevroren inkoopprijs wordt er
   doorbesteld; daarboven blijft de bestelling staan voor de eigenaar.
 
+**Gebouwd (2026-10-12, fase 6):** `src/lib/orders/purchasing.ts`. Opnieuw
+proberen na een weigering is een overgang `REJECTED → SUBMITTING` die in
+`docs/STATE_MACHINES.md` nog niet stond; D-04 gaat voor, de tabel is
+aangepast. Inkopen staat uit tot `SUPPLIER_ORDERING=live` in productie.
+
 ---
 
 ## D-05 · Betaaldienst
@@ -512,6 +517,38 @@ persoon.
 met "MFA verplicht" in `.claude/rules/beveiliging.md`. De andere vragen
 hierboven blijven open.
 
+**Eigenaar (2026-10-12)**, op basis van een aangeleverde bouwbeschrijving van
+een ander paneel:
+
+- **Pad `/beheer`**, buiten de taaltak van de winkel; alleen Nederlands, licht
+  thema, `noindex` en een regel in `robots.txt`.
+- **Drie vaste rollen**, geen rechten per persoon: **eigenaar** (alles),
+  **boekhouder** (facturen), **marketing** (kortingen, beoordelingen,
+  statistieken). Eén recht per scherm. Prijzen, beheerders en
+  **terugbetalen blijven altijd bij de eigenaar**; de laatste actieve eigenaar
+  kan niet gedegradeerd of uitgeschakeld worden.
+- **Inloggen (2FA) wordt als laatste gebouwd**, zodat testen niet steeds een
+  code vraagt. Tot dan opent het paneel alleen lokaal: `pnpm dev`,
+  `ADMIN_DEV_LOGIN=true` én het adres `localhost`. In productie geeft
+  `/beheer` "niet gevonden". De rechtencontrole staat vanaf het begin in elke
+  pagina, actie en route.
+- **Order on hold** (bijv. afwijkend bedrag): de beheerder kiest zelf tussen
+  "toch doorzetten" (met reden) en "annuleren en volledig terugbetalen" (met
+  bevestiging van het bedrag); allebei in het auditlog.
+
+**Eigenaar (2026-10-13), afwijkende of te late betaling:** een betaling die
+Mollie als betaald meldt nadat hij hier al verlopen of mislukt was, wordt als
+betaald vastgelegd (alleen op het antwoord van Mollie zelf); de bestelling
+komt in "vraagt aandacht" en de beheerder betaalt terug met een knop. Is er
+een ander bedrag betaald dan de bestelling vroeg, dan annuleert de beheerder
+en betaalt terug wat er binnenkwam — het bedrag zoals Mollie het meldt wordt
+daarvoor bij de betaling vastgelegd (een terugbetaling kan niet meer zijn dan
+wat er betaald is). Nooit automatisch, en een bestelling wordt
+nooit vanzelf heropend. Verworpen: automatisch terugbetalen.
+
+Nog open: sessieduur (inactief en absoluut) en of de lokale doorgang na het
+bouwen van het inloggen blijft.
+
 ---
 
 ## D-08 · Kortingen en acties
@@ -544,6 +581,45 @@ terugbetaald (`docs/api/LEVERANCIER.md` § 10, `GEDOCUMENTEERD`). Herroepingen
 komen dus bij de winkel binnen en kosten het artikel — dat hoort ook in de
 kostprijs (D-16). **Retouradres** (eigenaar, 2026-10-10): voorlopig
 Thaliastraat 267, 6846 XX Arnhem, het woon- en bedrijfsadres.
+
+**Eigenaar (2026-10-12):** komt een retour binnen, dan beoordeelt de
+beheerder het product en kiest in het paneel **akkoord** of **niet
+akkoord**. Bij akkoord volgt de terugbetaling met één knop (met bevestiging van het
+bedrag); bij niet akkoord een reden. Nog open: hoe een klant aanmeldt, wie de
+retourzending betaalt, waardevermindering.
+
+**Eigenaar (2026-10-13):**
+
+- **Aanmelden** met een retourformulier op de site: de klant geeft het
+  mailadres van de bestelling en het **factuurnummer**, krijgt dan de
+  artikelen te zien, vinkt aan wat terug gaat en kiest per artikel een reden.
+  De reden is verplicht, met als keuze ook "geen reden nodig": bij herroeping
+  hoeft de klant geen reden te geven (`WETTELIJK`, BW 6:230o, te bevestigen).
+  Redenen: geen reden (herroeping), verkeerd geleverd, beschadigd aangekomen,
+  defect.
+- **Retourlabel:** de klant krijgt een retourlabel bij de bestelling; BigBuy
+  stopt het in het pakket. De winkel betaalt de retourzending dus altijd. Of
+  en hoe BigBuy dat doet is nog niet bevestigd (`AANNAME`, vraag 24 in
+  `docs/api/VRAGEN.md`). Het retouradres staat ook op de retourpagina, voor
+  wie het label kwijt is.
+- **Waardevermindering:** mag; de beheerder kiest bij akkoord zelf het hele
+  bedrag of een deel, met een reden. Nooit meer dan het berekende maximum.
+- **Termijn:** eerst de verzendstatus van BigBuy ophalen (tracking); herroepen
+  kan tot 14 dagen na aflevering. Bij verkeerd geleverd, beschadigd of defect
+  geldt die termijn niet (wettelijke garantie); de beheerder beoordeelt.
+
+**Uitwerking (2026-10-13), te bevestigen:** het maximum is de prijs van de
+teruggestuurde stuks plus verzendkosten volgens `docs/RETOUREN.md`: de gewone
+verzendkosten gaan alleen mee terug als daarmee de hele bestelling terug is;
+de eigen verzendkosten van een groot artikel (D-13) gaan per stuk mee terug
+bij een fout van de winkel, of als de hele bestelling terug is. Herroepen kan
+al vóór aflevering (de wet laat dat toe); zolang de aflevering niet bekend is,
+blijft het formulier open. Een retour kan vanaf het moment dat er een factuur
+is (na het annuleervenster). Bij de terugbetaling volgt een creditnota voor de
+teruggestuurde artikelen; een waardevermindering staat er als eigen regel op.
+
+**Gebouwd (2026-10-13):** `src/lib/returns/`, `/retour` en `/beheer/retouren`,
+de verzendstatus via `src/lib/orders/tracking.ts`; zie `docs/RETOUREN.md`.
 
 ---
 
@@ -660,6 +736,18 @@ brengt btw-tarieven en regels per land mee waar nu geen vraag naar is.
 - **Status:** OPEN
 - **Depends on:** —
 
+**Eigenaar (2026-10-12), te bevestigen door de boekhouder:** **btw per
+product**, en dan het totaal inclusief en exclusief btw — naar het voorbeeld
+van een aangeleverde factuur. Uitgewerkt (`src/lib/pricing/vat.ts`): de
+btw gaat uit het regeltotaal incl. btw (de bron is bruto), één keer
+afgerond, half naar boven: excl. = afronden(incl × 10 000 / (10 000 +
+tarief)). Per regeltotaal, niet per stuk × aantal (4 × € 2,97 = € 11,88 incl.
+→ € 9,82 excl., niet € 9,80). Verzendkosten krijgen het tarief van de
+artikelen. Dezelfde functie voor bevestigingsmail en factuur. Nog open:
+**verzendkosten bij twee tarieven** (zo'n factuur wordt geweigerd, niet
+geraden), de verdeling van een orderkorting (D-08), en de weergave in
+winkelwagen en afrekenscherm.
+
 Laten bevestigen door de boekhouder; daarna één functie overal.
 
 **Tot deze beslissing** (eigenaar, 2026-10-05): de winkelwagen toont
@@ -756,7 +844,14 @@ PDF-bibliotheek getagde, deterministische PDF's maken (meten).
 - **De PDF wordt altijd opgeslagen** bij het maken — een eis van de eigenaar.
   Een factuur verandert nooit, ook niet als het ontwerp later wijzigt.
 - KvK-nummer 42126738 (R.M.A. Marketing) staat al in `src/lib/company.ts`;
-  het btw-nummer volgt.
+  **btw-nummer NL005516835B45** (eigenaar, 2026-10-12) ook.
+- **PDF-bibliotheek** mag worden toegevoegd (eigenaar, 2026-10-12): pdfkit
+  0.20.2 — getagde PDF's (pdf-lib kan dat niet), deterministisch gemeten
+  2026-10-12. Lettertype DM Sans uit `googlefonts/dm-fonts` (OFL, toestemming
+  eigenaar 2026-10-12).
+- **Gebouwd (2026-10-12):** de PDF wordt bij het maken in de database
+  opgeslagen (`invoices.pdf`) en nooit meer gewijzigd; een annulering na
+  facturering geeft een creditnota. Opbouw naar het voorbeeld van de eigenaar.
 
 - **Wanneer:** direct na de betaling een orderbevestiging met het
   ordernummer; de factuur pas als het annuleervenster van 30 minuten (D-04)
@@ -877,8 +972,22 @@ eigenaar.
 
 ## D-29 · Maildienst voor transactiemail
 
-- **Status:** OPEN
+- **Status:** DECIDED
 - **Depends on:** —
+- **Decided:** 2026-10-12
+
+**Besloten (eigenaar, 2026-10-12): de mail van de hosting (Hostinger)**, met
+een afzender op `wonzo.nl`. Geen aparte maildienst. Te meten bij het bouwen:
+de SMTP-gegevens en -limieten van Hostinger, of SPF/DKIM/DMARC goed staan,
+of de server een message-id teruggeeft, en waar Hostinger de mail verwerkt
+(`docs/PRIVACY.md`). Voor SMTP is een bibliotheek nodig: die wordt eerst
+gevraagd.
+
+**Gebouwd (2026-10-12):** nodemailer 10.0.11 (toestemming eigenaar
+2026-10-12; zonder native onderdelen, eigen types; bewust niet de twee dagen
+oude 10.1.0). Verzending via de outbox, minstens één keer; het kenmerk van de
+server wordt bewaard (`outbox.message_id`). Buiten productie gaat mail alleen
+naar `MAIL_REDIRECT_TO`.
 
 Er was geen beslissing over de dienst die bevestigingen, verzendberichten en
 beheerdersmeldingen verstuurt; `.env.example` ging stil uit van SMTP. Eisen:
@@ -1218,6 +1327,11 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-10-13 | D-07, D-09 | Eigenaar: te late of afwijkende betaling als betaald vastleggen, beheerder betaalt terug (D-07); retourformulier met mailadres en factuurnummer, reden per artikel (ook "geen reden"), retourlabel door BigBuy in het pakket (te bevestigen, vraag 24), deels terugbetalen mag, termijn via tracking (D-09) |
+| 2026-10-12 | D-15, D-21 | Eigenaar: btw per product, totalen excl. en incl. (D-15, nog OPEN tot de boekhouder bevestigt; verzendkosten bij twee tarieven open). Facturen en creditnota's gebouwd met pdfkit en DM Sans (toestemming eigenaar voor beide downloads): na het venster, nummer uit de teller, PDF opgeslagen; btw-overzicht per maand in het paneel |
+| 2026-10-12 | D-29 | Mail gebouwd met nodemailer (toestemming eigenaar): bevestiging, annulering, meldingen aan de beheerder, via de outbox met backoff; voorvertoning in het paneel en een los testscript. Btw-bedrag in de bevestiging wacht op D-15 |
+| 2026-10-12 | D-04 | Automatisch inkopen gebouwd: na het venster een inkooporder, controle bij BigBuy (tot 10 % duurder), dan pas bestellen; geen antwoord → opzoeken op het ordernummer; weigering → meteen een melding en 24 uur elk half uur opnieuw, daarna kiest de eigenaar. `REJECTED → SUBMITTING` toegevoegd aan de statusregeling (volgt uit D-04). Staat uit tot `SUPPLIER_ORDERING=live` |
+| 2026-10-12 | D-07, D-09, D-21, D-29 | Eigenaar: beheerpaneel op `/beheer` met drie vaste rollen, terugbetalen alleen eigenaar, inloggen als laatste met lokale doorgang tot dan, beheerder kiest bij een hold (D-07); retour pas terugbetalen na akkoord van de beheerder (D-09); btw-nummer en toestemming voor een PDF-bibliotheek (D-21); mail via Hostinger, beslist (D-29) |
 | 2026-10-10 | D-05, D-09 | Beslist door de eigenaar: Mollie met hosted checkout; iDEAL, Apple Pay, Google Pay en creditcard (D-05). Onderzoek Mollie vastgelegd. D-09 van BLOCKED naar OPEN: D-05 is beslist, de informatie is nog niet compleet |
 | 2026-10-10 | D-04, D-05, D-07, D-21 | Antwoorden eigenaar op D-04 (na `PAID` en een eigen annuleervenster van 30 minuten, 24 uur opnieuw proberen, alleen moneybox met saldo in beheer, annuleren kan niet via de API, prijsverschil tot 10 %) en D-21 (altijd factuur, `2026-00001` en `C2026-00001`, PDF altijd opslaan, orderbevestiging bij betaling en factuur na het venster; bevestiging door de boekhouder volgt); retouren bij BigBuy uitgezocht en retouradres (D-09); voorkeur Mollie na de zakelijke rekening (D-05, open); beheer met 2FA (D-07, verder open) |
 | 2026-10-01 | D-00 – D-24 | Herschreven naar statusformaat met afhankelijkheden; D-14 – D-24 toegevoegd bij de herziening van de template |

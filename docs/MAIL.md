@@ -8,6 +8,21 @@ een mail die in de map ongewenst belandt is voor jou gewoon verstuurd.
 
 De factuur-PDF heeft zijn eigen regels en staat in `docs/FACTUUR.md`.
 
+**Gebouwd (fase 6, 2026-10-12):** `src/lib/mail/` — instellingen
+(`config.ts`), verzending met nodemailer over de SMTP van Hostinger (D-29,
+`transport.ts`), de gedeelde stijl en het omhulsel (`style.ts`, `layout.ts`),
+de berichten (`messages.ts`: bevestiging, annulering, melding nieuwe bestelling,
+"er vraagt iets aandacht") en de verwerker van de outbox (`worker.ts`, in de
+geplande taak `POST /api/cron/orders`). Voorvertoning met voorbeeldbestellingen
+op `/beheer/mail`; één testmail los van de site met
+`node --env-file=.env scripts/mail-test.mjs jouw@adres.nl`.
+
+Het btw-bedrag per tarief staat in de bevestiging, uit dezelfde functie als de
+factuur (D-15, 2026-10-12). Nog niet: een link
+naar het **modelformulier** (de pagina bestaat nog niet; tot dan de
+contactpagina), en de mails voor verzonden en retour. Een verlopen,
+onbetaalde bestelling krijgt bewust geen annuleringsmail.
+
 ## Welke berichten bestaan er
 
 | Bericht | Naar | Wanneer |
@@ -54,8 +69,9 @@ prijs, en een link naar de bestelling in het beheerpaneel.
 **De melding dat een inkoop mislukte of onbekend is** is de belangrijke: daar
 moet een mens iets mee. Ze zegt welke bestelling, wat de leverancier
 antwoordde (of dat er geen antwoord kwam), of de klant al betaald heeft, en
-een link naar de bestelling. Wat de beheerder daarna mag doen, is nog open in
-D-04.
+een link naar de bestelling. Wat de beheerder daarna kan doen (D-04): de
+prijs goedkeuren, opnieuw proberen na 24 uur, of annuleren en terugbetalen —
+in het beheerpaneel.
 
 ---
 
@@ -109,6 +125,12 @@ hebt, en wanneer het er ongeveer is.
 
 **Retour terugbetaald**: het bedrag, het retournummer, dat het teruggaat naar
 de rekening waarmee betaald is, en dat het een paar werkdagen kan duren.
+
+Gebouwd (2026-10-13, `src/lib/mail/after-sale.ts`): **onderweg** (met
+trackingnummer en het factuurnummer dat het retourformulier vraagt), **retour
+aangemeld** (stappen en retouradres), **retour niet akkoord** (met de reden),
+**retour terugbetaald** (met de waardevermindering als die er is), en voor de
+beheerder **nieuwe retour**. Alle vijf in de voorvertoning van het paneel.
 
 **Beoordelingsuitnodiging**: kort, één knop, en één per bestelling.
 
