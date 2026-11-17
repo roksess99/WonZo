@@ -5,9 +5,13 @@ import { t, type Messages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
 import { Container } from "../ui";
 
+/** The name in the credit line: the same in every language. */
+const CREDIT_NAME = "Nixlo";
+
 /** Company details visible on every page (docs/SCHERMEN.md § Vertrouwen; ACM). */
 export function Footer({ locale, m }: { locale: Locale; m: Messages }) {
   const missing = <em className="not-italic underline decoration-dotted">{m.contact.missing}</em>;
+  const [creditBefore = "", creditAfter = ""] = m.credit.text.split("{name}");
   return (
     <footer className="on-petrol mt-16 bg-petrol text-on-petrol">
       <Container className="grid gap-8 py-10 sm:grid-cols-2">
@@ -64,6 +68,20 @@ export function Footer({ locale, m }: { locale: Locale; m: Messages }) {
             </a>
           </address>
         </section>
+      </Container>
+      {/* Credit to the web designer (Nixlo): one quiet line under the columns. Only "Nixlo" is the link,
+          in a new tab so the visitor keeps the shop open. Underlined in the sentence, not by colour alone
+          (WCAG 1.4.1); the focus ring is the light one of the petrol footer (.on-petrol). */}
+      <Container className="border-t border-on-petrol/20 py-3 text-body-sm">
+        <p className="flex min-h-11 items-center">
+          <span>
+            {creditBefore}
+            <a href={m.credit.url} target="_blank" rel="noopener" className="underline decoration-on-petrol/50 underline-offset-4 hover:decoration-on-petrol">
+              {CREDIT_NAME}
+            </a>
+            {creditAfter}
+          </span>
+        </p>
       </Container>
     </footer>
   );

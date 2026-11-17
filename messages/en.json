@@ -357,6 +357,10 @@
     "privacy": "Privacy",
     "reviews": "Reviews"
   },
+  "credit": {
+    "text": "Website by {name}",
+    "url": "https://nixlo.nl/en?utm_source=wonzo&utm_medium=referral&utm_campaign=footer-credit"
+  },
   "notFound": {
     "title": "This page doesn't exist",
     "text": "The product may no longer be available, or the address has changed.",
