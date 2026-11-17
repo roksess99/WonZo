@@ -35,3 +35,17 @@ next-env.d.ts
 .pnp.*
 npm-debug.log*
 .pnpm-debug.log*
+
+# Claude Code: alleen wat het project zelf regelt gaat in Git — regels, hooks,
+# de gedeelde instellingen en de dev-server. Al het andere in .claude/
+# (persoonlijke agents en skills, zoals de SEO-set) blijft lokaal. Zonder deze
+# uitzonderingen zou een nieuw regelbestand of een nieuwe hook stil buiten Git
+# blijven.
+.claude/*
+!.claude/rules/
+!.claude/hooks/
+!.claude/settings.json
+!.claude/launch.json
+
+# Lokale uitvoer van de brag-video (groot, opnieuw te maken)
+brag-output/

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryTiles, categoryCovers } from "@/components/catalog/CategoryTiles";
 import { ProductGrid, ProductGridSkeleton } from "@/components/catalog/ProductGrid";
@@ -17,6 +18,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]">) {
 }
 
 async function AlwaysAvailable({ locale, m }: { locale: Locale; m: Messages }) {
+  // Per request, never prerendered: prices, stock and promotions of now (D-08).
+  await connection();
   const catalog = await getCatalogOrUnavailable(locale);
   if (!catalog) return <StateMessage tone="warning" title={m.listing.unavailableTitle} text={m.listing.unavailableText} />;
   return <ProductGrid products={applyQuery(catalog, { sort: "recommended" }).slice(0, 8)} locale={locale} m={m} />;

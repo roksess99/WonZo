@@ -33,15 +33,16 @@ async function invoiceDocument(conn: Queryable, orderId: number, number: string,
   const [o] = await selectRows<Raw>(
     conn,
     `SELECT reference, created_at, paid_at, email, phone, first_name, last_name, street, house_number, postcode, city, country,
-            subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents, currency FROM orders WHERE id = ?`,
+            subtotal_cents, discount_code, shipping_standard_cents, shipping_large_cents, total_cents, currency FROM orders WHERE id = ?`,
     [orderId],
   );
   if (!o || o.currency !== "EUR") throw new Error(`order ${orderId}: not found or not in EUR`);
-  const lines = await selectRows<Raw>(conn, "SELECT name, brand, sku, quantity, unit_price_cents, line_total_cents, vat_rate_bp, min_days, max_days FROM order_lines WHERE order_id = ? ORDER BY line_no", [orderId]);
+  const lines = await selectRows<Raw>(conn, "SELECT name, brand, sku, quantity, unit_price_cents, line_total_cents, code_discount_cents, vat_rate_bp, min_days, max_days FROM order_lines WHERE order_id = ? ORDER BY line_no", [orderId]);
   const [payment] = await selectRows<{ method: string | null }>(conn, "SELECT method FROM payments WHERE order_id = ? AND status = 'PAID' ORDER BY created_at, id LIMIT 1", [orderId]);
   const n = (r: Raw, k: string) => Number(r[k]);
   const vat = vatBreakdown(
-    lines.map((l) => ({ quantity: n(l, "quantity"), unitPrice: money(n(l, "unit_price_cents")), lineTotal: money(n(l, "line_total_cents")), vatRateBp: n(l, "vat_rate_bp") })),
+    // The code's share per line first (D-15): the VAT comes out of what was paid.
+    lines.map((l) => ({ quantity: n(l, "quantity"), unitPrice: money(n(l, "unit_price_cents")), lineTotal: money(n(l, "line_total_cents")), discount: money(n(l, "code_discount_cents")), vatRateBp: n(l, "vat_rate_bp") })),
     money(n(o, "shipping_standard_cents") + n(o, "shipping_large_cents")),
   );
   // The invoice says exactly what was paid: one cent off is a question nobody wants (docs/FACTUUR.md § Rekenen).
@@ -52,6 +53,7 @@ async function invoiceDocument(conn: Queryable, orderId: number, number: string,
     issuedAt,
     creditsNumber: null,
     orderReference: String(o.reference),
+    discountCode: o.discount_code === null ? null : String(o.discount_code),
     orderedAt: fromDbTime(String(o.created_at)),
     paidAt: o.paid_at === null ? null : fromDbTime(String(o.paid_at)),
     paymentMethod: payment?.method ?? null,
@@ -156,12 +158,13 @@ export async function issueReturnCreditNote(returnId: number, now: Date = new Da
     const original = snapshotOf(invoice.snapshot);
     const pieces = await selectRows<Raw>(
       conn,
-      `SELECT l.name, l.brand, l.sku, rl.quantity, l.unit_price_cents, l.vat_rate_bp
+      `SELECT l.name, l.brand, l.sku, rl.quantity, rl.code_discount_cents, l.unit_price_cents, l.vat_rate_bp
          FROM return_lines rl JOIN order_lines l ON l.order_id = ? AND l.line_no = rl.line_no WHERE rl.return_id = ? ORDER BY rl.line_no`,
       [orderId, returnId],
     );
     const n = (r: Raw, k: string) => Number(r[k]);
-    const back = pieces.map((p) => ({ quantity: -n(p, "quantity"), unitPrice: money(n(p, "unit_price_cents")), lineTotal: money(-n(p, "unit_price_cents") * n(p, "quantity")), vatRateBp: n(p, "vat_rate_bp") }));
+    // The code's share of the pieces that came back (fixed when the return was registered) comes off what is credited.
+    const back = pieces.map((p) => ({ quantity: -n(p, "quantity"), unitPrice: money(n(p, "unit_price_cents")), lineTotal: money(-n(p, "unit_price_cents") * n(p, "quantity")), discount: money(-n(p, "code_discount_cents")), vatRateBp: n(p, "vat_rate_bp") }));
     const max = n(ret, "lines_cents") + n(ret, "shipping_cents");
     const deduction = max - n(ret, "refund_cents");
     if (deduction < 0) throw new Error(`return ${returnId}: refunded more than its maximum`);

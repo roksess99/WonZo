@@ -138,7 +138,8 @@ export function renderInvoicePdf(doc: InvoiceDocument): Promise<Buffer> {
   for (const l of doc.lines) {
     pdf.font("b").fontSize(9);
     const nameHeight = pdf.heightOfString(l.name, { width: COLS[0].w - 6 });
-    const rowHeight = nameHeight + 18;
+    const codeShare = l.discount && l.discount.amount !== 0 ? `Kortingscode${doc.discountCode ? ` ${doc.discountCode}` : ""}: −${eur({ amount: Math.abs(l.discount.amount), currency: l.discount.currency })} incl. btw` : null;
+    const rowHeight = nameHeight + 18 + (codeShare ? 11 : 0);
     if (y + rowHeight > BOTTOM) newPage();
     const tr = pdf.struct("TR");
     table.add(tr);
@@ -146,6 +147,8 @@ export function renderInvoicePdf(doc: InvoiceDocument): Promise<Buffer> {
       pdf.struct("TD", {}, () => {
         text(l.name, 54, y, { font: "b", width: COLS[0].w - 6 });
         text([l.brand, l.sku].filter(Boolean).join("  ·  "), 54, y + nameHeight + 2, { size: 8, color: C.muted, width: COLS[0].w - 6 });
+        // The totals of the line are after the code (D-15); the share stands under the name, so the line adds up.
+        if (codeShare) text(codeShare, 54, y + nameHeight + 13, { size: 8, color: C.muted, width: COLS[0].w - 6 });
       }),
     );
     const cells = [String(l.quantity), eur(l.unitExcl), eur(l.unitIncl), eur(l.totalExcl), eur(l.totalIncl)];

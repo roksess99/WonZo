@@ -99,15 +99,16 @@ describe("the frozen snapshot", () => {
   it("freezes what the quote showed, with the supplier's cost per piece", async () => {
     const products = await getCatalog("nl");
     const snap = freeze(quoteCart(lines, products), products, await getSupplierCosts(lines));
-    // By hand: 2 × € 29,99 = € 59,98 + € 99,99 = € 159,97 subtotal (≥ € 50: the
-    // standard parcel is free); the bed is a large item: € 63,80 own shipping;
-    // total € 223,77.
-    expect(snap.subtotal.amount).toBe(15997);
+    // By hand: advised € 24,78 excl. × 1,21 = € 29,9838 → € 29,98; the bed
+    // € 82,64 × 1,21 = € 99,9944 → € 99,99. 2 × € 29,98 = € 59,96 + € 99,99 =
+    // € 159,95 subtotal (≥ € 50: the standard parcel is free); the bed is a
+    // large item: € 63,80 own shipping; total € 223,75.
+    expect(snap.subtotal.amount).toBe(15995);
     expect(snap.shippingStandard.amount).toBe(0);
     expect(snap.shippingLarge.amount).toBe(6380);
-    expect(snap.total.amount).toBe(22377);
+    expect(snap.total.amount).toBe(22375);
     expect(snap.lines.map((l) => [l.lineNo, l.productId, l.quantity, l.unitPrice.amount, l.lineTotal.amount, l.supplierCost.amount, l.largeShipping?.amount ?? null])).toEqual([
-      [1, "1300118", 2, 2999, 5998, 1235, null],
+      [1, "1300118", 2, 2998, 5996, 1235, null],
       [2, "1300104", 1, 9999, 9999, 2492, 6380],
     ]);
     expect(snap.lines[0]!.offerId).toBe(products.find((p) => p.id === "1300118")!.offerId);
@@ -117,7 +118,7 @@ describe("the frozen snapshot", () => {
     const one = [{ source: "bigbuy" as const, productId: "1300106", quantity: 1 }];
     const products = await getCatalog("nl");
     const snap = freeze(quoteCart(one, products), products, await getSupplierCosts(one));
-    // By hand: € 18,50 + € 5,95 = € 24,45.
+    // By hand: advised € 15,29 excl. × 1,21 = € 18,5009 → € 18,50; + € 5,95 = € 24,45.
     expect([snap.subtotal.amount, snap.shippingStandard.amount, snap.total.amount]).toEqual([1850, 595, 2445]);
   });
 

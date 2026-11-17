@@ -48,8 +48,8 @@ describe("placing an order", () => {
     const r = await placed(request());
     expect(r.reference).toMatch(/^WZ-\d{4}-\d{5,}$/);
     const [o] = await selectRows<Record<string, unknown>>(getPool(), "SELECT status, subtotal_cents, shipping_standard_cents, shipping_large_cents, total_cents, postcode FROM orders WHERE id = ?", [r.orderId]);
-    // By hand: 2 × € 29,99 + € 99,99 = € 159,97; standard free; bed € 63,80 → € 223,77.
-    expect(o).toEqual({ status: "PENDING_PAYMENT", subtotal_cents: 15997, shipping_standard_cents: 0, shipping_large_cents: 6380, total_cents: 22377, postcode: "1234 AB" });
+    // By hand: 2 × € 29,98 + € 99,99 = € 159,95; standard free; bed € 63,80 → € 223,75 (prices: advised excl. × 1,21).
+    expect(o).toEqual({ status: "PENDING_PAYMENT", subtotal_cents: 15995, shipping_standard_cents: 0, shipping_large_cents: 6380, total_cents: 22375, postcode: "1234 AB" });
     expect(await count("SELECT COUNT(*) AS n FROM order_lines WHERE order_id = ?", [r.orderId])).toBe(2);
     expect(await count("SELECT COUNT(*) AS n FROM order_events WHERE order_id = ? AND to_status = 'PENDING_PAYMENT'", [r.orderId])).toBe(1);
     expect(await findOrderIdByToken(getPool(), r.accessToken)).toBe(r.orderId);

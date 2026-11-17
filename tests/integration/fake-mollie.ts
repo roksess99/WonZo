@@ -14,6 +14,7 @@ export class FakeMollie implements PaymentProvider {
   payments = new Map<string, ProviderPayment>();
   refunds = new Map<string, StoredRefund>();
   private byKey = new Map<string, string>();
+  private askedByKey = new Map<string, number>();
   calls: { op: string; key?: string }[] = [];
   /** The next create call: no answer (the payment is created anyway, or not), or a refusal. */
   next: { create?: "lost-after-create" | "lost-before-create" | "refuse"; refund?: "lost-after-create" | "refuse"; refundStatus?: string } = {};
@@ -27,7 +28,12 @@ export class FakeMollie implements PaymentProvider {
     if (how === "refuse") throw new ProviderRefused(422, "refused");
     if (how === "lost-before-create") throw new ProviderOutcomeUnknown("timeout");
     const existing = this.byKey.get(req.key);
-    if (existing) return this.payments.get(existing)!;
+    if (existing) {
+      // GEMETEN 2026-11-13 (test mode, scripts/measure-mollie.mjs): the same key with the same body gives the
+      // same payment; with another amount Mollie refuses with HTTP 400.
+      if (this.askedByKey.get(req.key) !== req.amount.amount) throw new ProviderRefused(400, "idempotency key used before with different parameters");
+      return this.payments.get(existing)!;
+    }
     const id = `tr_${randomBytes(6).toString("hex")}`;
     const p: ProviderPayment = {
       id,
@@ -41,6 +47,7 @@ export class FakeMollie implements PaymentProvider {
     };
     this.payments.set(id, p);
     this.byKey.set(req.key, id);
+    this.askedByKey.set(req.key, req.amount.amount);
     if (how === "lost-after-create") throw new ProviderOutcomeUnknown("timeout after create");
     return p;
   }

@@ -49,6 +49,8 @@ De eigenaar bepaalt zijn marge, per groep. Drie dingen liggen vast:
   sleutel die op het artikel zelf zit.
 - **Geen prijsregel betekent: de adviesprijs van de leverancier**, zoals die
   binnenkomt. Geen opslag eroverheen, geen ondergrens eroverheen.
+  BigBuy geeft de adviesprijs **exclusief btw** (bevestigd 2026-11-02); de
+  winkel telt de btw er één keer bij (`sellingPrice`, D-03).
 - **Geen van beide** betekent: inkoop plus een minimummarge uit de instellingen.
   Dat is een noodgreep, geen strategie.
 
@@ -209,6 +211,37 @@ heeft opgehaald. Wat de browser meestuurt is alleen de tekst van de code.
 
 Is hij niet meer geldig, dan gaat de betaling **niet** door: de klant zag een
 bedrag met korting en mag niet zonder waarschuwing het volle bedrag afrekenen.
+
+### Gebouwd (2026-11-02, D-08, D-15)
+
+Rekenwerk in `src/lib/pricing/codes.ts`, opslag in `src/lib/discounts/codes.ts`,
+migratie 0013. Wat er in de code vastligt:
+
+- De klant typt de code al in de winkelwagen; de browser bewaart alleen de
+  tekst. Elke offerte (`POST /api/cart`) zoekt hem op, met een limiet per
+  bezoeker tegen raden (60 per 10 minuten). Een code die nog niet begonnen is,
+  heet "onbekend": het antwoord verraadt niet wat er komt.
+- **Basis**: de regels zonder eigen actie. Het **minimum** kijkt naar alle
+  artikelen (incl. btw), niet naar de verzending.
+- **Verdelen** (D-15): het bedrag (percentage van de basis, één keer half naar
+  boven afgerond) proportioneel naar het regeltotaal, elk aandeel naar beneden,
+  de rest per cent naar de grootste rest, bij gelijkstand de eerste regel.
+- **Ondergrens**: een aandeel wordt per regel begrensd tot wat de ondergrens
+  (D-16) toelaat; wat daar afvalt gaat niet naar een andere regel. De klant ziet
+  dat de korting bij sommige artikelen kleiner is.
+- **Gratis verzending** telt het subtotaal vóór de code. Dat is dezelfde regel
+  als "nooit duurder door een korting": een code verlaagt alleen het subtotaal.
+- **Afrekenen**: de code wordt opnieuw gekeurd, nu met het mailadres; een
+  geweigerde code plaatst niets, en de klant kiest (code verwijderen). Het
+  afrekenscherm stuurt de code alleen mee als het overzicht hem toonde.
+- **Aftekenen** bij de overgang naar betaald, in dezelfde transactie, op een
+  unieke sleutel (code, hash van het mailadres) en met de rij van de code
+  vergrendeld voor het maximum. Was een andere betaalde bestelling eerst, dan
+  komt deze in "vraagt aandacht"; nooit stil een extra korting of een
+  automatische terugbetaling.
+- **Retour**: het aandeel per stuk, cumulatief naar beneden afgerond (bij
+  € 1,00 korting op 3 stuks: 33, 33 en 34 cent), vastgelegd per retourregel.
+  Alle retouren van een regel samen geven precies terug wat ervoor betaald is.
 
 ---
 

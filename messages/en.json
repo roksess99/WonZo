@@ -136,7 +136,9 @@
       "close": "Close"
     },
     "unavailableTitle": "This product can't be loaded right now",
-    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes."
+    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes.",
+    "promotionFlag": "{percent}% off",
+    "promotionUntil": "Offer until {date}"
   },
   "cart": {
     "title": "Cart",
@@ -169,6 +171,23 @@
     "summaryTitle": "Summary",
     "subtotal": "Subtotal ({count} items)",
     "subtotalOne": "Subtotal (1 item)",
+    "discount": "Discount code {code}",
+    "codeLabel": "Discount code",
+    "codeApply": "Apply",
+    "codeRemove": "Remove code",
+    "codeApplied": "Code {code}: {percent} off the products.",
+    "codeLimited": "On some products the discount is smaller: their price cannot go lower.",
+    "codeSkipped": "Products already on offer do not count.",
+    "codeChecking": "Checking the code…",
+    "codeRefused": {
+      "unknown": "We do not know code {code}. Check the spelling.",
+      "ended": "Code {code} has expired.",
+      "exhausted": "Code {code} has been used as often as it could be.",
+      "used": "You have used code {code} before. It is valid once per customer.",
+      "min-subtotal": "Code {code} applies from {amount} in products.",
+      "promoted-only": "Code {code} does not apply to products already on offer.",
+      "try-later": "The code cannot be checked right now. Please try again in a few minutes."
+    },
     "shipping": "Shipping",
     "shippingLarge": "Shipping for large items",
     "shippingFree": "Free",
@@ -230,7 +249,8 @@
     "rateLimited": "Too many attempts in a row. Please try again in a few minutes.",
     "unavailable": "We cannot check the products right now. Please try again in a few minutes.",
     "backToCart": "Back to your cart",
-    "termsLink": "terms and conditions"
+    "termsLink": "terms and conditions",
+    "codeProblem": "Your order has not been placed yet: {reason}"
   },
   "order": {
     "metaTitle": "Your order",
@@ -348,6 +368,7 @@
     "line": "{quantity} × {name}",
     "lineSub": "{price} each · item number {sku}",
     "subtotal": "Subtotal",
+    "discount": "Discount code {code}",
     "shipping": "Shipping",
     "shippingFree": "Free",
     "shippingLarge": "Shipping for large items",
@@ -377,7 +398,13 @@
       "title": "Your order has been cancelled",
       "intro": "Your order {reference} has been cancelled.",
       "refund": "You will get {amount} back on the account or card you paid with. This usually takes a few working days.",
-      "questions": "Questions? Email us at {email}."
+      "questions": "Questions? Email us at {email}.",
+      "undeliverable": {
+        "subject": "Order {reference} cancelled: we could not deliver",
+        "preheader": "We could not deliver your order. You will get {amount} back.",
+        "title": "We could not deliver your order",
+        "intro": "We are sorry: we could not order {reference} from our supplier, so we have cancelled it. You do not need to do anything."
+      }
     },
     "returnLink": "Sending something back: {url}",
     "shipped": {

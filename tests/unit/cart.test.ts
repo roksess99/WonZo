@@ -22,6 +22,7 @@ function product(id: string, cents: number, stock: number, days: [number, number
     sku: `S${id}`,
     ean: null,
     price: money(cents),
+    promotion: null,
     vatRateBasisPoints: 2100,
     availability: "in_stock",
     stock,

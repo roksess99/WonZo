@@ -99,6 +99,19 @@ describe("the messages", () => {
     const mail = orderCancelled({ locale: "nl", reference: "WZ-2026-00012", refund: money(6195) }, links, getMessages("nl"));
     expect(mail.subject).toBe("Bestelling WZ-2026-00012 geannuleerd");
     expect(mail.text).toContain(`${formatMoney(money(6195))} terug`);
+    expect(mail.text).not.toContain("leverancier");
+  });
+
+  it("cancelled because BigBuy would not take it (D-04): says we could not deliver, and the amount", () => {
+    const nl = orderCancelled({ locale: "nl", reference: "WZ-2026-00012", refund: money(6195), why: "undeliverable" }, links, getMessages("nl"));
+    expect(nl.subject).toBe("Bestelling WZ-2026-00012 geannuleerd: we konden niet leveren");
+    expect(nl.text).toContain("We konden je bestelling niet leveren");
+    expect(nl.text).toContain("niet bij onze leverancier bestellen");
+    expect(nl.text).toContain(`${formatMoney(money(6195))} terug`);
+    expect(nl.html).toContain("We konden je bestelling niet leveren");
+    const en = orderCancelled({ locale: "en", reference: "WZ-2026-00012", refund: money(6195), why: "undeliverable" }, links, getMessages("en"));
+    expect(en.subject).toBe("Order WZ-2026-00012 cancelled: we could not deliver");
+    expect(en.text).toContain(`${formatMoney(money(6195))} back`);
   });
 
   it("for the owner: the number and amount in the subject, the supplier's numbers, a link to the panel", () => {
@@ -112,6 +125,7 @@ describe("the messages", () => {
     expect(alertKind("order:12:hold:AMOUNT_MISMATCH")).toBe("hold");
     expect(alertKind("supplier:abc:failed")).toBe("supplierFailed");
     expect(alertKind("supplier:abc:gave-up")).toBe("supplierGaveUp");
+    expect(alertKind("supplier:abc:refunded")).toBe("supplierRefunded");
     expect(alertKind("supplier:abc:price:1234")).toBe("supplierPrice");
     expect(alertKind("refund:abc:failed")).toBe("refundFailed");
     expect(alertKind("payment:abc:EXPIRED->PAID")).toBe("payment");
@@ -119,5 +133,13 @@ describe("the messages", () => {
     const mail = adminAlert({ reference: "WZ-2026-00012", kind: "supplierFailed", detail: { error: "Insufficient balance" }, paid: true }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages());
     expect(mail.subject).toBe("Let op: WZ-2026-00012 — inkoop bij BigBuy lukt niet (Insufficient balance)");
     expect(mail.text).toContain("De klant heeft betaald.");
+    // What to do, and what happens if nobody does (D-04, user 2026-11-13).
+    expect(mail.text).toContain("Waardeer het tegoed in je BigBuy-account op.");
+    expect(mail.text).toContain("vanzelf geannuleerd");
+    const done = adminAlert({ reference: "WZ-2026-00012", kind: "supplierRefunded", detail: {}, paid: true }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages());
+    expect(done.subject).toBe("Let op: WZ-2026-00012 — inkoop bij BigBuy lukte 24 uur niet; de bestelling is geannuleerd en terugbetaald");
+    expect(done.text).toContain("Je hoeft niets te doen");
+    // An alert without a next step gets no extra line.
+    expect(adminAlert({ reference: "WZ-2026-00012", kind: "other", detail: {}, paid: false }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages()).text).not.toContain("Waardeer");
   });
 });

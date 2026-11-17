@@ -67,6 +67,14 @@ bij een fout van de winkel) — vastleggen in D-09.
 **Bij een gedeeltelijke herroeping gaan de verzendkosten niet mee terug** — de
 klant houdt een deel van de bestelling, dus die zending was nodig.
 
+**Wat BigBuy terugbetaalt** (antwoord BigBuy 2026-10-22, `docs/api/VRAGEN.md`
+vraag 16): een artikel in goede staat (herroeping) neemt BigBuy niet terug;
+een defect meldt de beheerder bij BigBuy onder Returns en komt terug op het
+tegoed; de verzendkosten heen en terug betaalt BigBuy nooit terug. Wat de
+klant terugkrijgt, staat daar los van (de wet). Het retourscherm in het paneel
+zegt per reden wat er bij BigBuy moet gebeuren; voor beschadigd en verkeerd
+geleverd is de route bij BigBuy nog niet bevestigd.
+
 ---
 
 ## De aanvraag
@@ -109,7 +117,8 @@ een reden**.
 - **Terugbetalen is de enige knop die geld verplaatst.** Dus met een
   bevestiging die het exacte bedrag toont, een reden en een auditregel.
 - **Het bedrag wordt server-side berekend** uit de bevroren regels (incl.
-  verdeelde code-korting) en eerdere terugbetalingen. Het formulier mag een
+  verdeelde code-korting; gebouwd 2026-11-02: het aandeel per stuk staat in
+  `return_lines.code_discount_cents`, `docs/PRIJZEN.md` § 3) en eerdere terugbetalingen. Het formulier mag een
   lager bedrag voorstellen (waardevermindering, met reden); hoger nooit.
 - **Buiten bereik wordt geweigerd, niet afgekapt.** Zie `.claude/rules/geld.md`.
 - **Intent eerst, provider dan, uitkomst daarna**: refund `REQUESTED` met

@@ -38,6 +38,11 @@ export default async function MailPreviewPage({ searchParams }: PageProps<"/behe
   const mails = [
     { id: "bevestiging", label: m.confirmation, mail: orderConfirmation(o, links, getMessages(o.locale)) },
     { id: "annulering", label: m.cancelled, mail: orderCancelled({ locale: o.locale, reference: o.reference, refund: o.total.amount > 0 ? o.total : money(1) }, links, getMessages(o.locale)) },
+    {
+      id: "niet-leverbaar",
+      label: m.cancelledUndeliverable,
+      mail: orderCancelled({ locale: o.locale, reference: o.reference, refund: o.total.amount > 0 ? o.total : money(1), why: "undeliverable" }, links, getMessages(o.locale)),
+    },
     { id: "nieuw", label: m.newOrder, mail: adminNewOrder(o, admin, links.logoUrl, am) },
     { id: "let-op", label: m.alert, mail: adminAlert({ reference: o.reference, kind: "supplierFailed", detail: { error: "geweigerd (HTTP 400) Insufficient balance" }, paid: true }, admin, links.logoUrl, am) },
     {

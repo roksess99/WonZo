@@ -46,7 +46,8 @@ const RULES: readonly Rule[] = [
   { from: ["PAID"], to: "FULFILLMENT_PENDING", actors: ["admin", "system"] },
   // Inside the window the customer may cancel (D-04, 2026-10-10); always with a full refund.
   { from: ["PAID"], to: "CANCELLED", actors: ["admin", "customer"] },
-  { from: ["FULFILLMENT_PENDING"], to: "CANCELLED", actors: ["admin"] },
+  // system: purchasing at the supplier was refused for 24 hours; cancelled with a full refund (D-04, user 2026-11-13).
+  { from: ["FULFILLMENT_PENDING"], to: "CANCELLED", actors: ["admin", "system"] },
   { from: ["FULFILLMENT_PENDING"], to: "PURCHASED", actors: ["admin", "system"] },
   { from: ["FULFILLMENT_PENDING", "PURCHASED"], to: "PARTIALLY_FULFILLED", actors: ["admin", "system"] },
   { from: ["PURCHASED", "PARTIALLY_FULFILLED"], to: "SHIPPED", actors: ["admin", "provider"] },

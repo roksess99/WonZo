@@ -31,8 +31,14 @@ export type Product = {
   brand: string | null;
   sku: string;
   ean: string | null;
-  /** Selling price incl. VAT, before any promotion. Fase 1: mock (D-03 open). */
+  /**
+   * What the customer pays per piece, incl. VAT: the price rule (D-03), never
+   * below the floor (D-16), with a running promotion already taken off (D-08).
+   * src/lib/pricing/rules.ts.
+   */
   price: Money;
+  /** A running promotion (D-08): the price before it, and the discount in whole percent, rounded down. null: none. */
+  promotion: { id: string; listPrice: Money; shownPercent: number; endsAt: string } | null;
   vatRateBasisPoints: number;
   availability: Availability;
   /** Stock of the chosen offer. */

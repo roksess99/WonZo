@@ -105,6 +105,8 @@ aanwijzen.
 | `reviews` (D-12) | de tekst en de naam die de klant zelf invult; via de bestelling te herleiden | a (de klant kiest zelf om te beoordelen) | tot de klant vraagt hem weg te halen (dan verborgen; echt wissen: nog te bouwen) | nee — eigen termijn |
 | `review_tokens` (D-12) | geen: alleen de hash van een sleutel | f (alleen kopers kunnen beoordelen) | als de bestelling | ja |
 | `review_optouts` (D-12) | een hash van het mailadres, niet het adres | f (niet opnieuw uitnodigen wie dat niet wil) | zolang er uitnodigingen gaan | nee |
+| `discount_redemptions` (D-08) | een hash van het mailadres (niet het adres) en de bestelling waarbij de code is gebruikt | f ("één keer per klant": misbruik van een kortingscode tegengaan) | als de bestelling (D-24) | ja |
+| `discount_codes` (D-08) | geen: de code, percentage, voorwaarden en wie hem aanmaakte | — | onbeperkt (geen persoonsgegeven; een oude code komt nooit terug met een andere betekenis) | n.v.t. |
 | `page_views` (D-10) | geen: dag, pad en aantal | f | onbeperkt (geen persoonsgegeven) | n.v.t. |
 | `admins` (D-07) | naam en mailadres van een beheerder; wachtwoord alleen als scrypt-hash, het TOTP-geheim versleuteld | b (de arbeids- of opdrachtrelatie: toegang tot het paneel), f (beveiliging) | zolang de persoon beheerder is; daarna uitgeschakeld, verwijderen bij D-24 (het logboek verwijst ernaar) | n.v.t. |
 | `admin_sessions`, `admin_invites`, `admin_recovery_codes` (D-07) | geen: alleen hashes van sleutels en tijden | f (beveiliging) | sessies tot 12 uur, opgeruimd door de geplande taak; uitnodigingen 30 dagen na het verlopen | n.v.t. |

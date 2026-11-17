@@ -8,11 +8,13 @@ import type { Locale } from "@/lib/i18n/config";
 import { fromDecimal, money, type Money } from "@/lib/money";
 import type { BigBuyInformation } from "./bigbuy/dto";
 import { parseInformation, parseLowestShipping, parseProduct, parseStock } from "./bigbuy/dto";
-import { toProduct, type SupplierRecord } from "./bigbuy/map";
-import { catalogVersion, loadDatabaseCatalog } from "./bigbuy/read";
+import { toProduct, type PricingContext, type SupplierRecord } from "./bigbuy/map";
+import { catalogVersion, loadDatabaseRecords } from "./bigbuy/read";
 import { SOURCE } from "./bigbuy/store";
 import * as fixtures from "./fixtures";
 import type { Product } from "./types";
+import { loadPricing, pricingVersion, type Pricing } from "@/lib/discounts/store";
+import { NO_RULES, promotionActive, type PriceInput, type PriceOutcome } from "@/lib/pricing/rules";
 
 export class SupplierUnavailableError extends Error {
   constructor() {
@@ -82,54 +84,122 @@ export function catalogSource(env: Record<string, string | undefined>, databaseC
 
 const source = catalogSource(process.env, hasDatabase);
 
-const mockCache = new Map<Locale, Product[]>();
-
-function mockCatalog(locale: Locale): Product[] {
-  let products = mockCache.get(locale);
-  if (!products) {
-    products = mockRecords()
-      .map((r) => toProduct(locale, r).product)
-      .filter((p): p is Product => p !== null);
-    mockCache.set(locale, products);
-  }
-  return products;
-}
-
-/** How often the shop asks the database whether a newer copy is there. */
+/** How often the shop asks the database whether a newer copy, or a changed price rule, is there. */
 const VERSION_CHECK_MS = 60_000;
-let version: { value: number | null; checkedAt: number } | null = null;
-const dbCache = new Map<Locale, { version: number | null; products: Promise<Product[]> }>();
-/** The last copy that loaded, per language: shown while the database is out of reach. */
-const lastGood = new Map<Locale, Product[]>();
 
-async function databaseCatalog(locale: Locale): Promise<Product[]> {
+// ---------------------------------------------------------------- the price rule (D-03, D-08)
+
+let pricingState: { pricing: Pricing; checkedAt: number } | null = null;
+
+/**
+ * The rules and promotions the owner set (src/lib/discounts/store.ts), at
+ * most a minute old. Without a database: none (the advised price). With a
+ * database that is out of reach: the rules we had; without those, "not now"
+ * — never a quiet fall back to other prices.
+ */
+async function currentPricing(): Promise<Pricing | null> {
+  if (!hasDatabase) return null;
+  if (pricingState && Date.now() - pricingState.checkedAt < VERSION_CHECK_MS) return pricingState.pricing;
   try {
-    if (!version || Date.now() - version.checkedAt > VERSION_CHECK_MS) version = { value: await catalogVersion(), checkedAt: Date.now() };
-    const current = version.value;
-    let entry = dbCache.get(locale);
-    if (!entry || entry.version !== current) {
-      // One load per version, shared by every request that arrives meanwhile.
-      entry = { version: current, products: current === null ? Promise.resolve([]) : loadDatabaseCatalog(locale) };
-      dbCache.set(locale, entry);
-      entry.products.catch(() => dbCache.delete(locale));
-    }
-    const products = await entry.products;
-    lastGood.set(locale, products);
-    return products;
-  } catch {
-    // docs/SUPPLIER_RESILIENCE.md: the database briefly out of reach — keep
-    // showing the copy we had; without one, an honest "not now".
-    version = null;
-    const previous = lastGood.get(locale);
-    if (previous) return previous;
+    const v = await pricingVersion(getPool());
+    const pricing = pricingState && pricingState.pricing.version === v ? pricingState.pricing : await loadPricing(getPool(), new Date());
+    pricingState = { pricing, checkedAt: Date.now() };
+    return pricing;
+  } catch (err) {
+    const code = (err as { code?: unknown }).code;
+    // Before migration 0012 there is no table, so there can be no rule: the advised price is then simply true.
+    if (code === "ER_NO_SUCH_TABLE") return null;
+    console.error("[catalog] price rules", code ?? (err instanceof Error ? err.name : "unknown"));
+    if (pricingState) return pricingState.pricing;
     throw new SupplierUnavailableError();
   }
 }
 
-/** Every product that passes the selection rule (D-02), in one language. */
-export async function getCatalog(locale: Locale): Promise<Product[]> {
+/** Ask for the rules now, not within the minute: after the owner saved them in this process. */
+export function forgetPricing(): void {
+  pricingState = null;
+}
+
+/** The context to price with now, and a key that changes when a promotion starts or ends or a rule changes. */
+async function pricingNow(): Promise<{ key: string; context: PricingContext }> {
+  const now = new Date();
+  const pricing = await currentPricing();
+  if (!pricing) return { key: "none", context: { rules: NO_RULES, promotions: [], now } };
+  const active = pricing.promotions.filter((p) => promotionActive(p, now));
+  // A cache must never let through what has ended (.claude/rules/catalogus.md § Caching): the key holds the running promotions.
+  return { key: `${pricing.version}:${active.map((p) => p.id).join(",")}`, context: { rules: pricing.rules, promotions: active, now } };
+}
+
+// ---------------------------------------------------------------- products
+
+/** Server-side only: `input` holds the purchase price (D-16). */
+export type PricedProduct = { product: Product; pricing: PriceOutcome; input: PriceInput };
+
+function mapAll(records: SupplierRecord[], locale: Locale, context: PricingContext): PricedProduct[] {
+  const entries: PricedProduct[] = [];
+  for (const r of records) {
+    const res = toProduct(locale, r, context);
+    if (res.product) entries.push({ product: res.product, pricing: res.pricing, input: res.priceInput });
+  }
+  return entries;
+}
+
+let mockSupplier: SupplierRecord[] | null = null;
+const priced = new Map<Locale, { key: string; entries: PricedProduct[] }>();
+
+let version: { value: number | null; checkedAt: number } | null = null;
+/** The supplier records per catalog version: one load per version, shared by every request that arrives meanwhile. */
+let dbRecords: { version: number | null; records: Promise<SupplierRecord[]> } | null = null;
+/** The last copy that loaded: shown while the database is out of reach. */
+let lastGood: { version: number | null; records: SupplierRecord[] } | null = null;
+
+async function databaseRecords(): Promise<{ version: number | null; records: SupplierRecord[] }> {
+  try {
+    if (!version || Date.now() - version.checkedAt > VERSION_CHECK_MS) version = { value: await catalogVersion(), checkedAt: Date.now() };
+    const current = version.value;
+    if (!dbRecords || dbRecords.version !== current) {
+      const entry = { version: current, records: current === null ? Promise.resolve([]) : loadDatabaseRecords() };
+      dbRecords = entry;
+      entry.records.catch(() => {
+        if (dbRecords === entry) dbRecords = null;
+      });
+    }
+    const records = await dbRecords.records;
+    lastGood = { version: current, records };
+    return lastGood;
+  } catch {
+    // docs/SUPPLIER_RESILIENCE.md: the database briefly out of reach — keep
+    // showing the copy we had; without one, an honest "not now".
+    version = null;
+    if (lastGood) return lastGood;
+    throw new SupplierUnavailableError();
+  }
+}
+
+async function catalogEntries(locale: Locale): Promise<PricedProduct[]> {
   if (mockScenario() === "unavailable") throw new SupplierUnavailableError();
-  return source === "database" ? databaseCatalog(locale) : mockCatalog(locale);
+  const { key: pricingKey, context } = await pricingNow();
+  const base = source === "database" ? await databaseRecords() : { version: "mock", records: (mockSupplier ??= mockRecords()) };
+  const key = `${base.version}|${pricingKey}`;
+  const cached = priced.get(locale);
+  if (cached?.key === key) return cached.entries;
+  const entries = mapAll(base.records, locale, context);
+  priced.set(locale, { key, entries });
+  return entries;
+}
+
+/** Every product that passes the selection rule (D-02), priced by the rule (D-03), in one language. */
+export async function getCatalog(locale: Locale): Promise<Product[]> {
+  return (await catalogEntries(locale)).map((e) => e.product);
+}
+
+/**
+ * For the price screens in the panel: each product with how its price came
+ * about — the rule, the floor, a promotion the floor limited or blocked
+ * (docs/PRIJZEN.md § 2: the panel says where the floor stepped in).
+ */
+export async function getPricedCatalog(locale: Locale): Promise<PricedProduct[]> {
+  return catalogEntries(locale);
 }
 
 /**

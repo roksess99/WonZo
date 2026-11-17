@@ -1,10 +1,8 @@
 // The shop's view of the catalog copy: the sellable products, mapped to the
-// canonical Product with the same code as the mock (D-31).
+// canonical Product with the same code as the mock (D-31), in ../provider.ts.
 
 import { getPool, selectRows } from "@/lib/db";
-import type { Locale } from "@/lib/i18n/config";
-import type { Product } from "../types";
-import { toProduct } from "./map";
+import type { SupplierRecord } from "./map";
 import { toSupplierRecord } from "./records";
 import { loadCatalogRows, loadTaxonomyTree, SOURCE } from "./store";
 
@@ -15,15 +13,16 @@ export async function catalogVersion(): Promise<number | null> {
 }
 
 /**
- * Every product the last refresh marked sellable, in one language. The
- * selection rule runs again here on the same data: a product the rule
- * refuses never reaches a page, whatever the flag says.
+ * Every product the last refresh marked sellable, as supplier records in both
+ * languages. The selection rule and the price rule run again on them
+ * (./map.ts): a product the rule refuses never reaches a page, whatever the
+ * flag says.
  */
-export async function loadDatabaseCatalog(locale: Locale): Promise<Product[]> {
+export async function loadDatabaseRecords(): Promise<SupplierRecord[]> {
   const pool = getPool();
   const ids = (await selectRows<{ product_id: number }>(pool, "SELECT product_id FROM catalog_products WHERE source = ? AND sellable = 1 ORDER BY product_id", [SOURCE])).map(
     (r) => Number(r.product_id),
   );
   const rows = await loadCatalogRows(pool, ids, { descriptions: true, images: true, tree: await loadTaxonomyTree(pool) });
-  return rows.map((r) => toProduct(locale, toSupplierRecord(r)).product).filter((p): p is Product => p !== null);
+  return rows.map(toSupplierRecord);
 }

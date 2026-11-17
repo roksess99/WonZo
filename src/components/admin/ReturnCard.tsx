@@ -41,6 +41,17 @@ export function ReturnCard({ r, m, canAct, canRefund, showOrder, now }: { r: Ret
           </li>
         ))}
       </ul>
+      {r.status !== "REJECTED" && r.status !== "WITHDRAWN" ? (
+        // What the supplier does with it (BigBuy, 2026-10-22, docs/api/VRAGEN.md vraag 16): the admin's part there.
+        <div className="rounded-md bg-background p-3 text-body-sm ring-1 ring-line">
+          <p className="font-medium">{rm.supplierTitle}</p>
+          <ul className="flex flex-col gap-1">
+            {[...new Set(r.lines.map((l) => l.reason))].map((reason) => (
+              <li key={reason}>{rm.supplier[reason]}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <p className="tabular-nums">
         <span className="font-medium">{interpolate(rm.max, { amount: formatMoney(r.max) })}</span>
         <span className="block text-body-sm text-muted">{interpolate(rm.maxDetail, { lines: formatMoney(r.linesAmount), shipping: formatMoney(r.shipping) })}</span>

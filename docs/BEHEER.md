@@ -24,9 +24,10 @@ een melding voor iedereen op het dashboard als er retouren wachten; op het
 dashboard de facturen per jaar en maand (recht "facturen") en het bezoek met
 de trechter winkelwagen → afrekenen → betaling gestart → betaald (recht
 "statistieken", uit de eigen telling en de bestellingen — geen volgen per
-bezoeker, D-10). Nog niet, wachtend op een beslissing: prijzen (D-16, D-03),
-kortingen en codes (D-08), beoordelingen (D-12); beheerders en inloggen
-(6a) als laatste.
+bezoeker, D-10). **Prijzen en acties (2026-11-02):** `/beheer/prijzen`
+(recht "prijzen", alleen de eigenaar) en `/beheer/kortingen` (recht
+"kortingen"), zie § Prijzen en § Kortingen en acties, met daar ook de
+kortingscodes.
 
 ---
 
@@ -50,7 +51,7 @@ een deur naar werk dat openstaat.
 
 | Tegel | Waarom het werk is |
 |---|---|
-| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte: meer dan 10 % duurder (de eigenaar besluit), geweigerd (wordt 24 uur opnieuw geprobeerd), na 24 uur opgegeven (opnieuw proberen of annuleren en terugbetalen), of antwoord onbekend (wordt nagevraagd op het ordernummer) |
+| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte: meer dan 10 % duurder (de eigenaar besluit), geweigerd (wordt 24 uur opnieuw geprobeerd), na 24 uur vanzelf geannuleerd en terugbetaald (D-04, 2026-11-13; alleen met iets bij de leverancier of een hold kiest de eigenaar: opnieuw proberen of annuleren en terugbetalen), of antwoord onbekend (wordt nagevraagd op het ordernummer) |
 | Tegoed bij de leverancier | te weinig tegoed laat de volgende inkoop mislukken; opwaarderen vóór het zover is |
 | **Vraagt aandacht**: order on hold, betaald na verloop, bedrag wijkt af, terugbetaling of inkooporder `UNKNOWN`/`FAILED`/`REJECTED`, mail die niet weg kan | hier is iets mis dat een mens moet beslissen (`docs/PAYMENTS.md`) |
 | Omzet deze maand | de enige die puur informatief mag zijn |
@@ -138,6 +139,17 @@ Leg vast waaraan een prijsregel hangt, en gebruik overal dezelfde sleutel. Een
 regel die op de ene pagina geldt en bij het afrekenen niet, laat de klant een
 ander bedrag betalen dan hij zag.
 
+**Gebouwd (2026-11-02, D-03, D-16):** één formulier met de standaardopslag
+(leeg: de adviesprijs), de betaalkosten per stuk en een opslag per
+subcategorie, met per subcategorie de ruimte voor korting. "Controleren"
+toont elke wijziging als oud → nieuw en per subcategorie een echt artikel
+met zijn oude en nieuwe prijs; pas dan "Opslaan". Opgeslagen met de versie
+die het formulier zag (heeft iemand anders tussendoor opgeslagen, dan wordt
+het geweigerd), met oude en nieuwe waarden in het logboek. Daaronder de
+artikelen die op de ondergrens staan. De regel hangt aan de subcategorie van
+het artikel zelf (`src/lib/pricing/rules.ts`); de winkel rekent er binnen
+een minuut mee.
+
 ---
 
 ## Kortingen en acties
@@ -154,6 +166,25 @@ ander bedrag betalen dan hij zag.
 - Bij een actie op een groep die je niet kunt uitlijsten: zeg dat in het
   paneel. Anders zet de eigenaar een actie aan die werkt maar nergens
   zichtbaar is, en denkt hij dat er iets stuk is.
+
+**Gebouwd (2026-11-02, D-08):** een actie op een categorie, een subcategorie
+of één artikel (op artikelnummer), met percentage (1–95 %), begin en einde in
+Nederlandse tijd, na "Controleren". Per lopende actie: bij hoeveel artikelen
+hij geldt, bij hoeveel de ondergrens hem kleiner maakte, en waar er geen
+ruimte was. "Stoppen" zet het einde op nu; de actie blijft in de lijst. De
+winkel toont het toegepaste percentage, naar beneden afgerond, en het einde
+van de actie; een doorgestreepte "van"-prijs nog niet (die vraagt 30 dagen
+prijsgeschiedenis, die vanaf nu wordt bijgehouden).
+
+**Gebouwd (2026-11-02, D-08): kortingscodes**, op dezelfde pagina: code (3–32
+letters, cijfers of streepjes, uniek, ook na het einde), percentage (1–95 %),
+minimumbedrag over de artikelen (leeg: geen), hoe vaak in totaal (leeg:
+onbeperkt), begin en einde, na "Controleren". Per code hoe vaak hij gebruikt
+is (alleen betaalde bestellingen) en "Stoppen" (de rij blijft). Is een code
+door twee betaalde bestellingen tegelijk over het maximum gegaan, of door
+hetzelfde mailadres twee keer gebruikt, dan staat de tweede bestelling in
+"vraagt aandacht" (`CODE_EXHAUSTED`, `CODE_USED`): de beheerder zet door of
+annuleert en betaalt terug. De bestelling toont de code en de korting.
 
 ---
 
@@ -315,8 +346,9 @@ cookies en zonder iets over de bezoeker (`src/lib/stats.ts`).
 - **Rechtstreeks in de database kunnen.** Een paneel dat willekeurige
   wijzigingen toestaat omzeilt elke regel die je in code hebt gezet.
 - **Een knop die opnieuw bestelt bij de leverancier.** Inkopen gebeurt
-  automatisch, één keer per betaalde bestelling. Na 24 uur weigeringen kiest de
-  eigenaar "opnieuw proberen" (D-04): dat is dezelfde inkooporder met
+  automatisch, één keer per betaalde bestelling. Na 24 uur weigeringen wordt
+  er vanzelf terugbetaald; alleen waar dat niet kan, kiest de eigenaar
+  "opnieuw proberen" (D-04): dat is dezelfde inkooporder met
   hetzelfde ordernummer bij BigBuy, nooit een tweede bestelling. Een knop
   "nieuwe bestelling bij BigBuy" komt er niet: die wordt een keer per ongeluk
   geraakt.

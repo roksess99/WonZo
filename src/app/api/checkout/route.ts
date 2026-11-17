@@ -1,6 +1,6 @@
 // POST /api/checkout — place the order and start paying (docs/PAYMENTS.md
 // steps 1–6). The browser sends the checkout key, the cart lines (references
-// only), the language and the customer's details; every amount is the
+// only), the language, the customer's details and a code text; every amount is the
 // server's own (.claude/rules/geld.md). Changes something, so: our own
 // Origin only (CSRF), a rate limit per visitor, and off until launch
 // (CHECKOUT_ENABLED).
@@ -31,6 +31,7 @@ export async function POST(request: Request): Promise<Response> {
     case "not-ready":
       return json(409, result);
     case "conflict":
+    case "code-refused":
       return json(409, result);
     case "unavailable":
     case "off":
