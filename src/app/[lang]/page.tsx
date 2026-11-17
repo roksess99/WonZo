@@ -3,9 +3,11 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { CategoryTiles, categoryCovers } from "@/components/catalog/CategoryTiles";
 import { ProductGrid, ProductGridSkeleton } from "@/components/catalog/ProductGrid";
+import { Hero, PanelSkeleton, ShowcasePanel } from "@/components/home/Hero";
 import { Container, StateMessage } from "@/components/ui";
 import { applyQuery } from "@/lib/catalog/query";
 import { getCatalogOrUnavailable } from "@/lib/catalog/provider";
+import { heroShowcase } from "@/lib/catalog/showcase";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages, type Messages } from "@/lib/i18n/messages";
 import { pageMetadata } from "@/lib/seo";
@@ -22,7 +24,10 @@ async function AlwaysAvailable({ locale, m }: { locale: Locale; m: Messages }) {
   await connection();
   const catalog = await getCatalogOrUnavailable(locale);
   if (!catalog) return <StateMessage tone="warning" title={m.listing.unavailableTitle} text={m.listing.unavailableText} />;
-  return <ProductGrid products={applyQuery(catalog, { sort: "recommended" }).slice(0, 8)} locale={locale} m={m} />;
+  // Not the products the hero already shows: the same three twice reads as a mistake.
+  const inHero = new Set(heroShowcase(catalog).products.map((p) => `${p.source}:${p.id}`));
+  const rest = applyQuery(catalog, { sort: "recommended" }).filter((p) => !inHero.has(`${p.source}:${p.id}`));
+  return <ProductGrid products={rest.slice(0, 8)} locale={locale} m={m} />;
 }
 
 /**
@@ -35,6 +40,13 @@ async function TilesWithPhotos({ locale, m }: { locale: Locale; m: Messages }) {
   return <CategoryTiles locale={locale} m={m} covers={catalog ? categoryCovers(catalog) : {}} />;
 }
 
+/** The hero's products (src/components/home/Hero.tsx): per request, like the grid below. Without a catalogue: nothing, the hero stays. */
+async function HeroProducts({ locale, m }: { locale: Locale; m: Messages }) {
+  await connection();
+  const catalog = await getCatalogOrUnavailable(locale);
+  return catalog ? <ShowcasePanel showcase={heroShowcase(catalog)} locale={locale} m={m} /> : null;
+}
+
 /** Home: one task — bring the visitor to the product (docs/SCHERMEN.md § Home). */
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -42,12 +54,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const m = getMessages(lang);
   return (
     <>
-      <section className="bg-brand-soft/60">
-        <Container className="flex flex-col gap-6 py-10 sm:py-14">
-          <h1 className="max-w-2xl font-display text-h1 font-bold sm:text-display">{m.home.title}</h1>
-          <p className="max-w-prose text-body">{m.home.intro}</p>
-        </Container>
-      </section>
+      <Hero
+        locale={lang}
+        m={m}
+        panel={
+          <Suspense fallback={<PanelSkeleton label={m.loading} />}>
+            <HeroProducts locale={lang} m={m} />
+          </Suspense>
+        }
+      />
       <Container className="flex flex-col gap-12 py-10">
         <section aria-labelledby="home-categories" className="flex flex-col gap-4">
           <h2 id="home-categories" className="font-display text-h2">
