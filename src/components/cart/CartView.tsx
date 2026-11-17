@@ -47,13 +47,11 @@ export type CartLabels = StepperLabels & CodeLabels & {
   total: string;
   inclVat: string;
   delivery: string;
-  shipsFrom: string;
   checkout: string;
   checkoutNotYet: string;
   resolveFirst: string;
   continueShopping: string;
   noImage: string;
-  countries: Record<string, string>;
 };
 
 const sameRef = (a: Pick<CartLine, "source" | "productId">, b: Pick<CartLine, "source" | "productId">) =>
@@ -154,11 +152,7 @@ export function CartView({ locale, labels, checkoutOn }: { locale: Locale; label
         {quote.delivery ? (
           <p className="flex items-start gap-2 text-body-sm">
             <TruckIcon className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {interpolate(labels.delivery, { min: quote.delivery.minWorkingDays, max: quote.delivery.maxWorkingDays })}
-              {" · "}
-              {interpolate(labels.shipsFrom, { country: quote.delivery.shipsFrom.map((c) => labels.countries[c] ?? c).join(", ") })}
-            </span>
+            <span>{interpolate(labels.delivery, { min: quote.delivery.minWorkingDays, max: quote.delivery.maxWorkingDays })}</span>
           </p>
         ) : null}
         {checkoutOn && !hasProblems && !busy ? (
@@ -237,11 +231,7 @@ function CartRow({ locale, line, quoted, labels }: { locale: Locale; line: CartL
           <p className="text-body-sm tabular-nums">{interpolate(labels.perPiece, { price: formatMoney(quoted.unitPrice) })}</p>
           <p className="flex items-start gap-1.5 text-body-sm">
             <TruckIcon className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {interpolate(labels.delivery, { min: p.delivery.minWorkingDays, max: p.delivery.maxWorkingDays })}
-              {" · "}
-              {interpolate(labels.shipsFrom, { country: labels.countries[p.delivery.shipsFrom] ?? p.delivery.shipsFrom })}
-            </span>
+            <span>{interpolate(labels.delivery, { min: p.delivery.minWorkingDays, max: p.delivery.maxWorkingDays })}</span>
           </p>
           {quoted.largeShipping ? (
             <p className="text-body-sm text-muted tabular-nums">{interpolate(labels.largeItem, { cost: formatMoney(quoted.largeShipping) })}</p>

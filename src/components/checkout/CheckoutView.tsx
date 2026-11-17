@@ -51,9 +51,7 @@ export type CheckoutLabels = CustomerFieldLabels & CodeLabels & {
   total: string;
   inclVat: string;
   delivery: string;
-  shipsFrom: string;
   resolveFirst: string;
-  countries: Record<string, string>;
 };
 
 type Problem = "changed" | "conflict" | "error" | "rateLimited" | "unavailable" | "off" | { code: CodeRefusal; text: string };
@@ -259,11 +257,7 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
         {quote.delivery ? (
           <p className="flex items-start gap-2 text-body-sm">
             <TruckIcon className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {interpolate(labels.delivery, { min: quote.delivery.minWorkingDays, max: quote.delivery.maxWorkingDays })}
-              {" · "}
-              {interpolate(labels.shipsFrom, { country: quote.delivery.shipsFrom.map((c) => labels.countries[c] ?? c).join(", ") })}
-            </span>
+            <span>{interpolate(labels.delivery, { min: quote.delivery.minWorkingDays, max: quote.delivery.maxWorkingDays })}</span>
           </p>
         ) : null}
         <div className="flex flex-col gap-1 text-body-sm">

@@ -1,11 +1,13 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { connection } from "next/server";
 import { AddToCart } from "@/components/cart/AddToCart";
+import { Disclosure } from "@/components/catalog/Disclosure";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
 import { categoryByKey } from "@/lib/catalog/assortment";
+import { structureDescription } from "@/lib/catalog/description";
 import { getProduct, SupplierUnavailableError } from "@/lib/catalog/provider";
 import type { Product } from "@/lib/catalog/types";
 import { isLocale, type Locale } from "@/lib/i18n/config";
@@ -48,10 +50,6 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/product/[s
 /** The end of a promotion as the visitor reads it: Dutch time, in the page's language. */
 const promotionEnd = (locale: Locale, iso: string) =>
   new Intl.DateTimeFormat(locale === "nl" ? "nl-NL" : "en-GB", { timeZone: "Europe/Amsterdam", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-
-function countryName(m: Messages, code: string) {
-  return (m.countries as Record<string, string>)[code] ?? code;
-}
 
 /** Structured data with price and availability; no rating until there are real reviews (D-12). */
 function productJsonLd(p: Product, url: string) {
@@ -157,11 +155,8 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
               </li>
               <li className="flex items-center gap-2">
                 <TruckIcon />
-                <span>
-                  {t(m.product.delivery, { min: p.delivery.minWorkingDays, max: p.delivery.maxWorkingDays })}
-                  {" · "}
-                  {t(m.product.shipsFrom, { country: countryName(m, p.delivery.shipsFrom) })}
-                </span>
+                {/* No country here: the owner wants it only on "Zo werkt WonZo" (2026-11-16, D-13). */}
+                <span>{t(m.product.delivery, { min: p.delivery.minWorkingDays, max: p.delivery.maxWorkingDays })}</span>
               </li>
               <li className="flex items-start gap-2">
                 <InfoIcon className="mt-0.5 size-5 shrink-0" />
@@ -196,11 +191,44 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
         </div>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <section aria-labelledby="specs" className="flex flex-col gap-3">
-          <h2 id="specs" className="font-display text-h2">
-            {m.product.specs}
-          </h2>
+      {/* Description and specs fold open on request (user 2026-11-16: "like Coolblue and bol"); closed, the page
+          stays short. Reviews and the safety block below stay open: GPSR asks for the latter with every offer. */}
+      <div className="border-t border-line">
+        {p.description.length ? (
+          <Disclosure id="description" title={m.product.description}>
+            <div className="flex flex-col gap-5">
+              {structureDescription(p.description).map((block, i) =>
+                block.kind === "text" ? (
+                  <p key={i} className="max-w-prose whitespace-pre-line">
+                    {block.text}
+                  </p>
+                ) : (
+                  <div key={i} className="flex flex-col gap-2">
+                    <h3 className="font-medium">{m.product.features}</h3>
+                    <table className="w-full text-body-sm">
+                      <tbody>
+                        {block.facts.map((f, j) => (
+                          <tr key={j} className="border-b border-line align-top">
+                            {f.label ? (
+                              <th scope="row" className="w-1/3 py-2 pe-4 text-start font-medium">
+                                {f.label}
+                              </th>
+                            ) : (
+                              <td className="w-1/3 py-2 pe-4" />
+                            )}
+                            <td className="py-2">{f.values.join(", ")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ),
+              )}
+            </div>
+          </Disclosure>
+        ) : null}
+
+        <Disclosure id="specs" title={m.product.specs}>
           <table className="w-full text-body-sm">
             <tbody>
               {p.specs.map((s) => (
@@ -213,22 +241,7 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
               ))}
             </tbody>
           </table>
-        </section>
-
-        {p.description.length ? (
-          <section aria-labelledby="description" className="flex flex-col gap-3">
-            <h2 id="description" className="font-display text-h2">
-              {m.product.description}
-            </h2>
-            <div className="flex max-w-prose flex-col gap-3">
-              {p.description.map((para, i) => (
-                <p key={i} className="whitespace-pre-line">
-                  {para}
-                </p>
-              ))}
-            </div>
-          </section>
-        ) : null}
+        </Disclosure>
       </div>
 
       {/* GPSR art. 19: manufacturer and warnings with every offer (D-34). */}

@@ -250,6 +250,13 @@ plus wat D-36 uitsluit (zwemmen, opblaasbaar voor water). Wel diep op
 voorraad, en nog niet toegestaan: "Fitness en lichaamsbeweging ›
 Accessoires" (3 artikelen van InnovaGoods): een keuze voor de eigenaar.
 
+**Eigenaar (via de gebruiker, 2026-11-17): "Fitness en lichaamsbeweging ›
+Accessoires" komt erbij**, onder Sport › Thuis sporten; buiten sporten blijft
+eruit. Nog niet gebouwd: een regel in `src/lib/catalog/assortment.ts`; de
+artikelen gaan daarna door dezelfde selectieregel (douanecode, D-36, geen
+elektrisch kenmerk, voorraad, GPSR). Verworpen: buiten sporten (vooral
+kleding en ballen in losse maten met 1 tot 3 stuks, en wat D-36 uitsluit).
+
 **Voorstel uit het onderzoek** (`docs/ONDERZOEK.md` § 6): selectie op
 toegestane subcategorie, douanecode basis of licht, geen elektrisch kenmerk,
 conditie nieuw, voorraad, GPSR-gegevens aanwezig en een prijsondergrens. Met
@@ -436,6 +443,26 @@ niet: voorleggen. Gebouwd in `src/lib/orders/purchasing.ts`
 (`cancelAfterGivingUp`), verstuurd door de geplande taak
 (`src/app/api/cron/orders/route.ts`).
 
+**Eigenaar (via de gebruiker, 2026-11-17): de eigenaar keurt de
+terugbetaling goed in het beheerpaneel.** Dit vervangt "automatisch
+terugbetalen" van 2026-11-13: lukt inkopen 24 uur niet, dan annuleert de
+winkel niet zelf. De bestelling komt in "vraagt aandacht" met het hele bedrag
+klaar om terug te betalen; de eigenaar bevestigt dat bedrag met één knop
+(annuleren en volledig terugbetalen) of kiest "opnieuw proberen". Zo blijft
+terugbetalen bij de eigenaar (D-07). Wat blijft: de mail aan de beheerder bij
+de eerste weigering (tegoed opwaarderen), nu met "na 24 uur vraagt de
+bestelling je goedkeuring om terug te betalen"; de klant krijgt bij de
+annulering de mail "we konden niet leveren". Verworpen: automatisch
+terugbetalen (2026-11-13).
+
+**Nog aan te passen in de code** (staat op `feature/prijzen-kortingen-mollie`
+en verder, nog niet gemerged): de geplande taak annuleert en betaalt nu nog
+zelf terug (`cancelAfterGivingUp`). Te bouwen: na 24 uur geen annulering,
+maar een melding "goedkeuring nodig" en de knop in het paneel; de keuze voor
+de mail "we konden niet leveren" (`cancelledAsUndeliverable`) hangt nu aan
+een annulering door het systeem en moet ook een annulering door de beheerder
+na opgegeven inkoop herkennen; de tests en de teksten van de beheerdersmails.
+
 ---
 
 ## D-05 · Betaaldienst
@@ -499,7 +526,8 @@ vragen hierboven voor Mollie:
 - **Geldigheid van een betaalpoging:** iDEAL 15 minuten, kaart 30 minuten,
   PayPal 6 uur (Mollie raadt aan niet te voorspellen maar op de webhook te
   wachten). Past binnen de 60 minuten van onze snapshot: de klant kan binnen
-  die tijd opnieuw proberen.
+  die tijd opnieuw proberen. (Sinds 2026-11-17 is de snapshot 30 minuten
+  geldig, D-22: een kaartbetaling kan dan na de snapshot nog slagen.)
 - **Bedrag:** als string met twee decimalen (`"22.77"`); één valuta per
   betaling. Een betaling van € 0 gaat niet via Mollie: die slaan we over
   (`.claude/rules/geld.md`).
@@ -717,6 +745,15 @@ wachtwoorden (vraagt een lijst of een externe dienst) en wachtwoord vergeten
 per mail (een andere eigenaar stelt de toegang opnieuw in).
 
 Nog open: wie mag terugbetalen en tot welk bedrag zonder tweede persoon.
+
+**Eigenaar (via de gebruiker, 2026-11-17):** er is één beheerder. Komt er
+een tweede, dan krijgt die **dezelfde rechten** (de rol eigenaar). Daarmee
+geen tweede persoon en geen bedraggrens bij terugbetalen: de eigenaar
+betaalt terug, met bevestiging van het bedrag (zo gebouwd). De rollen
+boekhouder en marketing blijven in de code bestaan, maar worden niet
+gebruikt zolang de eigenaar het zo wil. Verworpen: een bedraggrens of een
+tweede persoon (er is geen tweede persoon). Alle vragen van D-07 zijn
+hiermee beantwoord; `DECIDED` zetten is aan de eigenaar.
 
 ---
 
@@ -942,6 +979,18 @@ werkdagen bovenop de verwerkingstijd, en "verzonden vanuit Spanje" — beide
 `AANNAME`, op één plek, te vervangen door de gekozen vervoerdersdienst en het
 gemeten magazijnland.
 
+**Land van verzending (eigenaar, via de gebruiker, 2026-11-16):** niet bij
+het artikel. "Verzonden vanuit Spanje" staat niet meer op productpagina,
+winkelwagen, afrekenen en statuspagina; het land staat alleen op "Zo werkt
+WonZo" (gelinkt in de voettekst van elke pagina), uit dezelfde waarde
+(`SHIPS_FROM`). De levertijd als bereik blijft overal. Wat de ACM vraagt
+(nagelezen 2026-11-16, acm.nl, 22-02-2024): aangeven uit welk land de
+producten komen, "duidelijk en makkelijk te vinden" op de website — een vaste
+plek per artikel noemt het bericht niet, en het maakt geen onderscheid tussen
+binnen en buiten de EU. `AANNAME` dat één vindbare pagina daaraan voldoet:
+voorleggen aan de adviseur (D-34, D-36). Verworpen: het land bij elk artikel
+houden (de eerdere uitwerking hierboven).
+
 ---
 
 ## D-14 · Valuta en markten
@@ -1124,6 +1173,31 @@ beperkt zinvol.
 **Te beantwoorden:** wordt voorraad gereserveerd bij het afrekenen; mag er
 besteld worden bij onbekende voorraad; hoe lang is een bevroren snapshot
 betaalbaar.
+
+**Eigenaar (via de gebruiker, 2026-11-17): prijs en artikelen worden
+maximaal 30 minuten vastgehouden, vanaf het afrekenen** ("Bestellen en
+betalen": daar wordt de bestelling met de snapshot gemaakt). Binnen die 30
+minuten betaalt de klant de vastgezette prijs; daarna vervalt de bestelling
+en is een nieuwe nodig. **De winkelwagen zegt dat duidelijk vooraf**, bij de
+knop naar afrekenen. Verworpen: de 30 minuten laten lopen vanaf de
+winkelwagen (vraagt een winkelwagen op de server; de winkelwagen staat in de
+browser, fase 2), en de huidige 60 minuten.
+
+Uitwerking, te bevestigen: "artikelen vasthouden" betekent bij dropship dat
+de stuks in een onbetaalde bestelling binnen die 30 minuten van de getoonde
+voorraad afgaan, zodat twee klanten niet hetzelfde laatste stuk kopen. Bij
+BigBuy wordt niets gereserveerd (dat kan de API niet). Gevolg voor Mollie
+(D-05): een kaartbetaling mag 30 minuten duren; is die laat gestart, dan kan
+ze na de 30 minuten slagen. Dat valt onder de te late betaling van D-07
+(vastgelegd als betaald, "vraagt aandacht", de eigenaar betaalt terug of
+zet door). Voorstel: in de laatste minuten geen nieuwe betaling meer
+starten — keuze voor de eigenaar.
+
+**Nog te bouwen:** de geldigheid van 60 naar 30 minuten
+(`snapshot_expires_at`, de geplande taak die verlopen bestellingen annuleert,
+met de reden "niet betaald binnen 30 minuten"); de tekst in de winkelwagen
+en op het afrekenscherm; het vasthouden van de voorraad. Nog open: mag er
+besteld worden bij onbekende voorraad.
 
 ---
 
@@ -1612,6 +1686,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-11-17 | D-02, D-04, D-07, D-22 | Eigenaar via de gebruiker: Fitness › Accessoires erbij, buiten sporten niet (D-02); terugbetalen na 24 uur weigeren alleen na goedkeuring van de eigenaar in het paneel, niet meer automatisch (D-04); één beheerder, een volgende krijgt dezelfde rechten, geen bedraggrens (D-07); prijs en artikelen 30 minuten vast vanaf het afrekenen, gemeld in de winkelwagen (D-22). Nog te bouwen |
 | 2026-11-13 | D-33 | Gebruiker namens de eigenaar: donker thema voor de webshop (niet het beheer), apparaat + knop, kleuren voorgesteld door Claude. Gebouwd; de eigenaar keurt de kleuren nog goed |
 | 2026-11-13 | D-04 | Gebruiker: na 24 uur weigeringen bij BigBuy vanzelf annuleren en volledig terugbetalen, met een mail aan de beheerder om op te waarderen; prijs boven 10 % blijft de keuze van de eigenaar. Gebouwd |
 | 2026-11-13 | D-05 | Gemeten in testmodus: methodes actief, vervaltijd 15 minuten, dezelfde sleutel geeft dezelfde betaling, met een ander bedrag HTTP 400; een hele bestelling lokaal betaald met iDEAL en als betaald vastgelegd |

@@ -37,9 +37,7 @@ export default async function CartPage({ params }: PageProps<"/[lang]/winkelwage
         labels={{
           ...m.cart,
           delivery: m.product.delivery,
-          shipsFrom: m.product.shipsFrom,
           noImage: m.product.noImage,
-          countries: m.countries,
         }}
       />
     </Container>

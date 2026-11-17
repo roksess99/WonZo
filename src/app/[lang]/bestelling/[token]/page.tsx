@@ -190,11 +190,7 @@ export default async function OrderPage({ params }: PageProps<"/[lang]/bestellin
             </div>
           </dl>
           <p className="text-body-sm text-muted">{m.cart.inclVat}</p>
-          <p className="text-body-sm">
-            {interpolate(m.product.delivery, { min: o.delivery.minWorkingDays, max: o.delivery.maxWorkingDays })}
-            {" · "}
-            {interpolate(m.product.shipsFrom, { country: o.delivery.shipsFrom.map((x) => (m.countries as Record<string, string>)[x] ?? x).join(", ") })}
-          </p>
+          <p className="text-body-sm">{interpolate(m.product.delivery, { min: o.delivery.minWorkingDays, max: o.delivery.maxWorkingDays })}</p>
         </section>
 
         <section aria-labelledby="order-address" className="flex flex-col gap-3 rounded-md bg-surface p-6 ring-1 ring-line">

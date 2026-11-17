@@ -70,9 +70,7 @@ export default async function CheckoutPage({ params }: PageProps<"/[lang]/afreke
             total: m.cart.total,
             inclVat: m.cart.inclVat,
             delivery: m.product.delivery,
-            shipsFrom: m.product.shipsFrom,
             resolveFirst: m.cart.resolveFirst,
-            countries: m.countries,
           }}
         />
       ) : (

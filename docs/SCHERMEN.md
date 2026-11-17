@@ -98,8 +98,9 @@ omlijnd vlak. Niet verspreid over de pagina.
   wát dat bedrag is.
 - **Voorraad** als woord én als kleur, met het aantal erbij als dat klopt met
   wat je echt kunt leveren.
-- **Levertijd als bereik met het land van verzending** ("3–6 werkdagen,
-  verzonden vanuit Spanje"), uit de gegevens van de leverancier. Nooit
+- **Levertijd als bereik** ("3–6 werkdagen"), uit de gegevens van de
+  leverancier. Het land van verzending staat alleen op "Zo werkt WonZo"
+  (eigenaar 2026-11-16, D-13). Nooit
   "morgen in huis" of "vandaag verzonden" als dat niet klopt (`WETTELIJK`:
   ACM, zie `docs/ONDERZOEK.md`).
 - **Energielabel en productkaart** bij de prijs, voor producten die er een
@@ -115,6 +116,14 @@ omlijnd vlak. Niet verspreid over de pagina.
 - **Lopende tekst** opgebouwd uit velden die het artikel écht heeft. Dezelfde
   zinnen gaan naar de gestructureerde data: een andere omschrijving daar dan
   op de pagina is reden om de markering te negeren.
+- **Omschrijving en productgegevens klappen open** (gebruiker 2026-11-16,
+  "zoals Coolblue en bol"): standaard dicht, met `<details>`, zodat de tekst
+  in de HTML blijft voor zoekmachines en zoeken op de pagina. In de
+  omschrijving worden de platgeslagen lijsten van de leverancier
+  ("Materiaal:", "Polyester", …) en regels als "Kleur: Groen" een tabel
+  "Kenmerken" (`src/lib/catalog/description.ts`); geen woord verandert.
+  Beoordelingen en "Fabrikant en veiligheid" blijven open: de
+  veiligheidsgegevens horen bij elk aanbod zichtbaar (GPSR, D-34).
 - Geen foto? Een eigen plaatshouder, nooit een gebroken plaatje.
 
 ## Winkelwagen
@@ -127,6 +136,9 @@ omlijnd vlak. Niet verspreid over de pagina.
 - **Het totaal is compleet**: subtotaal, verzendkosten, btw-bedrag. Geen
   bedrag dat pas een scherm later verschijnt.
 - Is er een drempel voor gratis verzending, zeg dan hoeveel er nog bij moet.
+- **Hoe lang de prijs vastligt**, bij de knop naar afrekenen: prijs en
+  artikelen worden 30 minuten voor je vastgehouden zodra je gaat afrekenen
+  (D-22, eigenaar 2026-11-17). Nog te bouwen.
 - Wordt een regel begrensd door voorraad, zeg dat op de regel zelf en bied één
   knop om het recht te zetten. Niet stilletjes verlagen.
 - Kortingscode kan hier al: dit is waar iemand met een code in zijn hand gaat
