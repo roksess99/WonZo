@@ -55,7 +55,12 @@ export function refuseJob(request: Request): Response | null {
  * visitor's address is the first entry of X-Forwarded-For — to measure live.
  */
 export function visitorKey(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const address = forwarded || request.headers.get("x-real-ip") || "unknown";
+  return visitorKeyOf(request.headers);
+}
+
+/** The same key from the headers alone: for a server action, which has no Request. */
+export function visitorKeyOf(headers: Headers): string {
+  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const address = forwarded || headers.get("x-real-ip") || "unknown";
   return createHash("sha256").update(`wonzo-rate:${address}`).digest("hex").slice(0, 32);
 }

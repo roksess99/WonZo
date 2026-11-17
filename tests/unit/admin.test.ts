@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 let host = "localhost:3000";
-vi.mock("next/headers", () => ({ headers: async () => new Headers({ host }) }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ host }), cookies: async () => ({ get: () => undefined }) }));
 
 import { cancelAndRefundAction, markDeliveredAction, refundPaymentAction, releaseHoldAction, searchAction } from "@/app/beheer/bestellingen/actions";
 import { AdminAccessDenied, authorize, currentAdmin, devLoginAllowed, isLocalHost, requireAction, requirePage, type Admin } from "@/lib/admin/access";
@@ -44,7 +44,7 @@ describe("permissions (D-07: three fixed roles)", () => {
   });
 });
 
-describe("the panel without logging in (only local, until 6a)", () => {
+describe("the panel without logging in (only local, for developing)", () => {
   it("knows a local address, with or without a port", () => {
     for (const h of ["localhost", "localhost:3000", "127.0.0.1:3000", "[::1]:3000", "LOCALHOST:3000"]) expect(isLocalHost(h)).toBe(true);
     for (const h of ["wonzo.nl", "localhost.wonzo.nl", "127.0.0.2", "", null]) expect(isLocalHost(h)).toBe(false);
@@ -64,8 +64,9 @@ describe("the panel without logging in (only local, until 6a)", () => {
     vi.stubEnv("ADMIN_DEV_LOGIN", "true");
     expect(await currentAdmin()).toBeNull();
     await expect(requireAction("bestellingen")).rejects.toThrow(AdminAccessDenied);
-    // notFound(): the panel does not exist for a stranger.
-    await expect(requirePage(null)).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
+    // Not logged in: to the login page, nothing of the panel itself.
+    const refused = await requirePage(null).catch((err: { digest?: string }) => err.digest);
+    expect(refused).toMatch(/^NEXT_REDIRECT;replace;\/beheer\/inloggen;/);
   });
 
   it("locally with the setting: the owner; from another host: nobody", async () => {

@@ -208,6 +208,14 @@ verzoek van de klant (nu: verbergen met die reden).
 - **Het logboek is zichtbaar in het paneel**, niet alleen in de database. Wie,
   wat, wanneer, waarop. Gebouwd (2026-10-13): `/beheer/logboek`, recht
   "logboek" (alleen de eigenaar).
+- **Gebouwd (2026-10-19, D-07):** `/beheer/inloggen` (mailadres, wachtwoord en
+  code in één formulier), `/beheer/opzetten` (de eerste eigenaar, met
+  `ADMIN_SETUP_TOKEN`; sluit zichzelf), `/beheer/uitnodiging/<sleutel>`,
+  `/beheer/beheerders` (recht "beheerders": uitnodigen, rol, uitschakelen,
+  toegang opnieuw instellen) en `/beheer/account` (sessies, overal
+  uitloggen, nieuwe herstelcodes). Telefoon kwijt: inloggen met een
+  herstelcode, of een andere eigenaar stelt de toegang opnieuw in. Het
+  logboek toont de naam van de beheerder.
 
 ---
 

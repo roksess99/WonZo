@@ -104,6 +104,8 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
             (SELECT COALESCE(SUM(r.amount_cents), 0) FROM refunds r WHERE r.payment_id = p.id AND r.status <> 'FAILED') AS refunded
        FROM payments p JOIN orders o ON o.id = p.order_id
       WHERE p.status = 'PAID' AND o.hold_reason IS NULL
+        -- Only what is still open: paid back in full is done, and must not use up the LIMIT below.
+        AND p.amount_cents > (SELECT COALESCE(SUM(r2.amount_cents), 0) FROM refunds r2 WHERE r2.payment_id = p.id AND r2.status <> 'FAILED')
         AND (o.status IN ('CANCELLED', 'PENDING_PAYMENT', 'PAYMENT_FAILED')
              OR EXISTS (SELECT 1 FROM payments p2 WHERE p2.order_id = p.order_id AND p2.status IN ('PAID', 'CHARGED_BACK')
                           AND (p2.created_at < p.created_at OR (p2.created_at = p.created_at AND p2.id < p.id))))
@@ -161,7 +163,9 @@ export async function attentionItems(db: Queryable, now: Date): Promise<Attentio
     `SELECT r.id, r.number, r.status, r.order_id, o.reference, r.lines_cents + r.shipping_cents AS max, r.closed_at, r.requested_at,
             (SELECT c.id FROM invoices c WHERE c.return_id = r.id LIMIT 1) AS credit
        FROM returns r JOIN orders o ON o.id = r.order_id
-      WHERE r.status IN ('REQUESTED', 'RECEIVED') OR (r.status = 'REFUNDED' AND r.closed_at < ?)
+      WHERE r.status IN ('REQUESTED', 'RECEIVED')
+         -- Paid back without its credit note: only those, so the finished ones never use up the LIMIT.
+         OR (r.status = 'REFUNDED' AND r.closed_at < ? AND NOT EXISTS (SELECT 1 FROM invoices c2 WHERE c2.return_id = r.id))
       ORDER BY r.id LIMIT 100`,
     [toDbTime(new Date(now.getTime() - 10 * 60_000))],
   );

@@ -3,6 +3,7 @@ import { adminMessages } from "@/lib/admin/messages";
 import { company } from "@/lib/company";
 import { getMessages } from "@/lib/i18n/messages";
 import { EXAMPLES } from "@/lib/mail/examples";
+import { adminInvite, adminRecoveryUsed } from "@/lib/mail/admin-account";
 import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, reviewInvite, type ReturnMailData } from "@/lib/mail/after-sale";
 import { adminAlert, adminNewOrder, orderCancelled, orderConfirmation } from "@/lib/mail/messages";
 import { money } from "@/lib/money";
@@ -49,6 +50,8 @@ export default async function MailPreviewPage({ searchParams }: PageProps<"/behe
     { id: "retour-terug", label: m.returnRefunded, mail: returnRefunded({ ...ret, refund: money(Math.max(1, ret.max.amount - 500)), deductionReason: "verpakking ontbrak" }, links, getMessages(o.locale)) },
     { id: "retour-nieuw", label: m.newReturn, mail: adminNewReturn(ret, admin, links.logoUrl, am) },
     { id: "beoordelen", label: m.reviewInvite, mail: reviewInvite({ locale: o.locale, reference: o.reference }, abs(o.locale === "en" ? "/en/review/voorbeeld-sleutel" : "/beoordelen/voorbeeld-sleutel"), links, getMessages(o.locale)) },
+    { id: "beheerder-uitnodiging", label: m.adminInvite, mail: adminInvite({ name: "Sam", role: "boekhouder" }, abs("/beheer/uitnodiging/voorbeeld-sleutel"), new Date("2026-10-21T10:00:00Z"), links.logoUrl, am) },
+    { id: "beheerder-herstelcode", label: m.adminRecovery, mail: adminRecoveryUsed({ name: "Sam", at: new Date("2026-10-19T08:15:00Z"), left: 9 }, abs("/beheer/account"), links.logoUrl, am) },
   ];
 
   return (

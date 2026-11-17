@@ -106,6 +106,8 @@ aanwijzen.
 | `review_tokens` (D-12) | geen: alleen de hash van een sleutel | f (alleen kopers kunnen beoordelen) | als de bestelling | ja |
 | `review_optouts` (D-12) | een hash van het mailadres, niet het adres | f (niet opnieuw uitnodigen wie dat niet wil) | zolang er uitnodigingen gaan | nee |
 | `page_views` (D-10) | geen: dag, pad en aantal | f | onbeperkt (geen persoonsgegeven) | n.v.t. |
+| `admins` (D-07) | naam en mailadres van een beheerder; wachtwoord alleen als scrypt-hash, het TOTP-geheim versleuteld | b (de arbeids- of opdrachtrelatie: toegang tot het paneel), f (beveiliging) | zolang de persoon beheerder is; daarna uitgeschakeld, verwijderen bij D-24 (het logboek verwijst ernaar) | n.v.t. |
+| `admin_sessions`, `admin_invites`, `admin_recovery_codes` (D-07) | geen: alleen hashes van sleutels en tijden | f (beveiliging) | sessies tot 12 uur, opgeruimd door de geplande taak; uitnodigingen 30 dagen na het verlopen | n.v.t. |
 | `service_checks` (fase 6) | geen: de stand van Mollie en BigBuy, en het tegoed | — | wordt overschreven bij elke meting | n.v.t. |
 
 Vuistregels voor de grondslag (`WETTELIJK`, AVG art. 6 lid 1):

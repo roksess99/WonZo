@@ -34,7 +34,8 @@ onbetaalde bestelling krijgt bewust geen annuleringsmail.
 | Verzonden | klant | bij het verzenden |
 | Retour ontvangen / terugbetaald | klant | bij de afhandeling |
 | Uitnodiging voor een beoordeling | klant | dagen na levering |
-| Wachtwoord of uitnodiging beheerder | beheerder | |
+| Uitnodiging beheerder (D-07) | de uitgenodigde | na "uitnodigen" of "toegang opnieuw instellen"; de sleutel wordt pas bij het versturen gemaakt en werkt 48 uur, één keer |
+| Ingelogd met een herstelcode | die beheerder | direct na zo'n inlog (`.claude/rules/beveiliging.md` § Authenticatie) |
 
 **De bevestiging hangt aan de betaalstatus, niet aan de terugkeerpagina.** Een
 klant die zijn tabblad sluit heeft wél betaald en hoort zijn mail te krijgen.

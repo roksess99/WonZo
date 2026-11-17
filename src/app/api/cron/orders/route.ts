@@ -4,12 +4,14 @@
 // (src/lib/orders/tracking.ts), cancelling unpaid orders
 // after 60 minutes, reconciliation with the payment provider
 // (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
-// (src/lib/mail/worker.ts) and tidying the rate limit. Bearer
+// (src/lib/mail/worker.ts), and tidying the rate limit and the admin
+// sessions past their time (.claude/rules/beveiliging.md § Sessies). Bearer
 // JOB_TOKEN; one run at a time (GET_LOCK), so two calls never work double
 // (.claude/rules/beveiliging.md § Geplande taken).
 
 import { getPool, hasDatabase } from "@/lib/db";
 import { pruneRateLimits } from "@/lib/db/rate-limit";
+import { pruneAdminSessions } from "@/lib/admin/auth";
 import { json, refuseJob } from "@/lib/http";
 import { defaultOrdering } from "@/lib/catalog/ordering";
 import { releaseClosedWindows } from "@/lib/orders";
@@ -60,6 +62,7 @@ export async function POST(request: Request): Promise<Response> {
       }
       const mailed = await sendDueMail(mail?.sender ?? null, mail?.config ?? null, now);
       const pruned = await pruneRateLimits(now);
+      const sessionsPruned = await pruneAdminSessions(now);
       return json(200, {
         status: "done",
         released: released.released.length,
@@ -76,6 +79,7 @@ export async function POST(request: Request): Promise<Response> {
         mailSent: mailed.sent,
         mailFailed: mailed.failed,
         pruned,
+        sessionsPruned,
       });
     } finally {
       await lock.query("SELECT RELEASE_LOCK('wonzo_orders_job')");

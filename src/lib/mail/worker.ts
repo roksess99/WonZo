@@ -6,6 +6,7 @@
 // and on the dashboard. Runs inside the orders job (one at a time, GET_LOCK).
 // Server-side only.
 
+import { adminForMail, issueInvite } from "@/lib/admin/auth";
 import { adminMessages } from "@/lib/admin/messages";
 import { statusPath } from "@/lib/checkout";
 import { company } from "@/lib/company";
@@ -20,12 +21,13 @@ import { bareAddress, recipient, type MailConfig } from "./config";
 import { invoicesOfOrder } from "@/lib/invoices";
 import { parcelsOfOrder } from "@/lib/orders/tracking";
 import { readReturn } from "@/lib/returns";
+import { adminInvite, adminRecoveryUsed } from "./admin-account";
 import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, reviewInvite, type ReturnMailData } from "./after-sale";
 import { issueReviewToken, optedOut } from "@/lib/reviews";
 import { adminAlert, adminNewOrder, alertKind, orderCancelled, orderConfirmation, type Links } from "./messages";
 import type { MailSender, OutgoingMail } from "./transport";
 
-export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert", "order-shipped", "return-requested", "return-rejected", "return-refunded", "admin-new-return", "review-invite"] as const;
+export const MAIL_KINDS = ["order-confirmation", "admin-new-order", "order-cancelled", "admin-alert", "order-shipped", "return-requested", "return-rejected", "return-refunded", "admin-new-return", "review-invite", "admin-invite", "admin-recovery-used"] as const;
 /** Minutes to wait after the n-th failure: quick at first (a hiccup), then hours (a server that is down). */
 const BACKOFF_MINUTES = [1, 5, 15, 60, 180, 360, 720];
 export const MAX_ATTEMPTS = BACKOFF_MINUTES.length + 1;
@@ -39,8 +41,30 @@ type Composed = { kind: "mail"; intended: string; mail: Omit<OutgoingMail, "to">
 
 type Row = { id: number | string; kind: string; dedupe_key: string; payload: unknown; attempts: number | string };
 
+/**
+ * A mail about an admin's own account: to that admin, never to MAIL_ORDERS_TO.
+ * The invitation's key is made here, at sending: it exists as text only in
+ * the mail (src/lib/admin/auth.ts).
+ */
+async function composeAdminAccount(row: Row, now: Date): Promise<Composed> {
+  const payload = (typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload) as { adminId?: unknown; at?: unknown } | null;
+  const adminId = Number(payload?.adminId);
+  const admin = Number.isSafeInteger(adminId) ? await adminForMail(getPool(), adminId) : null;
+  if (!admin || admin.disabled) return { kind: "skip", reason: "beheerder niet gevonden of uitgeschakeld" };
+  if (row.kind === "admin-invite") {
+    if (!admin.pending) return { kind: "skip", reason: "uitnodiging al aangenomen" };
+    const invite = await withTransaction((conn) => issueInvite(conn, adminId, now));
+    if (!invite) return { kind: "skip", reason: "geen open uitnodiging" };
+    return { kind: "mail", intended: admin.email, mail: adminInvite(admin, url(`/beheer/uitnodiging/${invite.token}`), invite.expiresAt, url(LOGO), adminMessages()) };
+  }
+  const [left] = await selectRows<{ n: number | string }>(getPool(), "SELECT COUNT(*) AS n FROM admin_recovery_codes WHERE admin_id = ? AND used_at IS NULL", [adminId]);
+  const at = typeof payload?.at === "string" && !Number.isNaN(Date.parse(payload.at)) ? new Date(payload.at) : now;
+  return { kind: "mail", intended: admin.email, mail: adminRecoveryUsed({ name: admin.name, at, left: Number(left?.n ?? 0) }, url("/beheer/account"), url(LOGO), adminMessages()) };
+}
+
 /** What a record becomes, read from the frozen order at the moment of sending. */
 async function compose(row: Row, config: MailConfig, now: Date): Promise<Composed> {
+  if (row.kind === "admin-invite" || row.kind === "admin-recovery-used") return composeAdminAccount(row, now);
   const payload = (typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload) as { orderId?: unknown; reason?: unknown; error?: unknown; returnId?: unknown } | null;
   const orderId = Number(payload?.orderId);
   const order = Number.isSafeInteger(orderId) ? await readOrderView(getPool(), orderId, now) : null;

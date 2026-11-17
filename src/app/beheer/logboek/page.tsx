@@ -63,7 +63,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/beheer/log
                   return (
                     <tr key={r.id} className="flex flex-wrap gap-x-4 border-b border-line py-3 align-top sm:table-row sm:py-0">
                       <td className="py-0 tabular-nums text-muted sm:py-2 sm:pe-4">{dateTime(r.at)}</td>
-                      <td className="py-0 sm:py-2 sm:pe-4">{auditActor(all, r.actor)}</td>
+                      <td className="py-0 sm:py-2 sm:pe-4">{r.actorName ?? auditActor(all, r.actor)}</td>
                       <td className="w-full py-0 sm:w-auto sm:py-2 sm:pe-4">
                         <span className="font-medium">{auditAction(all, r.action)}</span>
                         {r.reason ? <span className="block text-body-sm">{interpolate(m.reason, { reason: r.reason })}</span> : null}

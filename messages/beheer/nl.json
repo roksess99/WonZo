@@ -15,7 +15,10 @@
     "log": "Logboek",
     "returns": "Retouren",
     "stats": "Statistieken",
-    "reviews": "Beoordelingen"
+    "reviews": "Beoordelingen",
+    "admins": "Beheerders",
+    "account": "Account",
+    "logout": "Uitloggen"
   },
   "notFound": {
     "title": "Niet gevonden",
@@ -369,7 +372,23 @@
     "newReturnIntro": "Bij bestelling {reference}. Maximaal {total} terug. Wacht op het pakket; daarna beoordeel je het product in het beheerpaneel.",
     "newReturnLine": "{quantity} × {sku}",
     "newReturnLineSub": "{name} — {reason}",
-    "openReturn": "Open de bestelling in het beheerpaneel"
+    "openReturn": "Open de bestelling in het beheerpaneel",
+    "accountWhy": "Deze mail komt van het beheerpaneel van WonZo, omdat dit adres daar een account heeft.",
+    "inviteSubject": "Uitnodiging voor het beheerpaneel van WonZo",
+    "invitePreheader": "Kies een wachtwoord en koppel je app. De link werkt 48 uur.",
+    "inviteTitle": "Je bent uitgenodigd",
+    "inviteIntro": "Hallo {name}, je bent uitgenodigd als {role} in het beheerpaneel van WonZo.",
+    "inviteSteps": "Via de knop kies je een wachtwoord en koppel je een authenticator-app op je telefoon (bijvoorbeeld Google Authenticator of Microsoft Authenticator). Daarna log je in met je mailadres, wachtwoord en de code uit die app.",
+    "inviteButton": "Uitnodiging aannemen",
+    "inviteValid": "De link werkt tot {date}, één keer. Daarna kan een eigenaar een nieuwe sturen.",
+    "inviteIgnore": "Verwachtte je deze mail niet? Dan kun je hem negeren: zonder de link gebeurt er niets.",
+    "recoverySubject": "Er is ingelogd met een herstelcode",
+    "recoveryPreheader": "Was jij dat? Er zijn nog {left} codes over.",
+    "recoveryTitle": "Ingelogd met een herstelcode",
+    "recoveryIntro": "Hallo {name}, op {date} is er in het beheerpaneel van WonZo ingelogd met een van je herstelcodes. Je hebt er nog {left} over.",
+    "recoveryYou": "Was jij dat? Maak dan nieuwe herstelcodes op je accountpagina als je er bijna geen meer hebt, en koppel je app opnieuw als je telefoon kwijt is (vraag een andere eigenaar om je toegang opnieuw in te stellen).",
+    "recoveryNotYou": "Was jij dat niet? Log dan direct in, kies “overal uitloggen” en vraag een andere eigenaar om je toegang opnieuw in te stellen.",
+    "recoveryButton": "Naar je account"
   },
   "mailPreview": {
     "title": "Mail bekijken",
@@ -386,7 +405,9 @@
     "returnRejected": "Retour niet akkoord (klant)",
     "returnRefunded": "Retour terugbetaald, met waardevermindering (klant)",
     "newReturn": "Nieuwe retour (beheerder)",
-    "reviewInvite": "Uitnodiging om te beoordelen (klant)"
+    "reviewInvite": "Uitnodiging om te beoordelen (klant)",
+    "adminInvite": "Uitnodiging voor een beheerder",
+    "adminRecovery": "Melding herstelcode gebruikt"
   },
   "invoices": {
     "title": "Facturen",
@@ -433,12 +454,14 @@
       "customer": "klant",
       "system": "systeem",
       "provider": "betaaldienst",
-      "reconciliation": "controle"
+      "reconciliation": "controle",
+      "visitor": "onbekende bezoeker"
     },
     "objects": {
       "order": "bestelling",
       "return": "retour",
-      "invoice": "factuur"
+      "invoice": "factuur",
+      "admin": "beheerder"
     },
     "actions": {
       "order.cancelled": "Bestelling geannuleerd",
@@ -464,7 +487,21 @@
       "review.replied": "Antwoord op een beoordeling",
       "review.reply-removed": "Antwoord op een beoordeling weggehaald",
       "review.hidden": "Beoordeling verborgen",
-      "review.shown": "Beoordeling weer getoond"
+      "review.shown": "Beoordeling weer getoond",
+      "admin.setup": "Eerste eigenaar ingesteld",
+      "admin.login": "Ingelogd",
+      "admin.login-failed": "Mislukte inlogpoging",
+      "admin.logout": "Uitgelogd",
+      "admin.logout-all": "Overal uitgelogd",
+      "admin.recovery-used": "Ingelogd met een herstelcode",
+      "admin.recovery-renewed": "Nieuwe herstelcodes gemaakt",
+      "admin.invited": "Beheerder uitgenodigd",
+      "admin.invite-resent": "Uitnodiging opnieuw verstuurd",
+      "admin.activated": "Uitnodiging aangenomen",
+      "admin.role-changed": "Rol gewijzigd",
+      "admin.disabled": "Beheerder uitgeschakeld",
+      "admin.enabled": "Beheerder weer ingeschakeld",
+      "admin.reset": "Toegang opnieuw ingesteld"
     }
   },
   "returns": {
@@ -582,5 +619,158 @@
     "errorChanged": "De beoordeling is intussen veranderd. Ververs de pagina.",
     "errorNotFound": "Beoordeling niet gevonden.",
     "errorAccess": "Je hebt geen toegang tot deze handeling."
+  },
+  "roles": {
+    "eigenaar": "Eigenaar",
+    "boekhouder": "Boekhouder",
+    "marketing": "Marketing"
+  },
+  "roleHints": {
+    "eigenaar": "Alles, ook terugbetalen, prijzen en beheerders.",
+    "boekhouder": "Alleen facturen.",
+    "marketing": "Kortingen, beoordelingen en statistieken."
+  },
+  "credentials": {
+    "passwordLabel": "Nieuw wachtwoord",
+    "passwordHint": "Minstens 12 tekens. Een zin van een paar woorden is sterk en makkelijk te onthouden.",
+    "appTitle": "Koppel je authenticator-app",
+    "appText": "Open een app zoals Google Authenticator, Microsoft Authenticator of 1Password, kies “code toevoegen” en scan deze QR-code.",
+    "qrAlt": "QR-code om WonZo beheer aan je authenticator-app toe te voegen",
+    "manual": "Kun je niet scannen? Typ dan deze sleutel over:",
+    "codeLabel": "Code uit de app",
+    "codeHint": "De 6 cijfers die de app nu toont.",
+    "errors": {
+      "password-short": "Kies een wachtwoord van minstens 12 tekens.",
+      "password-long": "Dat wachtwoord is te lang: hooguit 200 tekens.",
+      "password-is-email": "Je wachtwoord mag niet je mailadres zijn.",
+      "code": "Die code klopt niet. Typ de nieuwste code uit de app, en kijk of de tijd op je telefoon automatisch wordt ingesteld.",
+      "rate-limit": "Te veel pogingen. Wacht een kwartier en probeer het dan opnieuw.",
+      "not-configured": "Inloggen is nog niet ingesteld: ADMIN_TOTP_KEY ontbreekt op de server.",
+      "email": "Vul een geldig mailadres in.",
+      "name": "Vul een naam in (hooguit 80 tekens).",
+      "setup-token": "De opzetsleutel klopt niet.",
+      "closed": "Er is al een beheerder. Log in, of vraag een eigenaar om een uitnodiging.",
+      "invalid": "Deze uitnodiging werkt niet meer: hij is verlopen, al gebruikt of ingetrokken. Vraag een eigenaar om een nieuwe."
+    },
+    "codesTitle": "Bewaar je herstelcodes",
+    "codesText": "Ben je je telefoon kwijt, dan log je met een van deze codes in, in plaats van de code uit de app. Elke code werkt één keer. Je ziet ze alleen nu: zet ze in je wachtwoordkluis of print ze.",
+    "codesCopy": "Kopieer de codes",
+    "codesCopied": "Gekopieerd.",
+    "codesConfirm": "Ik heb de codes bewaard",
+    "toPanel": "Naar het beheerpaneel",
+    "busy": "Bezig…"
+  },
+  "login": {
+    "title": "Inloggen",
+    "intro": "Met je mailadres, je wachtwoord en de code uit je authenticator-app.",
+    "email": "Mailadres",
+    "password": "Wachtwoord",
+    "code": "Code",
+    "codeHint": "De 6 cijfers uit de app. Telefoon kwijt? Typ dan een herstelcode.",
+    "submit": "Inloggen",
+    "busy": "Bezig met inloggen…",
+    "invalid": "Deze combinatie klopt niet. Controleer je mailadres, wachtwoord en code.",
+    "rateLimit": "Te veel pogingen. Wacht een kwartier en probeer het dan opnieuw.",
+    "notConfigured": "Inloggen is nog niet ingesteld: ADMIN_TOTP_KEY ontbreekt op de server.",
+    "session": "Je blijft ingelogd tot je 30 minuten niets doet, en hooguit 12 uur.",
+    "loggedOut": "Je bent uitgelogd.",
+    "setupLink": "Nog geen beheerder? Stel de eerste eigenaar in"
+  },
+  "setup": {
+    "title": "Eerste eigenaar instellen",
+    "intro": "Deze pagina werkt één keer: zodra de eerste eigenaar bestaat, sluit hij voorgoed. Daarna komen beheerders er alleen bij met een uitnodiging.",
+    "tokenLabel": "Opzetsleutel",
+    "tokenHint": "De waarde van ADMIN_SETUP_TOKEN op de server.",
+    "name": "Je naam",
+    "nameHint": "Zo sta je in het logboek.",
+    "email": "Mailadres",
+    "submit": "Eigenaar instellen",
+    "missingToken": "Zet eerst ADMIN_SETUP_TOKEN (minstens 32 willekeurige tekens) en ADMIN_TOTP_KEY in de omgeving van de server. Daarna werkt deze pagina.",
+    "doneTitle": "Je bent de eerste eigenaar"
+  },
+  "invite": {
+    "title": "Uitnodiging aannemen",
+    "intro": "Welkom, {name}. Je wordt {role} in het beheerpaneel van WonZo, met het mailadres {email}. Kies een wachtwoord en koppel je authenticator-app.",
+    "submit": "Account instellen",
+    "doneTitle": "Je account staat klaar"
+  },
+  "admins": {
+    "title": "Beheerders",
+    "intro": "Wie in het paneel mag, en met welke rol. Elke beheerder logt in met wachtwoord en een code uit de app. De laatste eigenaar kan niet worden uitgeschakeld of een andere rol krijgen.",
+    "colName": "Naam",
+    "colEmail": "Mailadres",
+    "colRole": "Rol",
+    "colStatus": "Status",
+    "colLastSeen": "Laatst actief",
+    "status": {
+      "active": "Actief",
+      "invited": "Uitgenodigd",
+      "disabled": "Uitgeschakeld"
+    },
+    "never": "—",
+    "you": "(jij)",
+    "inviteValidUntil": "Link geldig tot {date}",
+    "inviteWaiting": "Uitnodiging wordt verstuurd",
+    "inviteTitle": "Iemand uitnodigen",
+    "inviteText": "Die persoon krijgt een mail met een link die 48 uur werkt. Daarmee kiest die zelf een wachtwoord en koppelt de app.",
+    "inviteName": "Naam",
+    "inviteEmail": "Mailadres",
+    "inviteRole": "Rol",
+    "inviteSubmit": "Uitnodiging versturen",
+    "inviteDone": "Uitnodiging klaargezet. De mail gaat binnen enkele minuten de deur uit.",
+    "roleLabel": "Rol van {name}",
+    "roleSave": "Rol opslaan",
+    "roleText": "{name} wordt {role}. Alle sessies van {name} stoppen: die logt opnieuw in met de nieuwe rechten.",
+    "roleConfirm": "Ja, wijzig de rol",
+    "roleDone": "Rol gewijzigd.",
+    "disable": "Uitschakelen",
+    "disableText": "{name} kan niet meer inloggen, en is meteen overal uitgelogd. Dit kun je later terugdraaien.",
+    "disableConfirm": "Ja, schakel uit",
+    "disableDone": "Uitgeschakeld.",
+    "enable": "Weer inschakelen",
+    "enableDone": "Weer ingeschakeld.",
+    "reset": "Toegang opnieuw instellen",
+    "resetText": "Voor een kwijtgeraakte telefoon of een vergeten wachtwoord. Wachtwoord, app-koppeling en herstelcodes van {name} vervallen, alle sessies stoppen, en {name} krijgt een nieuwe uitnodiging.",
+    "resetConfirm": "Ja, stel opnieuw in",
+    "resetDone": "Nieuwe uitnodiging klaargezet.",
+    "resend": "Uitnodiging opnieuw versturen",
+    "resendDone": "Nieuwe uitnodiging klaargezet; de vorige link werkt dan niet meer.",
+    "cancel": "Annuleren",
+    "errors": {
+      "not-found": "Die beheerder bestaat niet (meer).",
+      "last-owner": "Dit is de laatste eigenaar die kan inloggen. Nodig eerst een andere eigenaar uit.",
+      "self": "Dit kun je niet bij jezelf doen. Vraag een andere eigenaar.",
+      "state": "Dat kan niet in de huidige status. Ververs de pagina.",
+      "email": "Vul een geldig mailadres in.",
+      "name": "Vul een naam in (hooguit 80 tekens).",
+      "role": "Kies een rol.",
+      "exists": "Er is al een beheerder met dit mailadres.",
+      "access": "Alleen een eigenaar mag beheerders beheren."
+    },
+    "resendText": "{name} krijgt een nieuwe uitnodiging; de vorige link werkt dan niet meer.",
+    "enableText": "{name} kan weer inloggen. Was de uitnodiging nog niet aangenomen, dan gaat er een nieuwe."
+  },
+  "account": {
+    "title": "Account",
+    "intro": "Je gegevens en je sessies.",
+    "name": "Naam",
+    "email": "Mailadres",
+    "role": "Rol",
+    "local": "Je bent lokaal binnen zonder in te loggen (ADMIN_DEV_LOGIN). Er is dan geen account om te tonen.",
+    "sessions": "Open sessies: {count}",
+    "sessionsHint": "Elke computer of telefoon waarop je ingelogd bent telt mee.",
+    "logout": "Uitloggen",
+    "logoutAll": "Overal uitloggen",
+    "logoutAllText": "Al je sessies stoppen, ook deze. Handig als je ergens bent ingelogd gebleven, of een telefoon kwijt bent.",
+    "logoutAllConfirm": "Ja, log overal uit",
+    "codesLeft": "Herstelcodes over: {count} van 10",
+    "codesLow": "Je hebt bijna geen herstelcodes meer. Maak nieuwe.",
+    "renewTitle": "Nieuwe herstelcodes",
+    "renewText": "De oude codes werken dan niet meer. Bevestig met de code uit je app.",
+    "renewCode": "Code uit de app",
+    "renewSubmit": "Maak nieuwe codes",
+    "renewError": "Die code klopt niet. Typ de nieuwste code uit de app.",
+    "notConfigured": "Inloggen is nog niet ingesteld: ADMIN_TOTP_KEY ontbreekt op de server.",
+    "cancel": "Annuleren"
   }
 }
