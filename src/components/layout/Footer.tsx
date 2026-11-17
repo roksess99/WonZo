@@ -31,6 +31,21 @@ export function Footer({ locale, m }: { locale: Locale; m: Messages }) {
                 {m.footer.contact}
               </Link>
             </li>
+            <li>
+              <Link href={localizePath(locale, "/beoordelingen")} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+                {m.footer.reviews}
+              </Link>
+            </li>
+            <li>
+              <Link href={localizePath(locale, "/algemene-voorwaarden")} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+                {m.footer.terms}
+              </Link>
+            </li>
+            <li>
+              <Link href={localizePath(locale, "/privacy")} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+                {m.footer.privacy}
+              </Link>
+            </li>
           </ul>
         </section>
         <section aria-labelledby="footer-company">

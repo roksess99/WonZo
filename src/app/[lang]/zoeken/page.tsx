@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { CategoryTiles } from "@/components/catalog/CategoryTiles";
+import { CategoryTiles, categoryCovers } from "@/components/catalog/CategoryTiles";
 import { Listing } from "@/components/catalog/Listing";
 import { ProductGridSkeleton } from "@/components/catalog/ProductGrid";
 import { SearchForm } from "@/components/layout/Header";
@@ -27,11 +27,17 @@ async function Results({ locale, m, query }: { locale: Locale; m: Messages; quer
   if (hits.length === 0) {
     return (
       <StateMessage title={t(m.search.emptyTitle, { q: query.q })} text={m.search.emptyText}>
-        <CategoryTiles locale={locale} m={m} />
+        <CategoryTiles locale={locale} m={m} covers={categoryCovers(catalog)} />
       </StateMessage>
     );
   }
   return <Listing locale={locale} m={m} path={localizePath(locale, "/zoeken")} products={hits} query={query} emptyBaseText={m.search.emptyText} />;
+}
+
+/** The tiles with a product photo per category; the drawings until the catalogue is there. */
+async function TilesWithPhotos({ locale, m }: { locale: Locale; m: Messages }) {
+  const catalog = await getCatalogOrUnavailable(locale);
+  return <CategoryTiles locale={locale} m={m} covers={catalog ? categoryCovers(catalog) : {}} />;
 }
 
 export default async function SearchPage({ params, searchParams }: PageProps<"/[lang]/zoeken">) {
@@ -51,7 +57,9 @@ export default async function SearchPage({ params, searchParams }: PageProps<"/[
         </Suspense>
       ) : (
         <StateMessage title={m.search.noQueryTitle} text={m.search.noQueryText}>
-          <CategoryTiles locale={lang} m={m} />
+          <Suspense fallback={<CategoryTiles locale={lang} m={m} />}>
+            <TilesWithPhotos locale={lang} m={m} />
+          </Suspense>
         </StateMessage>
       )}
     </Container>

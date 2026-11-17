@@ -3,7 +3,7 @@ import { adminMessages } from "@/lib/admin/messages";
 import { company } from "@/lib/company";
 import { getMessages } from "@/lib/i18n/messages";
 import { EXAMPLES } from "@/lib/mail/examples";
-import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, type ReturnMailData } from "@/lib/mail/after-sale";
+import { adminNewReturn, orderShipped, returnRefunded, returnRejected, returnRequested, reviewInvite, type ReturnMailData } from "@/lib/mail/after-sale";
 import { adminAlert, adminNewOrder, orderCancelled, orderConfirmation } from "@/lib/mail/messages";
 import { money } from "@/lib/money";
 import { siteUrl } from "@/lib/seo";
@@ -26,7 +26,7 @@ export default async function MailPreviewPage({ searchParams }: PageProps<"/behe
   const example = EXAMPLES.find((e) => e.id === voorbeeld) ?? EXAMPLES[0]!;
   const o = example.order;
   const abs = (p: string) => new URL(p, siteUrl).toString();
-  const links = { statusUrl: abs("/bestelling/voorbeeld-sleutel"), contactUrl: abs(o.locale === "en" ? "/en/contact" : "/contact"), logoUrl: abs("/brand/png/wonzo-wordmark-1744px.png"), email: company.email, returnUrl: abs(o.locale === "en" ? "/en/return" : "/retour") };
+  const links = { statusUrl: abs("/bestelling/voorbeeld-sleutel"), contactUrl: abs(o.locale === "en" ? "/en/contact" : "/contact"), logoUrl: abs("/brand/png/wonzo-wordmark-1744px.png"), email: company.email, returnUrl: abs(o.locale === "en" ? "/en/return" : "/retour"), withdrawalFormUrl: abs(o.locale === "en" ? "/en/withdrawal-form" : "/herroepingsformulier") };
   const admin = abs("/beheer/bestellingen/1");
   // A return of the first line of the example, one piece, no reason given (D-09).
   const first = o.lines[0]!;
@@ -48,6 +48,7 @@ export default async function MailPreviewPage({ searchParams }: PageProps<"/behe
     { id: "retour-afgewezen", label: m.returnRejected, mail: returnRejected({ ...ret, rejectReason: "Het artikel is gebruikt en mist onderdelen." }, links, getMessages(o.locale)) },
     { id: "retour-terug", label: m.returnRefunded, mail: returnRefunded({ ...ret, refund: money(Math.max(1, ret.max.amount - 500)), deductionReason: "verpakking ontbrak" }, links, getMessages(o.locale)) },
     { id: "retour-nieuw", label: m.newReturn, mail: adminNewReturn(ret, admin, links.logoUrl, am) },
+    { id: "beoordelen", label: m.reviewInvite, mail: reviewInvite({ locale: o.locale, reference: o.reference }, abs(o.locale === "en" ? "/en/review/voorbeeld-sleutel" : "/beoordelen/voorbeeld-sleutel"), links, getMessages(o.locale)) },
   ];
 
   return (

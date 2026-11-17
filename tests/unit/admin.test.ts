@@ -164,7 +164,7 @@ describe("which buttons an order gets", () => {
   const pay = (id: string, status: AdminOrder["payments"][number]["status"], cents: number) => ({ id, status, amount: money(cents), method: null, providerPaymentId: null, createdAt: new Date() });
   const order = (o: Partial<AdminOrder>): AdminOrder =>
     ({ status: "PAID", holdReason: null, payments: [pay("p1", "PAID", 2445)], refunds: [], purchases: [], failedMails: [], invoices: [], ...o }) as AdminOrder;
-  const none = { acceptPrice: null, retryPurchase: null, resendMails: [], markDelivered: false };
+  const none = { acceptPrice: null, retryPurchase: null, resendMails: [], markDelivered: false, lookupPurchase: null };
 
   it("a reason has at least 3 characters, at most 200", () => {
     expect(cleanReason("  ok  ")).toBeNull();
@@ -204,6 +204,15 @@ describe("which buttons an order gets", () => {
     // € 1,00 and € 23,45 paid on a € 24,45 order: € 24,45 back in two refunds.
     const o = order({ status: "PENDING_PAYMENT", holdReason: "AMOUNT_MISMATCH", payments: [pay("p1", "PAID", 100), pay("p2", "PAID", 2345)] });
     expect(adminOptions(o)).toEqual({ releaseHold: false, cancel: { refund: money(2445) }, refundPayments: [], heldUnpaid: true, ...none });
+  });
+
+  it("a purchase order without a clear answer: ask BigBuy now (never order again); delivered can be marked once all are placed", () => {
+    const so = (id: string, status: string) => ({ id, status }) as unknown as AdminOrder["purchases"][number];
+    const o = order({ status: "FULFILLMENT_PENDING", purchases: [so("s1", "UNKNOWN")] });
+    expect(adminOptions(o).lookupPurchase).toEqual({ supplierOrderId: "s1" });
+    expect(adminOptions(o).markDelivered).toBe(false);
+    const placed = order({ status: "PURCHASED", purchases: [so("s1", "PLACED")] });
+    expect(adminOptions(placed)).toMatchObject({ lookupPurchase: null, markDelivered: true });
   });
 
   it("an unpaid order without a hold is not cancelled by hand: the expiry does that", () => {

@@ -14,11 +14,12 @@ import { createHash } from "node:crypto";
 import { appendAudit } from "@/lib/admin/audit";
 import { company } from "@/lib/company";
 import { fromDbTime, getPool, selectRows, toDbTime, withTransaction, type Connection, type Queryable } from "@/lib/db";
-import { amsterdamMonthRange } from "@/lib/dates";
+import { amsterdamMonthRange, amsterdamYearMonth } from "@/lib/dates";
 import { amsterdamYear, nextNumber } from "@/lib/db/counters";
 import { money, type Money } from "@/lib/money";
 import { lockOrder } from "@/lib/orders/store";
 import { MixedVatShipping, vatBreakdown } from "@/lib/pricing/vat";
+import { parseEuroInput } from "@/lib/returns/amount";
 import { fromSnapshot, invoiceNumber, negate, toSnapshot, type InvoiceDocument, type InvoiceKind } from "./document";
 import { renderInvoicePdf } from "./pdf";
 
@@ -271,6 +272,87 @@ export async function listInvoices(db: Queryable, year: number, month: number): 
     id: Number(r.id), number: String(r.number), kind: r.kind === "credit" ? "credit" : "invoice", orderId: Number(r.order_id), reference: String(r.reference),
     customer: `${String(r.first_name)} ${String(r.last_name)}`, issuedAt: fromDbTime(String(r.issued_at)), totalIncl: money(Number(r.total_incl_cents)),
   }));
+}
+
+export type InvoiceSearch =
+  | { kind: "number"; prefix: string }
+  | { kind: "order"; prefix: string }
+  | { kind: "email"; email: string }
+  | { kind: "amount"; cents: number }
+  | { kind: "name"; text: string };
+
+/**
+ * What a search term is (docs/BEHEER.md § Facturen): an invoice or credit
+ * note number ("2026-00042", "C2026", or the start of one), an order number
+ * ("WZ-2026-00001"), a whole e-mail address, an amount in euros ("37,71",
+ * "€ 37.71", "37" — never "3771" for € 37,71), or else a name. Pure.
+ */
+export function parseInvoiceSearch(term: string): InvoiceSearch | null {
+  const t = term.trim();
+  if (!t || t.length > 120) return null;
+  if (/^C?\d{4}(-\d{0,5})?$/i.test(t)) return { kind: "number", prefix: t.toUpperCase() };
+  if (/^WZ-\d{4}(-\d{0,5})?$/i.test(t)) return { kind: "order", prefix: t.toUpperCase() };
+  if (/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(t)) return { kind: "email", email: t.toLowerCase() };
+  const cents = parseEuroInput(t);
+  if (cents !== null) return { kind: "amount", cents };
+  return t.length >= 2 && /\p{L}/u.test(t) ? { kind: "name", text: t } : null;
+}
+
+const likeEscape = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
+
+/**
+ * The documents a term finds, newest first, at most 50. Searched on the order
+ * (number, name, address) and on the stored totals — never inside the frozen
+ * snapshot, which has no index (docs/BEHEER.md § Facturen). A credit note is
+ * found by its amount without the minus.
+ */
+export async function searchInvoices(db: Queryable, term: string): Promise<InvoiceListRow[] | null> {
+  const q = parseInvoiceSearch(term);
+  if (!q) return null;
+  const where =
+    q.kind === "number"
+      ? { sql: "i.number LIKE ?", params: [`${likeEscape(q.prefix)}%`] }
+      : q.kind === "order"
+        ? { sql: "o.reference LIKE ?", params: [`${likeEscape(q.prefix)}%`] }
+        : q.kind === "email"
+          ? { sql: "LOWER(o.email) = ?", params: [q.email] }
+          : q.kind === "amount"
+            ? { sql: "ABS(i.total_incl_cents) = ?", params: [q.cents] }
+            : { sql: "CONCAT(o.first_name, ' ', o.last_name) LIKE ?", params: [`%${likeEscape(q.text)}%`] };
+  const rows = await selectRows<Raw>(
+    db,
+    `SELECT i.id, i.number, i.kind, i.order_id, o.reference, o.first_name, o.last_name, i.issued_at, i.total_incl_cents
+       FROM invoices i JOIN orders o ON o.id = i.order_id
+      WHERE ${where.sql} ORDER BY i.id DESC LIMIT 50`,
+    where.params,
+  );
+  return rows.map((r) => ({
+    id: Number(r.id), number: String(r.number), kind: r.kind === "credit" ? "credit" : "invoice", orderId: Number(r.order_id), reference: String(r.reference),
+    customer: `${String(r.first_name)} ${String(r.last_name)}`, issuedAt: fromDbTime(String(r.issued_at)), totalIncl: money(Number(r.total_incl_cents)),
+  }));
+}
+
+export type InvoiceTotals = {
+  year: number;
+  /** This year, per month that has documents: invoices minus credit notes, incl. VAT. */
+  months: { month: number; documents: number; total: Money }[];
+  /** This year and the two before, in total. */
+  years: { year: number; documents: number; total: Money }[];
+};
+
+/** For the dashboard (docs/BEHEER.md, the description of 2026-10-12): totals per year and per month, newest year opened. */
+export async function invoiceTotals(db: Queryable, now: Date = new Date()): Promise<InvoiceTotals> {
+  const { year, month } = amsterdamYearMonth(now);
+  const sum = async (from: Date, to: Date) => {
+    const [r] = await selectRows<{ n: number | string; s: number | string | null }>(db, "SELECT COUNT(*) AS n, SUM(total_incl_cents) AS s FROM invoices WHERE issued_at >= ? AND issued_at < ?", [toDbTime(from), toDbTime(to)]);
+    return { documents: Number(r?.n ?? 0), total: money(Number(r?.s ?? 0)) };
+  };
+  const yearRange = (y: number) => ({ from: amsterdamMonthRange(y, 1).from, to: amsterdamMonthRange(y, 12).to });
+  const [months, years] = await Promise.all([
+    Promise.all(Array.from({ length: month }, (_, i) => i + 1).map(async (m) => ({ month: m, ...(await sum(amsterdamMonthRange(year, m).from, amsterdamMonthRange(year, m).to)) }))),
+    Promise.all([year, year - 1, year - 2].map(async (y) => ({ year: y, ...(await sum(yearRange(y).from, yearRange(y).to)) }))),
+  ]);
+  return { year, months: months.filter((m) => m.documents > 0).reverse(), years: years.filter((y) => y.year === year || y.documents > 0) };
 }
 
 export type VatMonth = { month: number; documents: number; byRate: { vatRateBp: number; base: Money; vat: Money }[] };

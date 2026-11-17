@@ -1,0 +1,185 @@
+{
+  "updated": "Last updated: {date}",
+  "decisive": "This text exists in Dutch and English. If they differ, the Dutch text applies.",
+  "print": "Print or save as PDF",
+  "open": "still to be filled in",
+  "terms": {
+    "metaTitle": "Terms and conditions",
+    "metaDescription": "The terms and conditions of WonZo: who we are, how ordering, paying, delivery and returns work, and what you can do if something goes wrong.",
+    "title": "Terms and conditions",
+    "intro": "This is what applies when you order from WonZo. We have kept it as short and clear as we can. Your statutory rights as a consumer always apply, even if something here were to say otherwise.",
+    "sections": [
+      {
+        "title": "1. Who we are",
+        "body": [
+          "WonZo is a trade name of {legalName}, a sole proprietorship.",
+          "Address: {address}. Chamber of Commerce (KvK) number: {kvk}. VAT number: {vat}. Email: {email}."
+        ]
+      },
+      {
+        "title": "2. When these terms apply",
+        "body": [
+          "These terms apply to every order on wonzo.nl. You see them before you order, and you can print or save them.",
+          "Your order is governed by the version that was on the site when you ordered."
+        ]
+      },
+      {
+        "title": "3. The offer and the prices",
+        "body": [
+          "All prices are in euros and include VAT. You see the shipping costs before you order: in the cart and at checkout. A large item has its own shipping costs, shown on the product page.",
+          "We check price and stock with our supplier at the moment you order. If a price or description contains an obvious mistake that you could reasonably have noticed, we do not have to keep to it. You will hear from us and get your money back."
+        ]
+      },
+      {
+        "title": "4. How the purchase is made",
+        "body": [
+          "The purchase is made when your payment has reached us. You immediately get a confirmation by email.",
+          "Up to 30 minutes after your payment you can still cancel your order or change your details through the link in that email. If you cancel, you get the full amount back. After that we pass the order on to our supplier."
+        ]
+      },
+      {
+        "title": "5. Paying",
+        "body": [
+          "You pay in advance, through our payment provider Mollie: with iDEAL, Apple Pay, Google Pay or credit card. You give your payment details directly to Mollie; we do not see them.",
+          "We make your invoice once the 30 minutes after your payment have passed. You find it through the link in your confirmation email."
+        ]
+      },
+      {
+        "title": "6. Delivery",
+        "body": [
+          "We only deliver in the Netherlands. The items are shipped from our supplier's warehouse in Spain. The expected delivery time is shown with each item and in your confirmation.",
+          "If we cannot deliver within that time, we let you know. If your order is not delivered within the agreed time, or at the latest 30 days after ordering, you may give us a reasonable extra period. If we still do not deliver, you may cancel the purchase and get your money back within 14 days.",
+          "Until the parcel has been delivered to you, it is at our risk."
+        ]
+      },
+      {
+        "title": "7. Cooling-off period: 14 days",
+        "body": [
+          "You may cancel (withdraw from) an order without giving a reason within 14 days of receiving it. For an order in several parcels, the period runs from the last parcel.",
+          "Let us know within those 14 days: with the return form on our site, with the model withdrawal form, or by email to {email}.",
+          "You then have another 14 days to send the items back. Your parcel contains a return label; sending it back then costs you nothing.",
+          "We refund you within 14 days of your notice, with the same means of payment you used. We may wait until we have the items back. If you send the whole order back, you also get the original shipping costs back.",
+          "You may examine an item as you would in a shop. If it has been used more than needed to assess it, we may deduct the loss in value. We will then explain why.",
+          "For our current range there are no exceptions to the cooling-off period. If an item is added for which there is one, the product page says so."
+        ]
+      },
+      {
+        "title": "8. If something is wrong with an item",
+        "body": [
+          "An item must do what you may reasonably expect of it. That is your statutory guarantee, and it also applies after the cooling-off period.",
+          "If an item was delivered wrong, damaged or defective, tell us as soon as possible after you notice it, with the return form or by email. We then arrange repair, replacement or your money back, as the law provides. The cost of sending it back is then ours."
+        ]
+      },
+      {
+        "title": "9. Complaints",
+        "body": [
+          "If you have a complaint, email {email} with your order number and what is wrong. You get a reply on the substance within 14 days, or a message saying when you will.",
+          "If we cannot resolve it together, you can go to court. We are not affiliated with a disputes committee."
+        ]
+      },
+      {
+        "title": "10. Your data",
+        "body": [
+          "What we do with your data is in our privacy statement."
+        ]
+      },
+      {
+        "title": "11. Which law applies",
+        "body": [
+          "Dutch law applies to every purchase. If you live in another country, you keep the protection that country's law gives you as a consumer."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "metaTitle": "Privacy statement",
+    "metaDescription": "Which data WonZo uses, why, who we share it with and how long we keep it. Without cookies and without tracking.",
+    "title": "Privacy statement",
+    "intro": "We only use the data needed to deliver your order and keep our records. We do not track you, we do not sell anything on and we do not use cookies.",
+    "sections": [
+      {
+        "title": "Who is responsible",
+        "body": [
+          "{legalName} (sole proprietorship, trading as WonZo), {address}, KvK {kvk}. Questions about your data: {email}."
+        ]
+      },
+      {
+        "title": "Which data and what for",
+        "body": [
+          "When you order: your name, address, email address and phone number, and what you order. We need these to deliver your order, email you about it and make the invoice. Legal basis: performing the purchase, and for the invoice our legal obligation to keep records.",
+          "When you send something back: what you send back, the reason, and a comment if you give one. Legal basis: performing the purchase.",
+          "Your payment: you make it with our payment provider Mollie. We only learn whether and how you paid, and the amount; we do not see your account or card details.",
+          "Security: to limit misuse of the site we count how many requests come from one internet address. For that we do not store the address itself, but a code calculated from it, and we delete it after a day. Legal basis: our legitimate interest in a safe shop.",
+          "When you leave a review: your stars, your text and the name you fill in yourself. These are shown on the site, with the date. Legal basis: your consent — you choose whether to review. If you want your review removed, email us and we will take it off the site.",
+          "Seven days after your parcel was delivered, we send one email asking you to review your order. Legal basis: our legitimate interest in real reviews from real buyers. You can opt out through the link in that email. We then keep a code calculated from your email address (not the address itself), so we do not invite you again."
+        ]
+      },
+      {
+        "title": "Who we share data with",
+        "body": [
+          "Our supplier BigBuy (Spain) ships your parcel. For that BigBuy receives your name, your delivery address, your email address and your phone number (the carrier asks for them), and what you ordered.",
+          "Our payment provider Mollie (the Netherlands) processes your payment. Mollie is itself responsible for your payment details.",
+          "Our hosting company Hostinger keeps the website, the database and our email on servers in the Netherlands.",
+          "Your data does not leave the European Union. We do not sell it and do not give it to others, unless the law requires us to."
+        ]
+      },
+      {
+        "title": "How long we keep data",
+        "body": [
+          "We keep invoices and the data on them for 7 years: the Dutch tax authorities require that.",
+          "Your email address and phone number are not needed for the invoice. How long we keep them after delivery is {open}.",
+          "We delete the code calculated from your internet address after a day.",
+          "A review stays on the site until you ask us to remove it. We keep your opt-out from invitations for as long as we send invitations."
+        ]
+      },
+      {
+        "title": "Cookies and statistics",
+        "body": [
+          "We use no cookies and no trackers, and the site loads nothing from advertising or analytics companies.",
+          "We keep your cart only in your own browser (which items and how many), so it is still there when you come back. That is needed for the cart and says nothing about who you are.",
+          "We count how often a page is viewed, per day. We do that on our own server, without cookies and without storing your internet address or anything else about you."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "body": [
+          "You may ask us which data we have about you, and have it corrected or deleted. You may also object, ask us to use less of it, or receive your data in a common format. Email us at {email}; you get a reply within a month.",
+          "Data we must keep for the tax authorities cannot be deleted earlier. We then restrict access to it.",
+          "If you are not satisfied with how we handle your data, you can file a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens)."
+        ]
+      },
+      {
+        "title": "Security",
+        "body": [
+          "The connection to the site is always encrypted. The link to your order works with a key that we only store in encrypted form. If we notice that something went wrong with your data, we report it within the legal period, and to you if needed."
+        ]
+      },
+      {
+        "title": "Changes",
+        "body": [
+          "If anything changes in what we do with your data, we update this statement and set the date at the top to the new date."
+        ]
+      }
+    ]
+  },
+  "withdrawal": {
+    "metaTitle": "Model withdrawal form",
+    "metaDescription": "The model form to withdraw from a purchase at WonZo within 14 days. You can also register online with the return form.",
+    "title": "Model withdrawal form",
+    "intro": "Do you want to withdraw from your purchase within the 14-day cooling-off period? The easiest way is our return form. You may also use this model form: fill it in and email it to {email}, or send it by post. A message of your own that clearly says you withdraw from the purchase is fine too.",
+    "formTitle": "Model withdrawal form",
+    "formNote": "(complete and return this form only if you wish to withdraw from the contract)",
+    "to": "To: {legalName} (WonZo), {address}, {email}",
+    "lines": [
+      "I/We* hereby give notice that I/We* withdraw from my/our* contract of sale of the following goods:",
+      "Ordered on* / received on*:",
+      "Order number (in your confirmation):",
+      "Name of consumer(s):",
+      "Address of consumer(s):",
+      "Signature of consumer(s) (only if this form is notified on paper):",
+      "Date:"
+    ],
+    "footnote": "* Delete as appropriate.",
+    "onlineLink": "Prefer online? Go to the return form"
+  }
+}

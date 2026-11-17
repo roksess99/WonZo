@@ -1,0 +1,185 @@
+{
+  "updated": "Laatst bijgewerkt: {date}",
+  "decisive": "Deze tekst bestaat in het Nederlands en het Engels. Bij verschil geldt de Nederlandse tekst.",
+  "print": "Afdrukken of opslaan als PDF",
+  "open": "nog in te vullen",
+  "terms": {
+    "metaTitle": "Algemene voorwaarden",
+    "metaDescription": "De algemene voorwaarden van WonZo: wie we zijn, hoe bestellen, betalen, leveren en retourneren werkt, en wat je kunt doen als er iets misgaat.",
+    "title": "Algemene voorwaarden",
+    "intro": "Hier staat wat er geldt als je bij WonZo bestelt. We hebben het zo kort en duidelijk mogelijk gehouden. Je wettelijke rechten als consument blijven altijd gelden, ook als hier iets anders zou staan.",
+    "sections": [
+      {
+        "title": "1. Wie wij zijn",
+        "body": [
+          "WonZo is een handelsnaam van {legalName}, een eenmanszaak.",
+          "Adres: {address}. KvK-nummer: {kvk}. Btw-nummer: {vat}. E-mail: {email}."
+        ]
+      },
+      {
+        "title": "2. Wanneer deze voorwaarden gelden",
+        "body": [
+          "Deze voorwaarden gelden voor elke bestelling op wonzo.nl. Je ziet ze vóór je bestelt, en je kunt ze afdrukken of opslaan.",
+          "Voor je bestelling geldt de versie die op de site stond op het moment dat je bestelde."
+        ]
+      },
+      {
+        "title": "3. Het aanbod en de prijzen",
+        "body": [
+          "Alle prijzen zijn in euro en inclusief btw. Verzendkosten zie je vóór je bestelt: in de winkelwagen en bij het afrekenen. Een groot artikel heeft eigen verzendkosten, die staan op de productpagina.",
+          "We controleren prijs en voorraad bij onze leverancier op het moment dat je bestelt. Staat er een kennelijke vergissing in een prijs of omschrijving, die je redelijkerwijs kon zien, dan hoeven we daaraan niet vast te houden. Dan hoor je dat van ons en krijg je je geld terug."
+        ]
+      },
+      {
+        "title": "4. Hoe de koop tot stand komt",
+        "body": [
+          "De koop komt tot stand als je betaling bij ons binnen is. Je krijgt daarvan meteen een bevestiging per mail.",
+          "Tot 30 minuten na je betaling kun je je bestelling via de link in die mail nog annuleren of je gegevens aanpassen. Annuleer je, dan krijg je het hele bedrag terug. Daarna geven we de bestelling door aan onze leverancier."
+        ]
+      },
+      {
+        "title": "5. Betalen",
+        "body": [
+          "Je betaalt vooraf, via onze betaaldienst Mollie: met iDEAL, Apple Pay, Google Pay of creditcard. Je betaalgegevens geef je rechtstreeks aan Mollie; wij zien ze niet.",
+          "Je factuur maken we zodra de 30 minuten na je betaling voorbij zijn. Je vindt hem via de link in je bevestigingsmail."
+        ]
+      },
+      {
+        "title": "6. Levering",
+        "body": [
+          "We bezorgen alleen in Nederland. De artikelen worden verstuurd vanuit het magazijn van onze leverancier in Spanje. De verwachte levertijd staat bij elk artikel en in je bevestiging.",
+          "Lukt het niet om binnen die tijd te leveren, dan laten we het je weten. Is je bestelling niet geleverd binnen de afgesproken tijd, of uiterlijk 30 dagen na het bestellen, dan mag je ons een redelijke extra termijn geven. Leveren we ook dan niet, dan mag je de koop ontbinden en krijg je je geld binnen 14 dagen terug.",
+          "Zolang het pakket niet bij je is afgeleverd, is het voor ons risico."
+        ]
+      },
+      {
+        "title": "7. Bedenktijd: 14 dagen",
+        "body": [
+          "Je mag een bestelling binnen 14 dagen nadat je haar hebt ontvangen zonder reden ontbinden (herroepen). Bij een bestelling in meer pakketten loopt de termijn vanaf het laatste pakket.",
+          "Laat het ons binnen die 14 dagen weten: via het retourformulier op onze site, met het modelformulier voor herroeping, of met een mail aan {email}.",
+          "Daarna heb je nog 14 dagen om de artikelen terug te sturen. In je pakket zit een retourlabel; het terugsturen kost je dan niets.",
+          "We betalen je binnen 14 dagen na je melding terug, met hetzelfde betaalmiddel waarmee je betaalde. We mogen wachten tot we de artikelen terug hebben. Stuur je de hele bestelling terug, dan krijg je ook de oorspronkelijke verzendkosten terug.",
+          "Je mag een artikel bekijken zoals je dat in een winkel zou doen. Is het meer gebruikt dan nodig om het te beoordelen, dan mogen we het verschil in waarde inhouden. Dan leggen we uit waarom.",
+          "Voor ons huidige assortiment gelden geen uitzonderingen op de bedenktijd. Komt er een artikel bij waarvoor dat wel zo is, dan staat dat op de productpagina."
+        ]
+      },
+      {
+        "title": "8. Als er iets mis is met een artikel",
+        "body": [
+          "Een artikel moet doen wat je er redelijkerwijs van mag verwachten. Dat is je wettelijke garantie, en die geldt ook na de bedenktijd.",
+          "Is een artikel verkeerd geleverd, beschadigd of defect, meld het ons dan zo snel mogelijk nadat je het ontdekt, via het retourformulier of per mail. Dan zorgen we voor herstel, vervanging of je geld terug, zoals de wet dat regelt. De kosten van het terugsturen zijn dan voor ons."
+        ]
+      },
+      {
+        "title": "9. Klachten",
+        "body": [
+          "Heb je een klacht, mail dan naar {email} met je ordernummer en wat er mis is. Je krijgt binnen 14 dagen een inhoudelijk antwoord, of een bericht wanneer je dat wel krijgt.",
+          "Komen we er samen niet uit, dan kun je naar de rechter. We zijn niet aangesloten bij een geschillencommissie."
+        ]
+      },
+      {
+        "title": "10. Je gegevens",
+        "body": [
+          "Wat we met je gegevens doen, staat in onze privacyverklaring."
+        ]
+      },
+      {
+        "title": "11. Welk recht geldt",
+        "body": [
+          "Op elke koop is Nederlands recht van toepassing. Woon je in een ander land, dan houd je de bescherming die het recht van dat land je als consument geeft."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "metaTitle": "Privacyverklaring",
+    "metaDescription": "Welke gegevens WonZo van je gebruikt, waarom, met wie we ze delen en hoe lang we ze bewaren. Zonder cookies en zonder tracking.",
+    "title": "Privacyverklaring",
+    "intro": "We gebruiken alleen de gegevens die nodig zijn om je bestelling te leveren en onze administratie te doen. We volgen je niet, we verkopen niets door en we gebruiken geen cookies.",
+    "sections": [
+      {
+        "title": "Wie verantwoordelijk is",
+        "body": [
+          "{legalName} (eenmanszaak, handelend als WonZo), {address}, KvK {kvk}. Vragen over je gegevens: {email}."
+        ]
+      },
+      {
+        "title": "Welke gegevens en waarvoor",
+        "body": [
+          "Als je bestelt: je naam, adres, e-mailadres en telefoonnummer, en wat je bestelt. We hebben die nodig om je bestelling te leveren, je te mailen over je bestelling en de factuur te maken. Grondslag: de uitvoering van de koop, en voor de factuur onze wettelijke plicht om een administratie te bewaren.",
+          "Als je iets terugstuurt: wat je terugstuurt, de reden, en een opmerking als je die geeft. Grondslag: de uitvoering van de koop.",
+          "Je betaling: die doe je bij onze betaaldienst Mollie. Wij krijgen alleen te horen of en hoe je betaald hebt, en het bedrag; je rekening- of kaartgegevens zien we niet.",
+          "Beveiliging: om misbruik van de site te beperken tellen we hoeveel verzoeken er van één internetadres komen. We bewaren daarvoor niet het adres zelf, maar een code die eruit berekend wordt, en die wissen we na een dag. Grondslag: ons gerechtvaardigd belang bij een veilige winkel.",
+          "Als je een beoordeling geeft: je sterren, je tekst en de naam die je zelf invult. Die staan op de site, met de datum. Grondslag: je toestemming — je kiest zelf of je beoordeelt. Wil je dat je beoordeling verdwijnt, mail ons; dan halen we hem van de site.",
+          "Zeven dagen nadat je pakket is afgeleverd, sturen we één mail met de vraag om je bestelling te beoordelen. Grondslag: ons gerechtvaardigd belang bij echte beoordelingen van echte kopers. Je kunt je afmelden via de link in die mail. We bewaren dan een code die uit je mailadres berekend wordt (niet het adres zelf), zodat we je niet opnieuw uitnodigen."
+        ]
+      },
+      {
+        "title": "Met wie we gegevens delen",
+        "body": [
+          "Onze leverancier BigBuy (Spanje) verstuurt je pakket. Daarvoor krijgt BigBuy je naam, je afleveradres, je e-mailadres en je telefoonnummer (die vraagt de vervoerder), en wat je bestelde.",
+          "Onze betaaldienst Mollie (Nederland) verwerkt je betaling. Mollie is voor je betaalgegevens zelf verantwoordelijk.",
+          "Onze hostingpartij Hostinger bewaart de website, de database en onze mail op servers in Nederland.",
+          "Je gegevens gaan niet buiten de Europese Unie. We verkopen ze niet en geven ze niet aan anderen, tenzij de wet ons daartoe verplicht."
+        ]
+      },
+      {
+        "title": "Hoe lang we gegevens bewaren",
+        "body": [
+          "Facturen en de gegevens die erop staan bewaren we 7 jaar: zo lang moeten we dat van de Belastingdienst.",
+          "Je e-mailadres en telefoonnummer zijn niet nodig voor de factuur. Hoe lang we die na de levering bewaren, is {open}.",
+          "De code die uit je internetadres berekend wordt, wissen we na een dag.",
+          "Een beoordeling blijft op de site tot je vraagt hem weg te halen. Je afmelding voor uitnodigingen bewaren we zolang we uitnodigingen sturen."
+        ]
+      },
+      {
+        "title": "Cookies en statistieken",
+        "body": [
+          "We gebruiken geen cookies en geen trackers, en de site laadt niets van advertentie- of analysebedrijven.",
+          "Je winkelwagen bewaren we alleen in je eigen browser (welke artikelen en hoeveel), zodat hij er nog is als je terugkomt. Dat is nodig voor de winkelwagen en zegt niets over wie je bent.",
+          "We tellen hoe vaak een pagina bekeken wordt, per dag. Dat doen we op onze eigen server, zonder cookies en zonder je internetadres of iets anders over jou op te slaan."
+        ]
+      },
+      {
+        "title": "Je rechten",
+        "body": [
+          "Je mag ons vragen welke gegevens we van je hebben, en ze laten verbeteren of wissen. Je mag ook bezwaar maken, vragen om minder te gebruiken, of je gegevens in een gangbaar formaat ontvangen. Mail ons op {email}; je krijgt binnen een maand antwoord.",
+          "Gegevens die we voor de Belastingdienst moeten bewaren, kunnen we niet eerder wissen. Die schermen we dan af.",
+          "Ben je niet tevreden over hoe we met je gegevens omgaan, dan kun je een klacht indienen bij de Autoriteit Persoonsgegevens."
+        ]
+      },
+      {
+        "title": "Beveiliging",
+        "body": [
+          "De verbinding met de site is altijd versleuteld. De link naar je bestelling werkt met een sleutel die we alleen versleuteld bewaren. Merken we dat er iets misging met je gegevens, dan melden we dat binnen de wettelijke termijn, en aan jou als dat nodig is."
+        ]
+      },
+      {
+        "title": "Wijzigingen",
+        "body": [
+          "Verandert er iets aan wat we met je gegevens doen, dan passen we deze verklaring aan en zetten we de datum bovenaan op de nieuwe datum."
+        ]
+      }
+    ]
+  },
+  "withdrawal": {
+    "metaTitle": "Modelformulier voor herroeping",
+    "metaDescription": "Het modelformulier om een koop bij WonZo binnen 14 dagen te herroepen. Online aanmelden via het retourformulier kan ook.",
+    "title": "Modelformulier voor herroeping",
+    "intro": "Wil je je koop binnen de bedenktijd van 14 dagen herroepen? Het makkelijkst gaat dat via ons retourformulier. Je mag ook dit modelformulier gebruiken: vul het in en mail het naar {email}, of stuur het per post. Een eigen bericht waarin duidelijk staat dat je de koop herroept, mag ook.",
+    "formTitle": "Modelformulier voor herroeping",
+    "formNote": "(dit formulier alleen invullen en terugzenden als u de overeenkomst wilt herroepen)",
+    "to": "Aan: {legalName} (WonZo), {address}, {email}",
+    "lines": [
+      "Ik/Wij* deel/delen* u hierbij mede, dat ik/wij* onze overeenkomst betreffende de verkoop van de volgende goederen herroep/herroepen*:",
+      "Besteld op* / ontvangen op*:",
+      "Ordernummer (staat in je bevestiging):",
+      "Naam/Namen consument(en):",
+      "Adres consument(en):",
+      "Handtekening van consument(en) (alleen wanneer dit formulier op papier wordt ingediend):",
+      "Datum:"
+    ],
+    "footnote": "* Doorhalen wat niet van toepassing is.",
+    "onlineLink": "Liever online? Ga naar het retourformulier"
+  }
+}

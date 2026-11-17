@@ -12,10 +12,15 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] **Bedrijfsgegevens** op de site: handelsnaam, adres, mailadres, KvK- en
       btw-nummer (`WETTELIJK`: o.a. BW 3:15d en 6:230m). Het is ook het eerste
       waar een klant naar zoekt als hij twijfelt.
-- [ ] **Algemene voorwaarden**, bereikbaar vóór het afrekenen.
+- [ ] **Algemene voorwaarden**, bereikbaar vóór het afrekenen. Concept op
+      `/algemene-voorwaarden` en bij de bestelknop (2026-10-15); een adviseur
+      kijkt het na.
 - [ ] **Privacyverklaring** die klopt met `docs/PRIVACY.md`, met een datum.
+      Concept op `/privacy` (2026-10-15); de bewaartermijn van mail en telefoon
+      (D-24) staat er nog als "nog in te vullen".
 - [ ] **Herroepingsrecht**: 14 dagen, duidelijk benoemd, met het modelformulier
-      beschikbaar.
+      beschikbaar. Modelformulier op `/herroepingsformulier`, gelinkt vanuit de
+      retourpagina en de bevestigingsmail (2026-10-15).
 - [ ] **Prijzen inclusief btw** voor consumenten, en verzendkosten zichtbaar
       vóór de laatste stap.
 - [ ] De bestelknop zegt wat er gebeurt ("Bestellen en betalen"), niet
@@ -25,7 +30,10 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] Is er een "van/voor"-prijs? Dan de referentieprijs volgens
       `docs/PRIJZEN.md` § De "van"-prijs, en de geschiedenis moet al lopen.
 - [ ] Beoordelingen? Dan geen selectie op gunstigheid, en alleen van mensen die
-      echt gekocht hebben.
+      echt gekocht hebben. Gebouwd (D-12, 2026-10-15): alleen via de sleutel van
+      een afgeleverde bestelling, verbergen alleen met reden; de uitleg hoe ze
+      verzameld worden staat bij elke lijst. Een adviseur bevestigt: de tekst
+      van die uitleg, en of de uitnodigingsmail als reclame telt.
 
 ## Prijzen en kortingen
 

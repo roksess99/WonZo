@@ -13,7 +13,9 @@
     "mail": "Mail",
     "invoices": "Facturen",
     "log": "Logboek",
-    "returns": "Retouren"
+    "returns": "Retouren",
+    "stats": "Statistieken",
+    "reviews": "Beoordelingen"
   },
   "notFound": {
     "title": "Niet gevonden",
@@ -67,7 +69,10 @@
     "mailHeld": "Mail wordt op deze computer niet verstuurd: zet MAIL_REDIRECT_TO om alles naar een testadres te sturen.",
     "mailRedirect": "Mail gaat op deze computer naar {to}, niet naar de klant.",
     "mailLoginFailed": "De mailserver laat ons niet inloggen: bevestigingen gaan niet weg.",
-    "mailLoginFailedText": "Controleer SMTP_USER en SMTP_PASSWORD (het wachtwoord van de mailbox bij Hostinger). De mails wachten en worden later alsnog verstuurd."
+    "mailLoginFailedText": "Controleer SMTP_USER en SMTP_PASSWORD (het wachtwoord van de mailbox bij Hostinger). De mails wachten en worden later alsnog verstuurd.",
+    "returnsWaiting": "Er wachten {count} retouren. De eerste moet uiterlijk {date} terugbetaald zijn.",
+    "returnsWaitingOne": "Er wacht een retour. Die moet uiterlijk {date} terugbetaald zijn.",
+    "returnsWaitingText": "De wet geeft 14 dagen na de melding. Is het pakket nog niet binnen, dan mag je daarop wachten. De eigenaar handelt retouren af in Retouren."
   },
   "dashboard": {
     "title": "Overzicht",
@@ -87,7 +92,20 @@
     "latestTitle": "Laatste bestellingen",
     "allOrders": "Alle bestellingen",
     "loadError": "Dit blok kon niet geladen worden. Ververs de pagina; blijft het zo, kijk dan in het serverlog (draait de laatste migratie?).",
-    "mailFailedTitle": "Mail die niet weg kan"
+    "mailFailedTitle": "Mail die niet weg kan",
+    "invoicesTitle": "Facturen",
+    "invoicesYear": "{year} ({count} documenten)",
+    "invoicesMonth": "{month} ({count})",
+    "invoicesNone": "Dit jaar nog geen facturen.",
+    "invoicesNote": "Facturen min creditnota's, inclusief btw.",
+    "visitsTitle": "Bezoek",
+    "visitsWeek": "Vandaag {today} paginaweergaven, de laatste 7 dagen {week}.",
+    "visitsMore": "Alle statistieken",
+    "reviewsTitle": "Beoordelingen",
+    "reviewsLow": "{count} lage scores zonder antwoord",
+    "reviewsLowOne": "1 lage score zonder antwoord",
+    "reviewsNone": "Geen lage scores zonder antwoord.",
+    "reviewsLink": "Naar de beoordelingen"
   },
   "attention": {
     "hold": "{reference} staat stil: {reason}.",
@@ -118,7 +136,8 @@
       "return-requested": "retourbevestiging aan de klant",
       "return-rejected": "retour niet akkoord aan de klant",
       "return-refunded": "retour terugbetaald aan de klant",
-      "admin-new-return": "melding nieuwe retour"
+      "admin-new-return": "melding nieuwe retour",
+      "review-invite": "uitnodiging om te beoordelen"
     },
     "invoiceFailed": "{reference}: de factuur kon niet gemaakt worden: {error}",
     "invoiceFailedAction": "Er wordt niets geraden. Los de oorzaak op; daarna kun je de factuur opnieuw laten maken.",
@@ -193,7 +212,9 @@
     "previous": "Vorige",
     "next": "Volgende",
     "count": "{count} bestellingen",
-    "countOne": "1 bestelling"
+    "countOne": "1 bestelling",
+    "colPurchase": "Bij BigBuy",
+    "purchaseNone": "nog niet"
   },
   "order": {
     "back": "Terug naar bestellingen",
@@ -254,7 +275,9 @@
     "parcelDelivered": "afgeleverd",
     "parcelStatus": "stand: {status}",
     "returnsTitle": "Retouren",
-    "returnsNone": "Geen retouren."
+    "returnsNone": "Geen retouren.",
+    "purchaseDearer": "Let op: BigBuy is {difference} duurder dan bevroren ({percent}%).",
+    "purchaseCheaper": "BigBuy is {difference} goedkoper dan bevroren ({percent}%)."
   },
   "actions": {
     "title": "Wat wil je doen?",
@@ -298,7 +321,10 @@
     "resendMailConfirm": "Ja, opnieuw versturen",
     "markDelivered": "Als afgeleverd markeren",
     "markDeliveredText": "De bestelling gaat op afgeleverd. Vanaf nu loopt de bedenktijd van 14 dagen voor de klant. Doe dit alleen als je weet dat het pakket er is (BigBuy meldt het nog niet zeker).",
-    "markDeliveredConfirm": "Ja, afgeleverd"
+    "markDeliveredConfirm": "Ja, afgeleverd",
+    "lookupPurchase": "Status opvragen bij BigBuy",
+    "lookupDone": "Gevraagd. De stand hieronder is bijgewerkt.",
+    "errorOrderingOff": "Inkopen staat uit (SUPPLIER_ORDERING): er is niemand om het te vragen."
   },
   "purchaseStatus": {
     "DRAFT": "Klaar om te bestellen",
@@ -359,7 +385,8 @@
     "returnRequested": "Retour aangemeld (klant)",
     "returnRejected": "Retour niet akkoord (klant)",
     "returnRefunded": "Retour terugbetaald, met waardevermindering (klant)",
-    "newReturn": "Nieuwe retour (beheerder)"
+    "newReturn": "Nieuwe retour (beheerder)",
+    "reviewInvite": "Uitnodiging om te beoordelen (klant)"
   },
   "invoices": {
     "title": "Facturen",
@@ -378,7 +405,14 @@
     "credit": "creditnota",
     "empty": "Geen facturen in deze maand.",
     "example": "Voorbeeldfactuur bekijken (PDF)",
-    "exampleCredit": "Voorbeeld-creditnota bekijken (PDF)"
+    "exampleCredit": "Voorbeeld-creditnota bekijken (PDF)",
+    "searchTitle": "Zoeken",
+    "searchLabel": "Factuur zoeken",
+    "searchHint": "Factuurnummer (2026-00042, C2026-00001), ordernummer (WZ-2026-00001), naam, volledig mailadres of bedrag (37,71).",
+    "searchButton": "Zoek",
+    "searchInvalid": "Typ een factuurnummer, ordernummer, naam, volledig mailadres of bedrag.",
+    "searchNone": "Niets gevonden voor deze zoekopdracht.",
+    "searchResults": "Gevonden"
   },
   "audit": {
     "title": "Logboek",
@@ -424,7 +458,13 @@
       "return.refund-requested": "Retour akkoord, terugbetaling aangevraagd",
       "return.refunded": "Retour terugbetaald",
       "return.refund-failed": "Terugbetaling van een retour mislukt",
-      "payment.amount-from-provider": "Betaald bedrag volgens Mollie vastgelegd"
+      "payment.amount-from-provider": "Betaald bedrag volgens Mollie vastgelegd",
+      "purchase.lookup": "Status bij BigBuy opgevraagd",
+      "review.created": "Beoordeling geplaatst door de klant",
+      "review.replied": "Antwoord op een beoordeling",
+      "review.reply-removed": "Antwoord op een beoordeling weggehaald",
+      "review.hidden": "Beoordeling verborgen",
+      "review.shown": "Beoordeling weer getoond"
     }
   },
   "returns": {
@@ -485,6 +525,62 @@
     "errorNotAllowed": "Dat kan niet in de stand waarin de retour nu staat, of er staat niet genoeg meer op de betaling. Ververs de pagina.",
     "errorAmountChanged": "Het maximum is intussen veranderd. Ververs de pagina.",
     "errorNotFound": "Retour niet gevonden.",
+    "errorAccess": "Je hebt geen toegang tot deze handeling.",
+    "refundBy": "Uiterlijk terugbetalen: {date}.",
+    "refundByLate": "Termijn om terug te betalen verlopen op {date}."
+  },
+  "stats": {
+    "title": "Statistieken",
+    "intro": "Hoe vaak pagina's bekeken worden, geteld op onze eigen server: zonder cookies en zonder iets over de bezoeker op te slaan. Bezoekers zonder JavaScript en de meeste zoekmachines tellen niet mee.",
+    "periods": "Periode",
+    "period": "{days} dagen",
+    "total": "{count} paginaweergaven in de laatste {days} dagen",
+    "perDayTitle": "Per dag",
+    "pagesTitle": "Meest bekeken pagina's",
+    "colDay": "Dag",
+    "colPage": "Pagina",
+    "colViews": "Weergaven",
+    "empty": "Nog niets geteld in deze periode.",
+    "statusPages": "statuspagina's van bestellingen (zonder de sleutel)",
+    "funnelTitle": "Van winkelwagen tot betaald",
+    "funnelCart": "Winkelwagen bekeken",
+    "funnelCheckout": "Afrekenen geopend",
+    "funnelStarted": "Betaling gestart",
+    "funnelPaid": "Betaald",
+    "funnelNote": "De laatste {days} dagen. De eerste twee zijn paginaweergaven, geen mensen: wie twee keer kijkt, telt twee keer. Een ruw beeld, geen meting per bezoeker."
+  },
+  "reviews": {
+    "title": "Beoordelingen",
+    "intro": "Beoordelingen verschijnen meteen. Antwoorden werkt beter dan verbergen; verbergen kan alleen met een reden, want selectief publiceren mag niet. Je ziet hier het ordernummer, niet de naam of het adres van de klant.",
+    "tabAll": "Alle",
+    "tabLow": "Lage score zonder antwoord",
+    "tabHidden": "Verborgen",
+    "empty": "Geen beoordelingen in deze lijst.",
+    "subjectShop": "Over de winkel",
+    "subjectProduct": "Over {name}",
+    "order": "Bestelling {reference}",
+    "rating": "{rating} van 5",
+    "anonymous": "zonder naam",
+    "hidden": "Verborgen: {reason}",
+    "reply": "Antwoord van WonZo",
+    "replyLabel": "Je antwoord (staat onder de beoordeling op de site)",
+    "replyHint": "Leeg maken en opslaan haalt het antwoord weg.",
+    "replySave": "Antwoord opslaan",
+    "hide": "Verbergen",
+    "hideText": "De beoordeling verdwijnt van de site. Alleen met een reden die een ander later begrijpt, bijvoorbeeld persoonsgegevens of scheldwoorden: een lage score is geen reden.",
+    "hideConfirm": "Ja, verbergen",
+    "show": "Weer tonen",
+    "showText": "De beoordeling staat weer op de site.",
+    "showConfirm": "Ja, weer tonen",
+    "upcomingTitle": "Nog niet uitgenodigd",
+    "upcomingText": "Deze bestellingen krijgen vanzelf een uitnodiging, 7 dagen na de aflevering (behalve bij een retour, of als de klant zich afmeldde).",
+    "upcomingNone": "Geen bestellingen die op een uitnodiging wachten.",
+    "upcomingLine": "{reference}: uitnodiging op {date}",
+    "done": "Gedaan.",
+    "errorReason": "Vul een reden in van minstens 3 tekens.",
+    "errorReply": "Je antwoord is te lang: hoogstens 2000 tekens.",
+    "errorChanged": "De beoordeling is intussen veranderd. Ververs de pagina.",
+    "errorNotFound": "Beoordeling niet gevonden.",
     "errorAccess": "Je hebt geen toegang tot deze handeling."
   }
 }

@@ -7,10 +7,11 @@
 // The caller has already checked the permission (./access.ts). Server-side only.
 
 import { appendAudit } from "@/lib/admin/audit";
-import { toDbTime, withTransaction, type Connection } from "@/lib/db";
+import { getPool, toDbTime, withTransaction, type Connection } from "@/lib/db";
 import { add, compare, money, subtract, type Money } from "@/lib/money";
 import { canTransition, type OrderStatus } from "@/lib/orders/states";
-import { acceptPrice, cancelOpenPurchases, retryPurchase, supplierOrdersOf } from "@/lib/orders/purchasing";
+import type { SupplierOrdering } from "@/lib/catalog/ordering";
+import { acceptPrice, cancelOpenPurchases, lookupPurchaseNow, retryPurchase, supplierOrdersOf } from "@/lib/orders/purchasing";
 import { lockOrder, transitionOrder } from "@/lib/orders/store";
 import { AT_SUPPLIER } from "@/lib/orders/supplier-states";
 import { requestPaymentRefund, submitRefund } from "@/lib/payments";
@@ -28,7 +29,9 @@ export type ActionError =
   /** The amount to refund is not what the confirmation showed. */
   | "amount-changed"
   /** The purchase order is (or may be) at the supplier: cancelling there is not something the shop can do (D-04). */
-  | "at-supplier";
+  | "at-supplier"
+  /** Ordering at the supplier is off (SUPPLIER_ORDERING): there is nobody to ask. */
+  | "ordering-off";
 
 export type ActionResult =
   | { ok: true; refund: "none" | "sent" | "queued" }
@@ -67,6 +70,8 @@ export type AdminOptions = {
   resendMails: { outboxId: number; kind: string }[];
   /** Purchased and not delivered as far as we know: the admin can mark it delivered (the supplier's status words are not measured yet). */
   markDelivered: boolean;
+  /** A purchase order without a clear answer: ask the supplier now, by our reference (never order again). */
+  lookupPurchase: { supplierOrderId: string } | null;
 };
 
 /**
@@ -94,6 +99,10 @@ export function adminOptions(order: AdminOrder): AdminOptions {
     acceptPrice: blocked && blocked.checkedProducts ? { supplierOrderId: blocked.id, expected: blocked.expectedCost, checked: blocked.checkedProducts } : null,
     retryPurchase: gaveUp ? { supplierOrderId: gaveUp.id, error: gaveUp.lastError ?? "" } : null,
     resendMails: order.failedMails.map((x) => ({ outboxId: x.id, kind: x.kind })),
+    lookupPurchase: (() => {
+      const unknown = order.purchases.find((p) => p.status === "UNKNOWN");
+      return unknown ? { supplierOrderId: unknown.id } : null;
+    })(),
     markDelivered:
       ["PURCHASED", "PARTIALLY_FULFILLED", "SHIPPED"].includes(order.status) &&
       order.holdReason === null &&
@@ -205,6 +214,18 @@ export async function retryPurchaseAction(input: { orderId: number; supplierOrde
     const r = await retryPurchase(conn, { supplierOrderId: input.supplierOrderId, actor: input.actor, reason, now });
     return r === "ok" ? { ok: true, refund: "none" } : { ok: false, error: "changed" };
   });
+}
+
+/** Asks the supplier now about a purchase order of this order that is UNKNOWN; read only at the supplier. */
+export async function lookupPurchase(input: { orderId: number; supplierOrderId: string; actor: string; now?: Date }, ordering: SupplierOrdering | null): Promise<ActionResult> {
+  const now = input.now ?? new Date();
+  if (!ordering) return { ok: false, error: "ordering-off" };
+  const own = await supplierOrdersOf(getPool(), input.orderId);
+  if (!own.some((p) => p.id === input.supplierOrderId && p.status === "UNKNOWN")) return { ok: false, error: "changed" };
+  const outcome = await lookupPurchaseNow(ordering, input.supplierOrderId, now);
+  if (outcome === "changed") return { ok: false, error: "changed" };
+  await withTransaction((conn) => appendAudit(conn, { actor: input.actor, action: "purchase.lookup", objectType: "order", objectId: input.orderId, after: { outcome } }, now));
+  return { ok: true, refund: "none" };
 }
 
 /** A FAILED mail of this order back in the queue, tried as if new (at least once: the customer may get it twice if it did arrive). */

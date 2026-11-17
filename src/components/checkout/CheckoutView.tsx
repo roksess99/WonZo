@@ -22,6 +22,7 @@ export type CheckoutLabels = CustomerFieldLabels & {
   withdrawal: string;
   cancelWindow: string;
   terms: string;
+  termsLink: string;
   submit: string;
   submitting: string;
   toPayment: string;
@@ -242,8 +243,14 @@ export function CheckoutView({ locale, labels }: { locale: Locale; labels: Check
         <div className="flex flex-col gap-1 text-body-sm">
           <p>{labels.withdrawal}</p>
           <p>{labels.cancelWindow}</p>
-          {/* TODO livegang: link naar de algemene voorwaarden zodra die pagina er is (docs/SCHERMEN.md § Statische pagina's). */}
-          <p>{labels.terms}</p>
+          {/* In a new tab: the form keeps what the customer typed. */}
+          <p>
+            {labels.terms.split("{terms}")[0]}
+            <a href={localizePath(locale, "/algemene-voorwaarden")} target="_blank" rel="noopener" className="underline underline-offset-4">
+              {labels.termsLink}
+            </a>
+            {labels.terms.split("{terms}")[1] ?? ""}
+          </p>
         </div>
         {problem ? (
           <div role="alert" className="flex flex-col gap-2 rounded-md bg-warning-soft p-3 text-body-sm text-warning">

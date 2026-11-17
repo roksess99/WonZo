@@ -46,6 +46,9 @@ describe("placeInAssortment — by name, trimmed (D-02)", () => {
       subcategoryKey: "kamperen",
     });
   });
+  it("working out at home is its own main category, not outdoors (owner 2026-10-15)", () => {
+    expect(placeInAssortment(["Sport en outdoor", "Fitness en lichaamsbeweging", "Yoga"])).toEqual({ categoryKey: "sport", subcategoryKey: "thuis-sporten" });
+  });
   it("does not match a sibling or a parent", () => {
     expect(placeInAssortment(["Tuin", "Tuinieren", "Ongediertebestrijding en gewasbescherming"])).toBeNull();
     expect(placeInAssortment(["Tuin"])).toBeNull();

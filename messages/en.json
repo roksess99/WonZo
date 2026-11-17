@@ -1,7 +1,7 @@
 {
   "meta": {
     "siteName": "WonZo",
-    "description": "Things for in and around the house: storage, furniture, decor, garden, outdoors and pets. Honest about price and delivery time."
+    "description": "Things for in and around the house: storage, furniture, decor, garden, outdoors, sports and pets. Honest about price and delivery time."
   },
   "a11y": {
     "skipToContent": "Skip to content",
@@ -37,7 +37,11 @@
     },
     "buitenleven": {
       "name": "Outdoors",
-      "intro": "Camping and working out at home."
+      "intro": "Camping chairs and tables, sleeping bags and air beds."
+    },
+    "sport": {
+      "name": "Sports",
+      "intro": "Working out at home: strength training, pilates and yoga."
     },
     "dieren": {
       "name": "Pets",
@@ -214,7 +218,7 @@
     "quantityOf": "{quantity} × {name}",
     "withdrawal": "You have 14 days to change your mind after receipt.",
     "cancelWindow": "After paying, you can still cancel your order or change your details for 30 minutes.",
-    "terms": "By ordering you accept the WonZo terms and conditions.",
+    "terms": "By ordering you agree to the {terms} of WonZo.",
     "submit": "Order and pay",
     "submitting": "Placing your order…",
     "toPayment": "Taking you to the payment page…",
@@ -225,7 +229,8 @@
     "error": "Something went wrong. Nothing has been charged. Please try again.",
     "rateLimited": "Too many attempts in a row. Please try again in a few minutes.",
     "unavailable": "We cannot check the products right now. Please try again in a few minutes.",
-    "backToCart": "Back to your cart"
+    "backToCart": "Back to your cart",
+    "termsLink": "terms and conditions"
   },
   "order": {
     "metaTitle": "Your order",
@@ -320,7 +325,10 @@
     "kvk": "KvK {kvk}",
     "vat": "VAT {vat}",
     "language": "Language",
-    "returns": "Returns"
+    "returns": "Returns",
+    "terms": "Terms and conditions",
+    "privacy": "Privacy",
+    "reviews": "Reviews"
   },
   "notFound": {
     "title": "This page doesn't exist",
@@ -360,7 +368,8 @@
       "next": "Until {time} you can still cancel your order or change your details. After that we order it for you; you can expect it within {min}–{max} working days.",
       "withdrawalTitle": "Cooling-off period: 14 days",
       "withdrawal": "You have 14 days from the day you receive the parcel to change your mind, without giving a reason. If you want to send the order back, register it within those 14 days with the return form on our site (you need the invoice number for it) or at {email}. You then have another 14 days to send the parcel back. We refund you within 14 days of your notice, including the shipping costs for a full return.",
-      "withdrawalMore": "The return form: {url}"
+      "withdrawalMore": "The return form: {url}",
+      "withdrawalForm": "The model withdrawal form: {url}"
     },
     "cancelled": {
       "subject": "Order {reference} cancelled",
@@ -408,7 +417,17 @@
       "intro": "For return {number} of order {reference} we have refunded {amount} to the account or card you paid with. This usually takes a few working days.",
       "deduction": "That is less than the maximum of {max}, because: {reason}"
     },
-    "questions": "Questions? Email us at {email}."
+    "questions": "Questions? Email us at {email}.",
+    "reviewInvite": {
+      "subject": "How do you like your order {reference}?",
+      "preheader": "Let us know in a minute what you think.",
+      "title": "How do you like it?",
+      "intro": "Your order {reference} was delivered a week ago. We would like to hear what you think: of the items and of us.",
+      "button": "Review your order",
+      "text": "Review: {url}",
+      "optOut": "Rather no more invitations? You can switch them off through the same link: {url}",
+      "once": "You get this invitation once per order."
+    }
   },
   "returns": {
     "metaTitle": "Returns",
@@ -472,6 +491,45 @@
     "step1": "Pack the items well, preferably in the original packaging.",
     "step2": "Stick the return label from your parcel on it.",
     "step3": "Send the parcel back within 14 days.",
-    "doneMax": "You get at most {amount} back, once we have received and checked the parcel."
+    "doneMax": "You get at most {amount} back, once we have received and checked the parcel.",
+    "modelForm": "Prefer a form on paper or by email? Use the model withdrawal form."
+  },
+  "reviews": {
+    "productTitle": "Reviews",
+    "loading": "Loading reviews…",
+    "error": "The reviews cannot be loaded right now.",
+    "none": "No reviews yet.",
+    "summary": "{average} out of 5, from {count} reviews",
+    "summaryOne": "{average} out of 5, from 1 review",
+    "averageLabel": "On average {average} out of 5 stars",
+    "ratingLabel": "{rating} out of 5 stars",
+    "anonymous": "Customer",
+    "reply": "Reply from WonZo",
+    "howCollected": "Only customers who ordered from us can leave a review, through a personal link after delivery. We show all reviews, negative ones too. We only hide a review with a reason, for example when it contains personal data or abuse.",
+    "shopTitle": "What customers say about WonZo",
+    "shopIntro": "Reviews from customers about their order at WonZo: delivery, service and how it went.",
+    "formTitle": "Review your order",
+    "formIntro": "Order {reference}. Give stars to what you want to review; you choose what.",
+    "shopQuestion": "How was your order at WonZo?",
+    "productQuestion": "How do you like {name}?",
+    "bodyLabel": "Comment (may stay empty)",
+    "nameLabel": "Your name with the review (may stay empty)",
+    "nameHint": "For example your first name. If you leave it empty, it says “Customer”.",
+    "publicNote": "Your review appears on the site with the name you choose above. Do not include an address or phone number.",
+    "submit": "Post review",
+    "busy": "One moment…",
+    "thanksTitle": "Thank you!",
+    "thanksText": "Your review is on the site.",
+    "allDone": "You have already reviewed this order. Thank you!",
+    "notYet": "You can review your order once it has been delivered.",
+    "errorEmpty": "Give stars to at least one part.",
+    "errorName": "Use only letters, digits, spaces, dots and hyphens for your name.",
+    "errorBody": "Your comment is too long: at most 2000 characters.",
+    "rateLimit": "Too many attempts. Please try again in a few minutes.",
+    "notFoundTitle": "This link does not work",
+    "notFoundText": "Use the whole link from your email. If it still does not work, please contact us.",
+    "optOutText": "Don't want any more invitations to review? Then we will not send them, not for a next order either.",
+    "optOut": "No more invitations",
+    "optOutDone": "You will not get any more invitations."
   }
 }

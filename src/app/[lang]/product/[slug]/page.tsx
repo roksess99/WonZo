@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddToCart } from "@/components/cart/AddToCart";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
+import { ProductReviews } from "@/components/reviews/ProductReviews";
 import { CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Breadcrumb, Container, StateMessage } from "@/components/ui";
 import { categoryByKey } from "@/lib/catalog/assortment";
@@ -218,6 +219,13 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
       </div>
 
       {/* GPSR art. 19: manufacturer and warnings with every offer (D-34). */}
+      <section aria-labelledby="reviews" className="flex flex-col gap-3">
+        <h2 id="reviews" className="font-display text-h2">
+          {m.reviews.productTitle}
+        </h2>
+        <ProductReviews source={p.source} productId={p.id} locale={lang} m={m.reviews} />
+      </section>
+
       <section aria-labelledby="safety" className="flex flex-col gap-3 rounded-md bg-surface p-6 ring-1 ring-line">
         <h2 id="safety" className="flex items-center gap-2 font-display text-h2">
           <ShieldIcon className="size-6" />

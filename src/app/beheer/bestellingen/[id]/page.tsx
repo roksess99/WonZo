@@ -53,6 +53,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
   const needsAttention = order.holdReason !== null || options.refundPayments.length > 0 || options.heldUnpaid || options.acceptPrice !== null || options.retryPurchase !== null || options.resendMails.length > 0;
   const hasActions = needsAttention || options.cancel !== null || options.markDelivered;
   const withdrawalEnds = withdrawalEndsAt(order.deliveredAt);
+  const now = new Date();
 
   return (
     <>
@@ -289,6 +290,16 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
                 {p.checkedProducts && p.checkedTotal ? (
                   <p className="text-body-sm text-muted">{interpolate(m.order.purchaseChecked, { products: formatMoney(p.checkedProducts), total: formatMoney(p.checkedTotal) })}</p>
                 ) : null}
+                {p.checkedProducts && p.checkedProducts.amount !== p.expectedCost.amount ? (
+                  // docs/BEHEER.md § De bestelling zelf: a purchase price other than the frozen one is said, not left to compare.
+                  <p className={`text-body-sm font-medium ${p.checkedProducts.amount > p.expectedCost.amount ? "text-warning" : ""}`}>
+                    {interpolate(p.checkedProducts.amount > p.expectedCost.amount ? m.order.purchaseDearer : m.order.purchaseCheaper, {
+                      // Rounded down: a shown percentage is never more than it is.
+                      percent: p.expectedCost.amount > 0 ? Math.floor((Math.abs(p.checkedProducts.amount - p.expectedCost.amount) * 100) / p.expectedCost.amount) : 0,
+                      difference: formatMoney({ ...p.checkedProducts, amount: Math.abs(p.checkedProducts.amount - p.expectedCost.amount) }),
+                    })}
+                  </p>
+                ) : null}
                 {p.priceAcceptedBy ? <p className="text-body-sm text-muted">{interpolate(m.order.purchaseAccepted, { by: p.priceAcceptedBy })}</p> : null}
                 {p.attempts ? <p className="text-body-sm text-muted">{interpolate(m.order.purchaseAttempts, { count: p.attempts })}</p> : null}
                 {p.lastError ? <p className="text-body-sm text-danger">{interpolate(m.order.purchaseLastError, { error: p.lastError })}</p> : null}
@@ -329,7 +340,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/beheer/best
           {m.order.returnsTitle}
         </h2>
         {order.returns.length ? (
-          order.returns.map((r) => <ReturnCard key={r.id} r={r} m={m} canAct={can(admin.role, "retouren")} canRefund={can(admin.role, "terugbetalen")} showOrder={false} />)
+          order.returns.map((r) => <ReturnCard key={r.id} r={r} m={m} canAct={can(admin.role, "retouren")} canRefund={can(admin.role, "terugbetalen")} now={now} showOrder={false} />)
         ) : (
           <p className="text-muted">{m.order.returnsNone}</p>
         )}

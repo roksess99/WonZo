@@ -63,6 +63,14 @@ export const assortment: Category[] = [
           ["Sport en outdoor", "Kamperen en wandelen", "Slaapuitrusting voor kamperen"],
         ],
       },
+    ],
+  },
+  {
+    // Owner 2026-10-15: working out at home is not "outdoors". Outdoor sports
+    // are not in D-02; measured, there is hardly anything deliverable.
+    key: "sport",
+    slug: { nl: "sport", en: "sports" },
+    subcategories: [
       {
         key: "thuis-sporten",
         slug: { nl: "thuis-sporten", en: "home-fitness" },
@@ -126,4 +134,26 @@ export function findSubcategoryBySlug(category: Category, locale: Locale, slug: 
 
 export function categoryByKey(key: string): Category | undefined {
   return assortment.find((c) => c.key === key);
+}
+
+/**
+ * Subcategories that moved to another main category. Their old address
+ * redirects with a 308 (.claude/rules/frontend.md § SEO): it may be indexed
+ * or bookmarked.
+ */
+const moved: { fromCategory: string; subcategory: string }[] = [
+  { fromCategory: "buitenleven", subcategory: "thuis-sporten" }, // to "sport", owner 2026-10-15
+];
+
+/** The current path of a moved subcategory, e.g. ("nl", "buitenleven", "thuis-sporten") → "/sport/thuis-sporten". */
+export function movedSubcategoryPath(locale: Locale, categorySlug: string, subSlug: string): string | null {
+  for (const m of moved) {
+    const from = categoryByKey(m.fromCategory);
+    const now = assortment.find((c) => c.subcategories.some((s) => s.key === m.subcategory));
+    const sub = now?.subcategories.find((s) => s.key === m.subcategory);
+    if (from && now && sub && from.slug[locale] === categorySlug && sub.slug[locale] === subSlug) {
+      return `/${now.slug[locale]}/${sub.slug[locale]}`;
+    }
+  }
+  return null;
 }

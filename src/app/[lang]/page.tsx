@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { CategoryTiles } from "@/components/catalog/CategoryTiles";
+import { CategoryTiles, categoryCovers } from "@/components/catalog/CategoryTiles";
 import { ProductGrid, ProductGridSkeleton } from "@/components/catalog/ProductGrid";
 import { Container, StateMessage } from "@/components/ui";
 import { applyQuery } from "@/lib/catalog/query";
@@ -22,6 +22,16 @@ async function AlwaysAvailable({ locale, m }: { locale: Locale; m: Messages }) {
   return <ProductGrid products={applyQuery(catalog, { sort: "recommended" }).slice(0, 8)} locale={locale} m={m} />;
 }
 
+/**
+ * The tiles with a real product photo per category. The catalogue comes later
+ * than the page: until then (and when it is unavailable) the tiles show their
+ * drawings, in the same size, so nothing jumps.
+ */
+async function TilesWithPhotos({ locale, m }: { locale: Locale; m: Messages }) {
+  const catalog = await getCatalogOrUnavailable(locale);
+  return <CategoryTiles locale={locale} m={m} covers={catalog ? categoryCovers(catalog) : {}} />;
+}
+
 /** Home: one task — bring the visitor to the product (docs/SCHERMEN.md § Home). */
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -40,7 +50,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <h2 id="home-categories" className="font-display text-h2">
             {m.home.categoriesTitle}
           </h2>
-          <CategoryTiles locale={lang} m={m} />
+          <Suspense fallback={<CategoryTiles locale={lang} m={m} />}>
+            <TilesWithPhotos locale={lang} m={m} />
+          </Suspense>
         </section>
         <section aria-labelledby="home-available" className="flex flex-col gap-4">
           <h2 id="home-available" className="font-display text-h2">

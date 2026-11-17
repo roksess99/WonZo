@@ -2,6 +2,7 @@
 // use the Dutch words; the proxy maps the public English words onto them.
 // Category slugs are not here: they live with the assortment.
 
+import { movedSubcategoryPath } from "@/lib/catalog/assortment";
 import { defaultLocale, isLocale, type Locale } from "./config";
 
 /** Internal (Dutch) route segment → public segment per language. */
@@ -14,6 +15,11 @@ export const staticSegments = {
   afrekenen: { nl: "afrekenen", en: "checkout" },
   bestelling: { nl: "bestelling", en: "order" },
   retour: { nl: "retour", en: "return" },
+  "algemene-voorwaarden": { nl: "algemene-voorwaarden", en: "terms" },
+  privacy: { nl: "privacy", en: "privacy" },
+  herroepingsformulier: { nl: "herroepingsformulier", en: "withdrawal-form" },
+  beoordelen: { nl: "beoordelen", en: "review" },
+  beoordelingen: { nl: "beoordelingen", en: "reviews" },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type StaticSegment = keyof typeof staticSegments;
@@ -31,6 +37,13 @@ export type ResolvedPath =
   | { kind: "rewrite"; locale: Locale; internalPath: string }
   | { kind: "redirect"; to: string };
 
+/** A subcategory that moved to another main category: its old path redirects. */
+function movedRedirect(locale: Locale, parts: string[]): ResolvedPath | null {
+  if (parts.length !== 2) return null;
+  const now = movedSubcategoryPath(locale, parts[0]!, parts[1]!);
+  return now ? { kind: "redirect", to: localizePath(locale, now) } : null;
+}
+
 /**
  * Maps a public path to the internal route (`/<lang>/<dutch words>`), or to a
  * redirect when the URL is not the canonical one (e.g. `/nl/...`).
@@ -45,6 +58,8 @@ export function resolvePublicPath(pathname: string): ResolvedPath {
   }
 
   if (head && isLocale(head)) {
+    const moved = movedRedirect(head, parts.slice(1));
+    if (moved) return moved;
     const [first, ...rest] = parts.slice(1);
     let internalFirst = first;
     if (first !== undefined) {
@@ -59,5 +74,7 @@ export function resolvePublicPath(pathname: string): ResolvedPath {
     return { kind: "rewrite", locale: head, internalPath: `/${head}${internal ? `/${internal}` : ""}` };
   }
 
+  const moved = movedRedirect(defaultLocale, parts);
+  if (moved) return moved;
   return { kind: "rewrite", locale: defaultLocale, internalPath: `/${defaultLocale}${pathname === "/" ? "" : pathname}` };
 }

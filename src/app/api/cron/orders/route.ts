@@ -17,6 +17,7 @@ import { runPurchasing } from "@/lib/orders/purchasing";
 import { runTracking } from "@/lib/orders/tracking";
 import { runInvoicing } from "@/lib/invoices";
 import { settleReturns } from "@/lib/returns";
+import { runReviewInvites } from "@/lib/reviews";
 import { defaultMail } from "@/lib/mail";
 import { sendDueMail } from "@/lib/mail/worker";
 import { expireUnpaidOrders, reconcile } from "@/lib/payments";
@@ -41,6 +42,8 @@ export async function POST(request: Request): Promise<Response> {
       const purchasing = await runPurchasing(defaultOrdering(), now);
       // Where the parcels are: shipped, delivered (D-09: the withdrawal window runs from the delivery).
       const tracked = await runTracking(defaultOrdering(), now);
+      // Invitations to review, 7 days after the delivery (D-12); sent below with the other mail.
+      const invites = await runReviewInvites(now);
       // Returns whose refund the provider settled: refunded (mail, credit note) or back to the admin (D-09).
       const returns = await settleReturns(now);
       // Invoices for what was released, credit notes for what was cancelled after invoicing or returned (D-21, D-09).
@@ -67,6 +70,7 @@ export async function POST(request: Request): Promise<Response> {
         invoices: invoicing.invoices,
         creditNotes: invoicing.credits,
         returnsRefunded: returns.refunded,
+        reviewInvites: invites,
         cancelled: expired.cancelled.length,
         ...reconciled,
         mailSent: mailed.sent,
