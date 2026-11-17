@@ -6,6 +6,9 @@ import { Header } from "@/components/layout/Header";
 import { PageViewCounter } from "@/components/layout/PageViewCounter";
 import { isLocale, locales } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
+import { activeCatalogSource } from "@/lib/catalog/provider";
+import { checkoutAvailable } from "@/lib/checkout";
+import { testBanner } from "@/lib/notice";
 import { siteUrl } from "@/lib/seo";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "../globals.css";
@@ -34,6 +37,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const m = getMessages(lang);
+  const banner = testBanner(activeCatalogSource(), checkoutAvailable(), m.mock);
   return (
     // data-theme: "system" from the server; the script below sets the visitor's own choice before the first
     // paint (D-33), so the DOM differs from the server's on purpose (suppressHydrationWarning).
@@ -49,9 +53,11 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
         >
           {m.a11y.skipToContent}
         </a>
-        <p className="bg-warning-soft px-4 py-2 text-center text-body-sm text-warning" role="note">
-          {m.mock.banner}
-        </p>
+        {banner ? (
+          <p className="bg-warning-soft px-4 py-2 text-center text-body-sm text-warning" role="note">
+            {banner}
+          </p>
+        ) : null}
         <Header locale={lang} m={m} />
         <main id="inhoud" tabIndex={-1} className="flex-1 focus:outline-none">
           {children}

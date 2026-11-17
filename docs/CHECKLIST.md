@@ -56,6 +56,10 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
       reconciliatie.
 - [ ] `CHECKOUT_ENABLED=true` pas als alles in deze lijst staat; daarvoor
       blijft afrekenen uit.
+- [ ] De gele testbanner is weg na de uitrol. Hij verschijnt vanzelf zolang
+      het niet klopt (`src/lib/notice.ts`, gebruiker 2026-11-13): met
+      `CATALOG_SOURCE=mock` "voorbeeldproducten", met de echte catalogus maar
+      zonder afrekenen "bestellen kan nog niet"; met allebei aan geen banner.
 - [ ] De link naar de algemene voorwaarden staat bij de bestelknop
       (`src/components/checkout/CheckoutView.tsx`; de pagina bestaat nog niet).
 - [ ] Gemeten: welk adres de rate limit achter de CDN van Hostinger ziet

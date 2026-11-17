@@ -9,7 +9,8 @@
     "breadcrumb": "Breadcrumb"
   },
   "mock": {
-    "banner": "Test environment: example products and example prices. Ordering is not possible yet."
+    "banner": "Test environment: example products and example prices. Ordering is not possible yet.",
+    "noCheckout": "Ordering is not possible yet: the shop opens soon."
   },
   "usp": {
     "delivery": "Delivery time shown on every product",

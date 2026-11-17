@@ -9,7 +9,8 @@
     "breadcrumb": "Kruimelpad"
   },
   "mock": {
-    "banner": "Testomgeving: voorbeeldproducten en voorbeeldprijzen. Bestellen kan nog niet."
+    "banner": "Testomgeving: voorbeeldproducten en voorbeeldprijzen. Bestellen kan nog niet.",
+    "noCheckout": "Bestellen kan nog niet: de winkel gaat binnenkort open."
   },
   "usp": {
     "delivery": "Levertijd staat bij elk product",
