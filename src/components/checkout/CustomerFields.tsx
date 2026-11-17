@@ -78,7 +78,9 @@ export function CustomerFields({ idPrefix, values, errors, labels, onChange, onB
         const hint = hints[field];
         const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") || undefined;
         return (
-          <div key={field} className={`flex flex-col gap-1 ${field === "email" || field === "street" ? "sm:col-span-2" : ""}`}>
+          // A field with a hint takes the whole row: beside a field without one, its input sat lower than the
+          // neighbour's (user 2026-11-16). It also keeps the pairs together: first and last name, postcode and number.
+          <div key={field} className={`flex flex-col gap-1 ${hint || field === "street" ? "sm:col-span-2" : ""}`}>
             <label htmlFor={id} className="font-medium">
               {labels[field]}
             </label>

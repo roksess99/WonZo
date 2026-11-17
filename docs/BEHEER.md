@@ -51,7 +51,7 @@ een deur naar werk dat openstaat.
 
 | Tegel | Waarom het werk is |
 |---|---|
-| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte: meer dan 10 % duurder (de eigenaar besluit), geweigerd (wordt 24 uur opnieuw geprobeerd), na 24 uur vanzelf geannuleerd en terugbetaald (D-04, 2026-11-13; alleen met iets bij de leverancier of een hold kiest de eigenaar: opnieuw proberen of annuleren en terugbetalen), of antwoord onbekend (wordt nagevraagd op het ordernummer) |
+| Inkoop vastgelopen: inkooporder `UNKNOWN` of `REJECTED` (bijv. te weinig tegoed bij de leverancier) | inkopen gaat automatisch (D-04); hier staat alleen wat niet lukte: meer dan 10 % duurder (de eigenaar besluit), geweigerd (wordt 24 uur opnieuw geprobeerd), na 24 uur wacht de bestelling op de eigenaar: annuleren en volledig terugbetalen met één knop (bedrag bevestigen), of opnieuw proberen (D-04, eigenaar 2026-11-17; nooit automatisch), of antwoord onbekend (wordt nagevraagd op het ordernummer) |
 | Tegoed bij de leverancier | te weinig tegoed laat de volgende inkoop mislukken; opwaarderen vóór het zover is |
 | **Vraagt aandacht**: order on hold, betaald na verloop, bedrag wijkt af, terugbetaling of inkooporder `UNKNOWN`/`FAILED`/`REJECTED`, mail die niet weg kan | hier is iets mis dat een mens moet beslissen (`docs/PAYMENTS.md`) |
 | Omzet deze maand | de enige die puur informatief mag zijn |
@@ -346,9 +346,9 @@ cookies en zonder iets over de bezoeker (`src/lib/stats.ts`).
 - **Rechtstreeks in de database kunnen.** Een paneel dat willekeurige
   wijzigingen toestaat omzeilt elke regel die je in code hebt gezet.
 - **Een knop die opnieuw bestelt bij de leverancier.** Inkopen gebeurt
-  automatisch, één keer per betaalde bestelling. Na 24 uur weigeringen wordt
-  er vanzelf terugbetaald; alleen waar dat niet kan, kiest de eigenaar
-  "opnieuw proberen" (D-04): dat is dezelfde inkooporder met
+  automatisch, één keer per betaalde bestelling. Na 24 uur weigeringen keurt
+  de eigenaar de terugbetaling goed of kiest hij "opnieuw proberen" (D-04,
+  2026-11-17): dat is dezelfde inkooporder met
   hetzelfde ordernummer bij BigBuy, nooit een tweede bestelling. Een knop
   "nieuwe bestelling bij BigBuy" komt er niet: die wordt een keer per ongeluk
   geraakt.

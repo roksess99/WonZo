@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { ReturnIcon, ShieldIcon, TruckIcon, CheckIcon } from "@/components/icons";
 import { Container } from "@/components/ui";
+import { SHIPS_FROM } from "@/lib/catalog/delivery";
 import { isLocale } from "@/lib/i18n/config";
-import { getMessages } from "@/lib/i18n/messages";
+import { getMessages, t } from "@/lib/i18n/messages";
 import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/zo-werkt-wonzo">) {
@@ -12,13 +13,19 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/zo-werkt-w
   return pageMetadata(lang, { nl: "/zo-werkt-wonzo", en: "/en/how-wonzo-works" }, m.howItWorks.title, m.howItWorks.intro);
 }
 
-/** Where products come from and how long they take — trust, and ACM (docs/ONDERZOEK.md § 1.1). */
+/**
+ * Where products come from and how long they take — trust, and ACM (docs/ONDERZOEK.md § 1.1). The only page
+ * that names the country of shipping (owner 2026-11-16, D-13): ACM asks for it "clear and easy to find" on the
+ * website, and this page is linked from every page's footer.
+ */
 export default async function HowItWorks({ params }: PageProps<"/[lang]/zo-werkt-wonzo">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  const h = getMessages(lang).howItWorks;
+  const m = getMessages(lang);
+  const h = m.howItWorks;
+  const country = (m.countries as Record<string, string>)[SHIPS_FROM] ?? SHIPS_FROM;
   const blocks = [
-    { Icon: ShieldIcon, title: h.sourceTitle, text: h.sourceText },
+    { Icon: ShieldIcon, title: h.sourceTitle, text: t(h.sourceText, { country }) },
     { Icon: TruckIcon, title: h.deliveryTitle, text: h.deliveryText },
     { Icon: CheckIcon, title: h.stockTitle, text: h.stockText },
     { Icon: ReturnIcon, title: h.returnsTitle, text: h.returnsText },

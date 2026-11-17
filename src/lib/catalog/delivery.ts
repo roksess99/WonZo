@@ -1,5 +1,6 @@
 // Delivery estimate shown on every step of the funnel (D-13, ACM: a correct
-// delivery time and the country of shipping, during ordering).
+// delivery time). The country of shipping is named once, on "Zo werkt WonZo"
+// (owner 2026-11-16, D-13), not beside each product.
 //
 // Handling days come from the supplier's stock row (GEMETEN 2026-10-05: 0–1
 // or 1–2 days). Transit depends on the carrier service, which is D-13 and

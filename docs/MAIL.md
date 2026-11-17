@@ -71,11 +71,13 @@ prijs, en een link naar de bestelling in het beheerpaneel.
 moet een mens iets mee. Ze zegt welke bestelling, wat de leverancier
 antwoordde (of dat er geen antwoord kwam), of de klant al betaald heeft, en
 een link naar de bestelling. Bij een weigering zegt ze ook wat te doen: het
-tegoed bij BigBuy opwaarderen, want na 24 uur wordt de bestelling vanzelf
-geannuleerd en terugbetaald; daarna volgt een mail dat dat gebeurd is (D-04,
-gebruiker 2026-11-13). Wat de beheerder verder kan doen: de prijs goedkeuren,
-of — waar niet vanzelf wordt terugbetaald — opnieuw proberen of annuleren en
-terugbetalen, in het beheerpaneel.
+tegoed bij BigBuy opwaarderen, want na 24 uur vraagt de bestelling de
+goedkeuring van de eigenaar om te annuleren en terug te betalen (D-04,
+eigenaar 2026-11-17; tot 2026-11-17 gebeurde dat vanzelf, en de code doet
+dat nog tot hij is aangepast). Wat de beheerder verder kan doen: de prijs
+goedkeuren, opnieuw proberen, of annuleren en terugbetalen, in het
+beheerpaneel. De klant krijgt bij die annulering de mail "we konden niet
+leveren".
 
 ---
 

@@ -36,7 +36,8 @@ gebruikte cijfers komen uit hun openbare samenvattingen.
 
 **Gevolg:** de levertijd staat op de productkaart, de productpagina, in de
 winkelwagen, bij het afrekenen en in de bevestiging — als bereik ("3–6
-werkdagen"), uit de gegevens van BigBuy, met het land van verzending. Dat is
+werkdagen"), uit de gegevens van BigBuy; het land van verzending staat op
+"Zo werkt WonZo" (keuze eigenaar 2026-11-16, D-13). Dat is
 de wet, en het past bij het brandbook ("eerlijk over levertijd"). Een winkel
 die eerlijk is over vijf dagen verliest minder dan een die twee belooft en
 vijf levert.
