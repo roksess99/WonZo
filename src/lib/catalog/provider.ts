@@ -84,6 +84,11 @@ export function catalogSource(env: Record<string, string | undefined>, databaseC
 
 const source = catalogSource(process.env, hasDatabase);
 
+/** The source this shop runs on: the layout shows the test banner only while it is the mock. */
+export function activeCatalogSource(): CatalogSource {
+  return source;
+}
+
 /** How often the shop asks the database whether a newer copy, or a changed price rule, is there. */
 const VERSION_CHECK_MS = 60_000;
 
