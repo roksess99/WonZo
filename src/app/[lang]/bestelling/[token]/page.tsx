@@ -13,6 +13,7 @@ import { invoicesOfOrder } from "@/lib/invoices";
 import { findOrderIdByToken } from "@/lib/orders/store";
 import { parcelsOfOrder } from "@/lib/orders/tracking";
 import { RETURNABLE_ORDER_STATUSES } from "@/lib/returns/states";
+import { SNAPSHOT_VALID_MINUTES } from "@/lib/orders/states";
 import { readOrderView, type OrderView } from "@/lib/orders/view";
 import { PAYMENT_OPEN } from "@/lib/payments/states";
 import { interpolate } from "@/lib/text";
@@ -50,7 +51,7 @@ function statusText(o: OrderView, m: Messages["order"], locale: Locale): { title
     case "COMPLETED":
       return { title: m.completed, tone: "info", pending: false };
     case "CANCELLED": {
-      if (!o.paidAt) return { title: m.expired, text: m.expiredText, tone: "info", pending: false };
+      if (!o.paidAt) return { title: m.expired, text: interpolate(m.expiredText, { minutes: SNAPSHOT_VALID_MINUTES }), tone: "info", pending: false };
       const active = o.refunds.filter((r) => r.status !== "FAILED");
       const amount = formatMoney(active.reduce((s, r) => add(s, r.amount), money(0)));
       const done = active.length > 0 && active.every((r) => r.status === "SUCCEEDED");

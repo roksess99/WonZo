@@ -109,7 +109,7 @@ De klant komt terug met parameters in de URL. **Die bewijzen niets.** De pagina:
 - Bij `PENDING_PAYMENT` zijn regels, prijzen, kortingen, btw, verzendkosten,
   valuta en de gekozen aanbieding per regel **bevroren**.
 - Een snapshot is 30 minuten geldig vanaf het afrekenen (D-22, eigenaar
-  2026-11-17; de code staat nog op 60). De winkelwagen zegt dat vooraf. Na afloop: order
+  2026-11-17). De winkelwagen zegt dat vooraf. Na afloop: order
   `CANCELLED` (reden `EXPIRED`) via een geplande taak, na controle bij de
   provider dat er geen geslaagde payment is.
 - Een nieuwe betaalpoging op een verlopen snapshot maakt een **nieuwe quote**;

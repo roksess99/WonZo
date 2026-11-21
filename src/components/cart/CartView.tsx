@@ -16,6 +16,8 @@ import { cartActions, useCart, useCode } from "./store";
 import { useQuote } from "./useQuote";
 
 export type CartLabels = StepperLabels & CodeLabels & {
+  /** How long price and items are held from the checkout (D-22), with the minutes filled in. */
+  holdNote: string;
   loading: string;
   updating: string;
   itemsLabel: string;
@@ -156,12 +158,20 @@ export function CartView({ locale, labels, checkoutOn }: { locale: Locale; label
           </p>
         ) : null}
         {checkoutOn && !hasProblems && !busy ? (
-          <Link
-            href={localizePath(locale, "/afrekenen")}
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-accent px-6 text-body font-bold text-accent-contrast"
-          >
-            {labels.checkout}
-          </Link>
+          <>
+            <Link
+              href={localizePath(locale, "/afrekenen")}
+              aria-describedby="cart-hold-note"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-accent px-6 text-body font-bold text-accent-contrast"
+            >
+              {labels.checkout}
+            </Link>
+            {/* Before the step, not after: how long the price holds (D-22, owner 2026-11-17). */}
+            <p id="cart-hold-note" className="flex items-start gap-2 text-body-sm">
+              <InfoIcon className="mt-0.5 size-4 shrink-0" />
+              <span>{labels.holdNote}</span>
+            </p>
+          </>
         ) : (
           <>
             {/* A button that cannot act says why (.claude/rules/frontend.md). */}

@@ -14,7 +14,7 @@ import { cancelledAsUndeliverable, runPurchasing, supplierOrdersOf } from "@/lib
 import { CANCEL_WINDOW_MS } from "@/lib/orders/states";
 import { setHold } from "@/lib/orders/store";
 import { RETRY_EVERY_MS, RETRY_FOR_MS } from "@/lib/orders/supplier-states";
-import { handleWebhook, startPayment, submitRefund } from "@/lib/payments";
+import { handleWebhook, startPayment } from "@/lib/payments";
 import { FakeBigBuy } from "./fake-bigbuy";
 import { FakeMollie } from "./fake-mollie";
 
@@ -130,50 +130,46 @@ describe("a refusal (D-04: alert at once, try again for 24 hours with the same r
     expect(await attentionFor(o.orderId, new Date(o.at.getTime() + RETRY_EVERY_MS + 2_000))).toEqual([]);
   });
 
-  it("after 24 hours of refusals: cancelled and paid back in full, by itself (user 2026-11-13)", async () => {
+  it("after 24 hours of refusals: nothing by itself, the owner approves the refund in the panel (owner 2026-11-17)", async () => {
     const o = await released();
     // First the check is refused; the next try, 24 hours later, gets as far as placing, which is refused too.
     bigbuy.steer(o.reference, { check: ["refuse"], place: ["refuse"] });
-    expect((await runPurchasing(bigbuy, o.at)).refunds).toEqual([]);
+    await runPurchasing(bigbuy, o.at);
     // Within the 24 hours: the owner is asked to top up, the order still waits.
     expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");
     expect(await attentionFor(o.orderId, o.at)).toEqual(["purchase-failing"]);
 
     const late = new Date(o.at.getTime() + RETRY_FOR_MS + 1_000);
-    const run = await runPurchasing(bigbuy, late);
-    expect(run.outcomes).toEqual(["refunded"]);
-    expect(run.refunds).toHaveLength(1);
-    expect(await orderStatus(o.orderId)).toBe("CANCELLED");
+    expect((await runPurchasing(bigbuy, late)).outcomes).toEqual(["refused"]);
+    // Not cancelled, nothing recorded for Mollie: the order waits for the owner.
+    expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");
     const p = await purchase(o.orderId);
-    expect(p.status).toBe("CANCELLED");
+    expect(p.gaveUpAt).not.toBeNull();
     const sent = await alerts(o.orderId);
     expect(sent).toContain(`supplier:${p.id}:failed`);
-    expect(sent).toContain(`supplier:${p.id}:refunded`);
-    expect(sent).not.toContain(`supplier:${p.id}:gave-up`);
-
-    // The whole amount, recorded before anything goes to Mollie (intent first), by the system.
-    const [refund] = await selectRows<{ id: string; status: string; amount_cents: number | string; requested_by: string }>(getPool(), "SELECT id, status, amount_cents, requested_by FROM refunds WHERE order_id = ?", [o.orderId]);
-    expect(refund).toMatchObject({ id: run.refunds[0], status: "REQUESTED", requested_by: "system" });
-    expect(Number(refund!.amount_cents)).toBe(await totalOf(o.orderId));
-    // As the orders job does: sent to Mollie with its own id as the key.
-    await submitRefund(run.refunds[0]!, mollie, late);
-    expect([...mollie.refunds.values()].map((r) => [r.refundId, r.amount.amount])).toEqual([[run.refunds[0], await totalOf(o.orderId)]]);
-    // Nothing more by itself, and nothing left for the owner to do.
+    expect(sent).toContain(`supplier:${p.id}:gave-up`);
+    expect(await selectRows(getPool(), "SELECT id FROM refunds WHERE order_id = ?", [o.orderId])).toEqual([]);
+    expect(await attentionFor(o.orderId, late)).toEqual(["purchase-gave-up"]);
+    // No more tries by itself.
     await runPurchasing(bigbuy, minutes(late, 60));
     expect(bigbuy.callsFor(o.reference, "check")).toBe(2);
-    expect(await attentionFor(o.orderId, minutes(late, 60))).toEqual([]);
-    // The customer hears that we could not deliver (not a plain "cancelled").
+
+    // The owner approves: cancelled, the whole amount back via Mollie, and the customer hears we could not deliver.
+    expect(await cancelAndRefund({ orderId: o.orderId, expectedRefundCents: await totalOf(o.orderId), reason: "inkoop lukte 24 uur niet", actor, now: late }, mollie)).toEqual({ ok: true, refund: "sent" });
+    expect(await orderStatus(o.orderId)).toBe("CANCELLED");
+    expect((await purchase(o.orderId)).status).toBe("CANCELLED");
+    expect([...mollie.refunds.values()].map((r) => r.amount.amount)).toEqual([await totalOf(o.orderId)]);
     expect(await selectRows(getPool(), "SELECT id FROM outbox WHERE kind = 'order-cancelled' AND dedupe_key = ?", [`order:${o.orderId}`])).toHaveLength(1);
     expect(await cancelledAsUndeliverable(getPool(), o.orderId)).toBe(true);
   });
 
-  it("a held order is never paid back by itself: after 24 hours the owner chooses, e.g. try again", async () => {
+  it("a held order: after 24 hours the owner chooses as well, e.g. try again", async () => {
     const o = await released();
     bigbuy.steer(o.reference, { check: ["refuse"], place: ["refuse"] });
     await runPurchasing(bigbuy, o.at);
     await withTransaction((conn) => setHold(conn, o.orderId, "FRAUD_REVIEW", "admin:test", o.at));
     const late = new Date(o.at.getTime() + RETRY_FOR_MS + 1_000);
-    expect((await runPurchasing(bigbuy, late)).refunds).toEqual([]);
+    await runPurchasing(bigbuy, late);
     const p = await purchase(o.orderId);
     expect(p.gaveUpAt).not.toBeNull();
     expect(await orderStatus(o.orderId)).toBe("FULFILLMENT_PENDING");

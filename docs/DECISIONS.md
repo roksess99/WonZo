@@ -252,8 +252,9 @@ Accessoires" (3 artikelen van InnovaGoods): een keuze voor de eigenaar.
 
 **Eigenaar (via de gebruiker, 2026-11-17): "Fitness en lichaamsbeweging ›
 Accessoires" komt erbij**, onder Sport › Thuis sporten; buiten sporten blijft
-eruit. Nog niet gebouwd: een regel in `src/lib/catalog/assortment.ts`; de
-artikelen gaan daarna door dezelfde selectieregel (douanecode, D-36, geen
+eruit. Gebouwd (2026-11-17): een regel in `src/lib/catalog/assortment.ts`,
+op de naam zoals gemeten in de boom (2026-10-05: 93 artikelen in die groep,
+vóór de selectie). De artikelen gaan door dezelfde selectieregel (douanecode, D-36, geen
 elektrisch kenmerk, voorraad, GPSR). Verworpen: buiten sporten (vooral
 kleding en ballen in losse maten met 1 tot 3 stuks, en wat D-36 uitsluit).
 
@@ -455,13 +456,16 @@ bestelling je goedkeuring om terug te betalen"; de klant krijgt bij de
 annulering de mail "we konden niet leveren". Verworpen: automatisch
 terugbetalen (2026-11-13).
 
-**Nog aan te passen in de code** (staat op `feature/prijzen-kortingen-mollie`
-en verder, nog niet gemerged): de geplande taak annuleert en betaalt nu nog
-zelf terug (`cancelAfterGivingUp`). Te bouwen: na 24 uur geen annulering,
-maar een melding "goedkeuring nodig" en de knop in het paneel; de keuze voor
-de mail "we konden niet leveren" (`cancelledAsUndeliverable`) hangt nu aan
-een annulering door het systeem en moet ook een annulering door de beheerder
-na opgegeven inkoop herkennen; de tests en de teksten van de beheerdersmails.
+**Gebouwd (2026-11-17):** de geplande taak annuleert en betaalt niet meer
+zelf terug (`cancelAfterGivingUp` is weg). Na 24 uur stopt het opnieuw
+proberen, krijgt de beheerder de melding "lukt al 24 uur niet" en staat de
+bestelling in "vraagt aandacht" met de bestaande knoppen "annuleren en
+terugbetalen" (bedrag bevestigen) en "opnieuw proberen". De overgang
+`FULFILLMENT_PENDING → CANCELLED` mag weer alleen door de beheerder. De klant
+krijgt de mail "we konden niet leveren" als de bestelling geannuleerd is met
+een inkooporder waarop de winkel na 24 uur stopte
+(`cancelledAsUndeliverable`), wie de knop ook indrukte. Integratietest:
+`tests/integration/purchasing.test.ts`.
 
 ---
 
@@ -1193,11 +1197,15 @@ ze na de 30 minuten slagen. Dat valt onder de te late betaling van D-07
 zet door). Voorstel: in de laatste minuten geen nieuwe betaling meer
 starten — keuze voor de eigenaar.
 
-**Nog te bouwen:** de geldigheid van 60 naar 30 minuten
-(`snapshot_expires_at`, de geplande taak die verlopen bestellingen annuleert,
-met de reden "niet betaald binnen 30 minuten"); de tekst in de winkelwagen
-en op het afrekenscherm; het vasthouden van de voorraad. Nog open: mag er
-besteld worden bij onbekende voorraad.
+**Gebouwd (2026-11-17):** de geldigheid is 30 minuten (`SNAPSHOT_VALID_MS`
+in `src/lib/orders/states.ts`; daaruit volgen `snapshot_expires_at`, de
+geplande taak die verlopen bestellingen annuleert, en de teksten); de
+winkelwagen zegt het bij de knop naar afrekenen, en de statuspagina van een
+verlopen bestelling noemt dezelfde 30 minuten. **Niet gebouwd, wacht op
+bevestiging:** het vasthouden van de voorraad (de uitwerking hierboven) — dat
+vraagt een vergrendeling per artikel bij het afrekenen. Nog open: mag er
+besteld worden bij onbekende voorraad; geen nieuwe betaling in de laatste
+minuten (voorstel).
 
 ---
 
@@ -1686,7 +1694,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
-| 2026-11-17 | D-02, D-04, D-07, D-22 | Eigenaar via de gebruiker: Fitness › Accessoires erbij, buiten sporten niet (D-02); terugbetalen na 24 uur weigeren alleen na goedkeuring van de eigenaar in het paneel, niet meer automatisch (D-04); één beheerder, een volgende krijgt dezelfde rechten, geen bedraggrens (D-07); prijs en artikelen 30 minuten vast vanaf het afrekenen, gemeld in de winkelwagen (D-22). Nog te bouwen |
+| 2026-11-17 | D-02, D-04, D-07, D-22 | Eigenaar via de gebruiker: Fitness › Accessoires erbij, buiten sporten niet (D-02); terugbetalen na 24 uur weigeren alleen na goedkeuring van de eigenaar in het paneel, niet meer automatisch (D-04); één beheerder, een volgende krijgt dezelfde rechten, geen bedraggrens (D-07); prijs en artikelen 30 minuten vast vanaf het afrekenen, gemeld in de winkelwagen (D-22). Gebouwd, behalve het vasthouden van de voorraad (D-22, te bevestigen) |
 | 2026-11-13 | D-33 | Gebruiker namens de eigenaar: donker thema voor de webshop (niet het beheer), apparaat + knop, kleuren voorgesteld door Claude. Gebouwd; de eigenaar keurt de kleuren nog goed |
 | 2026-11-13 | D-04 | Gebruiker: na 24 uur weigeringen bij BigBuy vanzelf annuleren en volledig terugbetalen, met een mail aan de beheerder om op te waarderen; prijs boven 10 % blijft de keuze van de eigenaar. Gebouwd |
 | 2026-11-13 | D-05 | Gemeten in testmodus: methodes actief, vervaltijd 15 minuten, dezelfde sleutel geeft dezelfde betaling, met een ander bedrag HTTP 400; een hele bestelling lokaal betaald met iDEAL en als betaald vastgelegd |

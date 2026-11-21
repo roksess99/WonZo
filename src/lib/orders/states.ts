@@ -21,8 +21,10 @@ export type Actor = (typeof ACTORS)[number];
 
 export const TERMINAL: readonly OrderStatus[] = ["CANCELLED", "COMPLETED"];
 
-/** How long a frozen order may be paid (owner, 2026-10-10). */
-export const SNAPSHOT_VALID_MS = 60 * 60_000;
+/** How long a frozen order may be paid: price and items held 30 minutes from the checkout (D-22, owner 2026-11-17; was 60). */
+export const SNAPSHOT_VALID_MS = 30 * 60_000;
+/** The same, in whole minutes, for the texts the customer reads (cart, status page). */
+export const SNAPSHOT_VALID_MINUTES = SNAPSHOT_VALID_MS / 60_000;
 /** The customer's own cancel window after payment (D-04, owner 2026-10-10). */
 export const CANCEL_WINDOW_MS = 30 * 60_000;
 
@@ -47,7 +49,8 @@ const RULES: readonly Rule[] = [
   // Inside the window the customer may cancel (D-04, 2026-10-10); always with a full refund.
   { from: ["PAID"], to: "CANCELLED", actors: ["admin", "customer"] },
   // system: purchasing at the supplier was refused for 24 hours; cancelled with a full refund (D-04, user 2026-11-13).
-  { from: ["FULFILLMENT_PENDING"], to: "CANCELLED", actors: ["admin", "system"] },
+  // Only the admin: after 24 hours of refusals the owner approves the refund (D-04, owner 2026-11-17).
+  { from: ["FULFILLMENT_PENDING"], to: "CANCELLED", actors: ["admin"] },
   { from: ["FULFILLMENT_PENDING"], to: "PURCHASED", actors: ["admin", "system"] },
   { from: ["FULFILLMENT_PENDING", "PURCHASED"], to: "PARTIALLY_FULFILLED", actors: ["admin", "system"] },
   { from: ["PURCHASED", "PARTIALLY_FULFILLED"], to: "SHIPPED", actors: ["admin", "provider"] },

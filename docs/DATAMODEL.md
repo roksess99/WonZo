@@ -108,7 +108,7 @@ Bijbehorend: `order_events` (append-only statuslog), `payments`,
 `order_lines`, `order_events`, `order_access_tokens`, `outbox`, `audit_log` en
 `counters` (order- en straks factuurnummers, per reeks en jaar). Het ordernummer
 is `WZ-2026-00001`; een order mag 30 minuten na het aanmaken betaald worden
-(`snapshot_expires_at`; D-22, eigenaar 2026-11-17 — de code staat nog op 60); het annuleervenster eindigt 30 minuten na de betaling
+(`snapshot_expires_at`; D-22, eigenaar 2026-11-17); het annuleervenster eindigt 30 minuten na de betaling
 (`cancel_window_ends_at`, D-04). Nog niet: btw-bedragen per regel (D-15; het
 tarief wordt wel bevroren), korting (D-08), `payments` en `refunds` (fase 5,
 D-05), `supplier_orders`, `returns`.

@@ -138,7 +138,7 @@ omlijnd vlak. Niet verspreid over de pagina.
 - Is er een drempel voor gratis verzending, zeg dan hoeveel er nog bij moet.
 - **Hoe lang de prijs vastligt**, bij de knop naar afrekenen: prijs en
   artikelen worden 30 minuten voor je vastgehouden zodra je gaat afrekenen
-  (D-22, eigenaar 2026-11-17). Nog te bouwen.
+  (D-22, eigenaar 2026-11-17).
 - Wordt een regel begrensd door voorraad, zeg dat op de regel zelf en bied één
   knop om het recht te zetten. Niet stilletjes verlagen.
 - Kortingscode kan hier al: dit is waar iemand met een code in zijn hand gaat

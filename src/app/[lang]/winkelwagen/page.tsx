@@ -5,7 +5,9 @@ import { checkoutAvailable } from "@/lib/checkout";
 import { isLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
+import { SNAPSHOT_VALID_MINUTES } from "@/lib/orders/states";
 import { pageMetadata } from "@/lib/seo";
+import { interpolate } from "@/lib/text";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/winkelwagen">) {
   const { lang } = await params;
@@ -37,6 +39,7 @@ export default async function CartPage({ params }: PageProps<"/[lang]/winkelwage
         labels={{
           ...m.cart,
           delivery: m.product.delivery,
+          holdNote: interpolate(m.cart.holdNote, { minutes: SNAPSHOT_VALID_MINUTES }),
           noImage: m.product.noImage,
         }}
       />
