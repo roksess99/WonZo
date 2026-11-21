@@ -124,7 +124,7 @@
     "purchaseBlocked": "{reference}: BigBuy vraagt {checked} voor de artikelen, {percent}% meer dan de {expected} waarmee gerekend is.",
     "purchaseBlockedAction": "Boven de 10% wordt niet vanzelf besteld (D-04). Bestel toch, of annuleer en betaal terug.",
     "purchaseFailing": "{reference}: inkoop bij BigBuy lukt niet: {error}",
-    "purchaseFailingAction": "Wordt elk half uur opnieuw geprobeerd tot {until}. Waarschijnlijk is het tegoed te laag: waardeer op in het BigBuy-account. Lukt het tot dan niet, dan wordt de bestelling vanzelf geannuleerd en terugbetaald.",
+    "purchaseFailingAction": "Wordt elk half uur opnieuw geprobeerd tot {until}. Waarschijnlijk is het tegoed te laag: waardeer op in het BigBuy-account. Lukt het tot dan niet, dan kies jij: annuleren en terugbetalen, of opnieuw proberen.",
     "purchaseGaveUp": "{reference}: inkoop bij BigBuy lukt al 24 uur niet: {error}",
     "purchaseGaveUpAction": "Kies: opnieuw proberen (na opwaarderen), of annuleren en terugbetalen.",
     "purchaseUnknown": "{reference}: bij BigBuy besteld, maar het antwoord kwam niet aan.",
@@ -364,9 +364,8 @@
     "alertPaid": "De klant heeft betaald.",
     "alertNotPaid": "De bestelling is niet (meer) betaald.",
     "alertTodo": {
-      "supplierFailed": "Waardeer het tegoed in je BigBuy-account op. De winkel probeert het elk half uur opnieuw. Lukt het 24 uur lang niet, dan wordt de bestelling vanzelf geannuleerd en krijgt de klant het hele bedrag terug.",
-      "supplierRefunded": "Je hoeft niets te doen: de klant krijgt een mail over de annulering en het geld terug via Mollie. Was er al een factuur, dan volgt de creditnota vanzelf.",
-      "supplierGaveUp": "Kies in het paneel: opnieuw proberen (na opwaarderen), of annuleren en terugbetalen."
+      "supplierFailed": "Waardeer het tegoed in je BigBuy-account op. De winkel probeert het elk half uur opnieuw. Lukt het 24 uur lang niet, dan vraagt de bestelling je goedkeuring om te annuleren en terug te betalen.",
+      "supplierGaveUp": "Kies in het paneel: annuleren en het hele bedrag terugbetalen (de klant krijgt de mail dat we niet konden leveren), of opnieuw proberen na opwaarderen. Er gebeurt niets vanzelf."
     },
     "alertWhat": {
       "hold": "de bestelling staat stil ({reason})",
@@ -374,7 +373,6 @@
       "refundFailed": "een terugbetaling is mislukt",
       "supplierFailed": "inkoop bij BigBuy lukt niet ({error})",
       "supplierGaveUp": "inkoop bij BigBuy lukt al 24 uur niet",
-      "supplierRefunded": "inkoop bij BigBuy lukte 24 uur niet; de bestelling is geannuleerd en terugbetaald",
       "supplierPrice": "BigBuy is meer dan 10% duurder",
       "supplierUnknown": "het antwoord van BigBuy bleef uit",
       "other": "iets dat een mens moet bekijken"

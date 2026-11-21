@@ -10,7 +10,7 @@ import { appendAudit } from "@/lib/admin/audit";
 import { fromDbTime, getPool, selectRows, withTransaction, type Connection } from "@/lib/db";
 import { compare, type Money } from "@/lib/money";
 import { enqueue } from "@/lib/orders/outbox";
-import { insideCancelWindow } from "@/lib/orders/states";
+import { insideCancelWindow, SNAPSHOT_VALID_MINUTES } from "@/lib/orders/states";
 import { lockOrder, ordersWithExpiredSnapshot, setHold, transitionOrder, type LockedOrder } from "@/lib/orders/store";
 import { defaultProvider, ProviderOutcomeUnknown, ProviderRefused, type PaymentProvider, type ProviderPayment } from "./mollie";
 import { canTransitionPayment, fromMolliePaymentStatus, fromMollieRefundStatus, PAYMENT_OPEN, PAYMENT_STATUSES, type PaymentActor, type PaymentStatus } from "./states";
@@ -394,7 +394,7 @@ async function allPages<T, K>(page: (after: K) => Promise<T[]>, keyOf: (t: T) =>
 }
 
 /**
- * Unpaid orders past their 60 minutes: ask the provider about every payment
+ * Unpaid orders past their 30 minutes (D-22): ask the provider about every payment
  * first, and cancel only when nothing was paid and nothing is still open
  * (docs/PAYMENTS.md § Snapshot en verloop).
  */
@@ -418,7 +418,7 @@ export async function expireUnpaidOrders(providerArg?: PaymentProvider | null, n
       if (payments.some((p) => PAYMENT_OPEN.includes(p.status))) return false;
       // Money the order did not take keeps it open until it is paid back (a late payment, owner 2026-10-13).
       for (const p of payments) if (p.status === "PAID" && (await refundable(conn, p)).amount > 0) return false;
-      return (await transitionOrder(conn, { orderId, to: "CANCELLED", actor: "system", reason: "verlopen: niet betaald binnen 60 minuten", now })).changed;
+      return (await transitionOrder(conn, { orderId, to: "CANCELLED", actor: "system", reason: `verlopen: niet betaald binnen ${SNAPSHOT_VALID_MINUTES} minuten`, now })).changed;
     });
     if (done) cancelled.push(orderId);
   }

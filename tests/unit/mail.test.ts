@@ -125,7 +125,6 @@ describe("the messages", () => {
     expect(alertKind("order:12:hold:AMOUNT_MISMATCH")).toBe("hold");
     expect(alertKind("supplier:abc:failed")).toBe("supplierFailed");
     expect(alertKind("supplier:abc:gave-up")).toBe("supplierGaveUp");
-    expect(alertKind("supplier:abc:refunded")).toBe("supplierRefunded");
     expect(alertKind("supplier:abc:price:1234")).toBe("supplierPrice");
     expect(alertKind("refund:abc:failed")).toBe("refundFailed");
     expect(alertKind("payment:abc:EXPIRED->PAID")).toBe("payment");
@@ -133,12 +132,13 @@ describe("the messages", () => {
     const mail = adminAlert({ reference: "WZ-2026-00012", kind: "supplierFailed", detail: { error: "Insufficient balance" }, paid: true }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages());
     expect(mail.subject).toBe("Let op: WZ-2026-00012 — inkoop bij BigBuy lukt niet (Insufficient balance)");
     expect(mail.text).toContain("De klant heeft betaald.");
-    // What to do, and what happens if nobody does (D-04, user 2026-11-13).
+    // What to do, and what happens if nobody does: nothing by itself, the owner approves (D-04, owner 2026-11-17).
     expect(mail.text).toContain("Waardeer het tegoed in je BigBuy-account op.");
-    expect(mail.text).toContain("vanzelf geannuleerd");
-    const done = adminAlert({ reference: "WZ-2026-00012", kind: "supplierRefunded", detail: {}, paid: true }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages());
-    expect(done.subject).toBe("Let op: WZ-2026-00012 — inkoop bij BigBuy lukte 24 uur niet; de bestelling is geannuleerd en terugbetaald");
-    expect(done.text).toContain("Je hoeft niets te doen");
+    expect(mail.text).toContain("vraagt de bestelling je goedkeuring");
+    expect(mail.text).not.toContain("vanzelf geannuleerd");
+    const gaveUp = adminAlert({ reference: "WZ-2026-00012", kind: "supplierGaveUp", detail: {}, paid: true }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages());
+    expect(gaveUp.subject).toBe("Let op: WZ-2026-00012 — inkoop bij BigBuy lukt al 24 uur niet");
+    expect(gaveUp.text).toContain("Er gebeurt niets vanzelf.");
     // An alert without a next step gets no extra line.
     expect(adminAlert({ reference: "WZ-2026-00012", kind: "other", detail: {}, paid: false }, "https://wonzo.nl/beheer/bestellingen/1", links.logoUrl, adminMessages()).text).not.toContain("Waardeer");
   });

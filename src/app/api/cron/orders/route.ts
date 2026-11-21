@@ -2,7 +2,7 @@
 // releasing orders after the 30-minute window, purchasing them at the
 // supplier (D-04, src/lib/orders/purchasing.ts) and following the parcels
 // (src/lib/orders/tracking.ts), cancelling unpaid orders
-// after 60 minutes, reconciliation with the payment provider
+// after 30 minutes (D-22), reconciliation with the payment provider
 // (docs/PAYMENTS.md § Reconciliatie), sending the mail in the outbox
 // (src/lib/mail/worker.ts), recording our selling prices
 // (src/lib/discounts/history.ts), and tidying the rate limit and the admin
@@ -24,7 +24,7 @@ import { runReviewInvites } from "@/lib/reviews";
 import { recordPrices } from "@/lib/discounts/history";
 import { defaultMail } from "@/lib/mail";
 import { sendDueMail } from "@/lib/mail/worker";
-import { expireUnpaidOrders, reconcile, submitRefund } from "@/lib/payments";
+import { expireUnpaidOrders, reconcile } from "@/lib/payments";
 import { defaultProvider } from "@/lib/payments/mollie";
 
 export async function POST(request: Request): Promise<Response> {
@@ -44,9 +44,6 @@ export async function POST(request: Request): Promise<Response> {
       const released = await releaseClosedWindows(now);
       // Purchasing at the supplier (D-04); with SUPPLIER_ORDERING off only the drafts.
       const purchasing = await runPurchasing(defaultOrdering(), now);
-      // Orders BigBuy refused for 24 hours were cancelled (D-04, user 2026-11-13): their refunds go to Mollie now.
-      // Without a key they stay REQUESTED; submitRefund itself handles no answer (UNKNOWN) and a refusal (alert).
-      if (provider) for (const id of purchasing.refunds) await submitRefund(id, provider, now);
       // Where the parcels are: shipped, delivered (D-09: the withdrawal window runs from the delivery).
       const tracked = await runTracking(defaultOrdering(), now);
       // Invitations to review, 7 days after the delivery (D-12); sent below with the other mail.
@@ -78,7 +75,6 @@ export async function POST(request: Request): Promise<Response> {
         released: released.released.length,
         purchaseDrafts: purchasing.drafts,
         purchased: purchasing.outcomes.filter((o) => o === "placed").length,
-        purchaseRefunded: purchasing.refunds.length,
         shipped: tracked.shipped,
         delivered: tracked.delivered,
         invoices: invoicing.invoices,

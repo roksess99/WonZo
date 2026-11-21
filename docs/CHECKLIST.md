@@ -71,10 +71,9 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
       Alles eromheen testen bewijst niet dat de keten werkt.
 - [ ] Het bedrag dat de betaaldienst ziet komt uit de bevroren snapshot.
 - [ ] Een bestelling is 30 minuten betaalbaar, en de winkelwagen zegt dat
-      vooraf (D-22, 2026-11-17; de code staat nog op 60).
+      vooraf (D-22, 2026-11-17).
 - [ ] Na 24 uur geweigerde inkoop wordt er alleen terugbetaald na goedkeuring
-      van de eigenaar in het paneel (D-04, 2026-11-17; de code doet het nog
-      automatisch).
+      van de eigenaar in het paneel (D-04, 2026-11-17).
 - [ ] De live-sleutel staat alleen in productie.
 
 ## Mail

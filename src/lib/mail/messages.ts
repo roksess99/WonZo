@@ -218,7 +218,6 @@ export function alertKind(dedupeKey: string): AlertWhat {
   if (/^refund:.+:failed$/.test(dedupeKey)) return "refundFailed";
   if (/^supplier:.+:failed$/.test(dedupeKey)) return "supplierFailed";
   if (/^supplier:.+:gave-up$/.test(dedupeKey)) return "supplierGaveUp";
-  if (/^supplier:.+:refunded$/.test(dedupeKey)) return "supplierRefunded";
   if (/^supplier:.+:price:/.test(dedupeKey)) return "supplierPrice";
   if (/^supplier:.+:unknown$/.test(dedupeKey)) return "supplierUnknown";
   return "other";

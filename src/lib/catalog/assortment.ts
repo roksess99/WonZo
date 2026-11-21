@@ -78,6 +78,8 @@ export const assortment: Category[] = [
           ["Sport en outdoor", "Fitness en lichaamsbeweging", "Spieropbouw"],
           ["Sport en outdoor", "Fitness en lichaamsbeweging", "Pilates"],
           ["Sport en outdoor", "Fitness en lichaamsbeweging", "Yoga"],
+          // Owner 2026-11-17 (D-02); name as measured in the tree on 2026-10-05.
+          ["Sport en outdoor", "Fitness en lichaamsbeweging", "Accessoires"],
         ],
       },
     ],
