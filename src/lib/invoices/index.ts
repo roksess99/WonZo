@@ -58,7 +58,7 @@ async function invoiceDocument(conn: Queryable, orderId: number, number: string,
     paidAt: o.paid_at === null ? null : fromDbTime(String(o.paid_at)),
     paymentMethod: payment?.method ?? null,
     delivery: { minWorkingDays: Math.max(0, ...lines.map((l) => n(l, "min_days"))), maxWorkingDays: Math.max(0, ...lines.map((l) => n(l, "max_days"))) },
-    seller: { tradeName: company.tradeName, legalName: company.legalName, address: company.address ?? "", email: company.email, kvk: company.kvk, vat: company.vat ?? "", iban: null },
+    seller: { tradeName: company.tradeName, legalName: company.legalName, address: company.address ?? "", email: company.email, kvk: company.kvk, vat: company.vat ?? "", iban: company.iban },
     customer: {
       name: `${String(o.first_name)} ${String(o.last_name)}`,
       street: `${String(o.street)} ${String(o.house_number)}`,
