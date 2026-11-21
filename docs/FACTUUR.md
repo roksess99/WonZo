@@ -17,10 +17,14 @@ voorbeeldfactuur) en voor de klant via de statuslink.
 de PDF is getagd (structuurboom, taal, titel); dezelfde invoer geeft dezelfde
 bytes, ook in twee processen, zodra de datums in de metadata vastliggen.
 
+Het IBAN van de zakelijke rekening staat erop sinds 2026-11-21 (opgave
+gebruiker, `src/lib/company.ts`), op facturen die daarna gemaakt worden: een
+opgeslagen factuur verandert nooit.
+
 Nog open: btw op verzendkosten bij twee tarieven (D-15; zo'n factuur wordt
-niet gemaakt maar staat in "vraagt aandacht"), het IBAN (de zakelijke rekening
-komt nog), en de leverdatum: op de factuur staat de verwachte levertermijn na
-de besteldatum — laten bevestigen door de boekhouder.
+niet gemaakt maar staat in "vraagt aandacht"), en de leverdatum: op de
+factuur staat de verwachte levertermijn na de besteldatum — laten bevestigen
+door de boekhouder.
 
 Dit bestand onderscheidt drie soorten regels. Laat de `WETTELIJK`-regels door
 de boekhouder of een adviseur bevestigen voor de markt van de winkel; het

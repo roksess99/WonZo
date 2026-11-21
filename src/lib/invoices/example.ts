@@ -28,7 +28,7 @@ export function exampleInvoice(kind: "invoice" | "credit" = "invoice"): InvoiceD
     paidAt: new Date("2026-10-12T13:32:00Z"),
     paymentMethod: "ideal",
     delivery: { minWorkingDays: 3, maxWorkingDays: 6 },
-    seller: { tradeName: company.tradeName, legalName: company.legalName, address: company.address ?? "", email: company.email, kvk: company.kvk, vat: company.vat ?? "", iban: null },
+    seller: { tradeName: company.tradeName, legalName: company.legalName, address: company.address ?? "", email: company.email, kvk: company.kvk, vat: company.vat ?? "", iban: company.iban },
     customer: { name: "Łukasz Öztürk-ß", street: "Ëerste Ölstraat 1-a", postcodeCity: "1234 AB 's-Hertogenbosch", country: "NL", email: "klant@example.nl", phone: "0612345678" },
     lines: input.map((l, i) => ({ name: l.name, brand: l.brand, sku: l.sku, quantity: l.quantity, ...vat.lines[i]! })),
     shipping: vat.shipping,

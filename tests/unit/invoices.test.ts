@@ -14,8 +14,20 @@ import { GET as customerPdf } from "@/app/api/orders/invoice/route";
 import { invoiceNumber, negate } from "@/lib/invoices/document";
 import { exampleInvoice } from "@/lib/invoices/example";
 import { renderInvoicePdf } from "@/lib/invoices/pdf";
+import { company } from "@/lib/company";
 import { money } from "@/lib/money";
 import { exclusive, MixedVatShipping, vatBreakdown } from "@/lib/pricing/vat";
+
+describe("the seller on the invoice", () => {
+  it("carries the IBAN of the business account, and it passes the IBAN check (mod 97)", () => {
+    expect(exampleInvoice().seller.iban).toBe(company.iban);
+    const iban = company.iban ?? "";
+    expect(iban).toMatch(/^NL\d{2}[A-Z]{4}\d{10}$/);
+    // ISO 13616: move the first four characters to the end, letters to numbers (A = 10), the whole mod 97 is 1.
+    const digits = (iban.slice(4) + iban.slice(0, 4)).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
+    expect([...digits].reduce((r, d) => (r * 10 + Number(d)) % 97, 0)).toBe(1);
+  });
+});
 
 describe("VAT per product (D-15)", () => {
   it("takes the VAT out of the gross line total, rounded half up", () => {

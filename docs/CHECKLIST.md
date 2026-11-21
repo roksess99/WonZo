@@ -105,7 +105,7 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 - [ ] De statuswoorden van BigBuy-tracking gemeten bij de eerste echte zending (vraag 25); tot dan "als afgeleverd markeren" in het paneel
 - [ ] Een modelformulier voor herroeping (pagina of PDF), en de retourteksten door een adviseur bekeken
 - [ ] De uitwerking van het maximum bij een retour (verzendkosten, D-09) bevestigd door de eigenaar
-- [ ] Het IBAN van de zakelijke rekening op de factuur (`src/lib/invoices/index.ts`, nu leeg)
+- [x] Het IBAN van de zakelijke rekening op de factuur (`src/lib/company.ts`, 2026-11-21)
 - [ ] De voorbeeldfactuur (`/beheer/facturen/voorbeeld`) is door de boekhouder bekeken
 - [ ] De opgeslagen PDF's zitten in de backup (`docs/DISASTER_RECOVERY.md`)
 
