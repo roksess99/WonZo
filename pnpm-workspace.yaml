@@ -11,3 +11,10 @@ allowBuilds:
 # before the build is fresh, so the check adds nothing there. Locally: run
 # `pnpm install` yourself after pulling new dependencies.
 verifyDepsBeforeRun: false
+
+# vite comes in only as a peer of vitest (tests, never on the server), so
+# `pnpm update` leaves it alone. Versions before 8.3.3 have the launch-editor
+# and server.fs advisories (pnpm audit, 2026-11-21). Applies only to those
+# versions; remove once vitest itself resolves a fixed vite.
+overrides:
+  "vite@<8.3.3": "8.3.8"
