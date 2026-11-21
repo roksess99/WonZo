@@ -1,22 +1,24 @@
 import { notFound } from "next/navigation";
-import { ReturnIcon, ShieldIcon, TruckIcon, CheckIcon } from "@/components/icons";
+import { CartIcon, CheckIcon, InfoIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Container } from "@/components/ui";
 import { SHIPS_FROM } from "@/lib/catalog/delivery";
 import { isLocale } from "@/lib/i18n/config";
 import { getMessages, t } from "@/lib/i18n/messages";
+import { companyFacts } from "@/lib/llms";
 import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/zo-werkt-wonzo">) {
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const m = getMessages(lang);
-  return pageMetadata(lang, { nl: "/zo-werkt-wonzo", en: "/en/how-wonzo-works" }, m.howItWorks.title, m.howItWorks.intro);
+  return pageMetadata(lang, { nl: "/zo-werkt-wonzo", en: "/en/how-wonzo-works" }, m.howItWorks.title, m.howItWorks.metaDescription);
 }
 
 /**
  * Where products come from and how long they take — trust, and ACM (docs/ONDERZOEK.md § 1.1). The only page
  * that names the country of shipping (owner 2026-11-16, D-13): ACM asks for it "clear and easy to find" on the
- * website, and this page is linked from every page's footer.
+ * website, and this page is linked from every page's footer. Each block answers one question on its own, with
+ * the shop's own numbers (shipping rule, KvK), so it can be quoted as is (GEO-analyse 2026-11-21).
  */
 export default async function HowItWorks({ params }: PageProps<"/[lang]/zo-werkt-wonzo">) {
   const { lang } = await params;
@@ -24,9 +26,12 @@ export default async function HowItWorks({ params }: PageProps<"/[lang]/zo-werkt
   const m = getMessages(lang);
   const h = m.howItWorks;
   const country = (m.countries as Record<string, string>)[SHIPS_FROM] ?? SHIPS_FROM;
+  const facts = companyFacts();
   const blocks = [
+    { Icon: InfoIcon, title: h.aboutTitle, text: t(h.aboutText, facts) },
     { Icon: ShieldIcon, title: h.sourceTitle, text: t(h.sourceText, { country }) },
     { Icon: TruckIcon, title: h.deliveryTitle, text: h.deliveryText },
+    { Icon: CartIcon, title: h.shippingTitle, text: t(h.shippingText, facts) },
     { Icon: CheckIcon, title: h.stockTitle, text: h.stockText },
     { Icon: ReturnIcon, title: h.returnsTitle, text: h.returnsText },
   ];

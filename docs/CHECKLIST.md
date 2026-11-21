@@ -152,7 +152,12 @@ winkel. Dit is een herinneringslijst, geen juridisch advies.
 
 - [ ] `pnpm build` slaagt op de machine waar hij straks draait.
 - [ ] 404 geeft echt status 404, geen 200 met een foutpagina.
-- [ ] sitemap.xml en robots.txt kloppen.
+- [ ] sitemap.xml en robots.txt kloppen. Gebouwd 2026-11-21 (`src/app/sitemap.ts`, `src/app/robots.ts`,
+      ook `/llms.txt`); live nalopen, de sitemap aanmelden in Google Search Console en Bing
+      Webmaster Tools, en met "Live URL testen" nagaan dat Googlebot de site bereikt (GEO-analyse:
+      een nagemaakte Googlebot kreeg 403 van Hostinger).
+- [ ] De productmarkering (verzendkosten, retourtermijn, verkoper) gecontroleerd met de Rich Results
+      Test van Google, op een echt product.
 - [ ] Taalvarianten verwijzen naar elkaar.
 - [ ] Werkt zonder JavaScript voor het belangrijkste pad? Minstens: zoeken en
       bladeren.

@@ -10,6 +10,7 @@ import { activeCatalogSource } from "@/lib/catalog/provider";
 import { checkoutAvailable } from "@/lib/checkout";
 import { testBanner } from "@/lib/notice";
 import { siteUrl } from "@/lib/seo";
+import { jsonLd, organizationJsonLd } from "@/lib/structured-data";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "../globals.css";
 
@@ -64,6 +65,8 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
         </main>
         <Footer locale={lang} m={m} />
         <PageViewCounter />
+        {/* Who sells, for search engines and AI answers; our own company details only (src/lib/structured-data.ts). */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationJsonLd(siteUrl)) }} />
       </body>
     </html>
   );

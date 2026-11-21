@@ -325,6 +325,11 @@
   "howItWorks": {
     "title": "Zo werkt WonZo",
     "intro": "Goed om te weten voordat je bestelt.",
+    "metaDescription": "Wie WonZo is, waar de producten vandaan komen, hoe lang levering duurt, wat verzending kost en hoe retourneren werkt.",
+    "aboutTitle": "Wie zit er achter WonZo?",
+    "aboutText": "WonZo is een Nederlandse webwinkel van {legalName} in {city}, ingeschreven bij de KvK onder nummer {kvk}. We verkopen spullen voor in en rond het huis en bezorgen alleen in Nederland.",
+    "shippingTitle": "Wat kost verzending?",
+    "shippingText": "Verzending kost {fee}. Vanaf {freeFrom} aan artikelen is het gratis. Grote artikelen, zoals meubels, hebben eigen verzendkosten per stuk; die staan op de productpagina, vóór de knop, en zijn nooit gratis.",
     "sourceTitle": "Waar komen de producten vandaan?",
     "sourceText": "WonZo werkt samen met een groothandel in Europa. Je bestelling wordt vanuit hun magazijn in {country} rechtstreeks naar je verstuurd.",
     "deliveryTitle": "Hoe lang duurt het?",
@@ -358,6 +363,11 @@
     "terms": "Algemene voorwaarden",
     "privacy": "Privacy",
     "reviews": "Beoordelingen"
+  },
+  "llms": {
+    "about": "Webwinkel van {legalName} (KvK {kvk}) in {city}. Bezorgt alleen in Nederland. Verzending {fee}, gratis vanaf {freeFrom}; grote artikelen hebben eigen verzendkosten per stuk. {days} dagen bedenktijd.",
+    "pages": "Pagina's (Nederlands)",
+    "categories": "Categorieën (Nederlands)"
   },
   "credit": {
     "text": "Website door {name}",

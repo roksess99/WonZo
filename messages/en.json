@@ -325,6 +325,11 @@
   "howItWorks": {
     "title": "How WonZo works",
     "intro": "Good to know before you order.",
+    "metaDescription": "Who WonZo is, where the products come from, how long delivery takes, what shipping costs and how returns work.",
+    "aboutTitle": "Who is behind WonZo?",
+    "aboutText": "WonZo is a Dutch online shop run by {legalName} in {city}, registered with the Dutch Chamber of Commerce (KvK) under number {kvk}. We sell things for in and around the house and deliver in the Netherlands only.",
+    "shippingTitle": "What does shipping cost?",
+    "shippingText": "Shipping costs {fee}. From {freeFrom} in items it is free. Large items, such as furniture, have their own shipping costs per piece; they are on the product page, before the button, and never free.",
     "sourceTitle": "Where do the products come from?",
     "sourceText": "WonZo works with a wholesaler in Europe. Your order ships straight to you from their warehouse in {country}.",
     "deliveryTitle": "How long does it take?",
@@ -358,6 +363,11 @@
     "terms": "Terms and conditions",
     "privacy": "Privacy",
     "reviews": "Reviews"
+  },
+  "llms": {
+    "about": "Online shop run by {legalName} (KvK {kvk}) in {city}. Delivers in the Netherlands only. Shipping {fee}, free from {freeFrom}; large items have their own shipping costs per piece. {days}-day cooling-off period.",
+    "pages": "Pages (English)",
+    "categories": "Categories (English)"
   },
   "credit": {
     "text": "Website by {name}",

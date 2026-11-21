@@ -16,6 +16,7 @@ import { localizePath } from "@/lib/i18n/paths";
 import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { productShipping } from "@/lib/pricing/shipping";
 import { pageMetadata, siteUrl } from "@/lib/seo";
+import { jsonLd, productJsonLd } from "@/lib/structured-data";
 
 const idFromSlug = (slug: string) => /-(\d+)$/.exec(slug)?.[1] ?? (/^\d+$/.test(slug) ? slug : null);
 
@@ -51,35 +52,6 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/product/[s
 const promotionEnd = (locale: Locale, iso: string) =>
   new Intl.DateTimeFormat(locale === "nl" ? "nl-NL" : "en-GB", { timeZone: "Europe/Amsterdam", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
-/** Structured data with price and availability; no rating until there are real reviews (D-12). */
-function productJsonLd(p: Product, url: string) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    sku: p.sku,
-    ...(p.ean ? { gtin13: p.ean } : {}),
-    ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
-    ...(p.imageUrls.length ? { image: p.imageUrls.map((u) => new URL(u, siteUrl).toString()) } : {}),
-    description: p.description.join(" "),
-    offers: {
-      "@type": "Offer",
-      url,
-      priceCurrency: p.price.currency,
-      price: (p.price.amount / 100).toFixed(2),
-      availability: "https://schema.org/InStock",
-      itemCondition: "https://schema.org/NewCondition",
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        deliveryTime: {
-          "@type": "ShippingDeliveryTime",
-          transitTime: { "@type": "QuantitativeValue", minValue: p.delivery.minWorkingDays, maxValue: p.delivery.maxWorkingDays, unitCode: "DAY" },
-        },
-      },
-    },
-  };
-}
-
 /** The product page: take away doubt (docs/SCHERMEN.md § Productpagina). */
 export default async function ProductPage({ params }: PageProps<"/[lang]/product/[slug]">) {
   // Per request, never prerendered: price, stock and a promotion that starts or ends must be those of now (D-08).
@@ -113,7 +85,7 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
       <script
         type="application/ld+json"
         // JSON.stringify of our own canonical data; "<" is escaped so a product name cannot close the tag.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(p, url)).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(productJsonLd(p, url, siteUrl)) }}
       />
       <Breadcrumb
         label={m.a11y.breadcrumb}

@@ -63,6 +63,12 @@ export function compare(a: Money, b: Money): number {
   return a.amount - b.amount;
 }
 
+/** "49.95": the amount as a decimal string with two places, from the integer cents (no float), for machines (schema.org). */
+export function toDecimalString(m: Money): string {
+  const abs = Math.abs(m.amount);
+  return `${m.amount < 0 ? "-" : ""}${Math.trunc(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
+}
+
 // Dutch notation on every page, also the English ones (D-14): "€ 49,95".
 const formatter = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
 
