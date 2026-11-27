@@ -31,6 +31,8 @@ import {
   logoutEverywhere,
   readInvite,
   readSession,
+  RECOVERY_ACTOR,
+  recoverOwner,
   resetAdmin,
   setupFirstOwner,
   setupOpen,
@@ -244,5 +246,57 @@ describe("managing admins (permission beheerders)", () => {
     expect(await readSession(getPool(), third.session, now)).toBeNull();
     expect(await login({ email: third.email, password: PASSWORD, code: codeAt(third.secret, at), visitor: visitor() }, at)).toEqual({ ok: false, error: "invalid" });
     expect(await disableAdmin(`admin:${owner.id}`, third.id, now)).toEqual({ ok: false, error: "state" });
+  });
+});
+
+describe("recovery by script (no other owner, D-07 2026-11-24)", () => {
+  it("clears the owner's credentials and gives a one-time invitation; the old ones stop; in the log", async () => {
+    const now = new Date();
+    const owner = await makeAdmin("eigenaar", now);
+    const result = await recoverOwner(`  ${owner.email.toUpperCase()} `, now);
+    if (!result.ok) throw new Error(`recover failed: ${result.error}`);
+    expect(result.adminId).toBe(owner.id);
+    expect(result.expiresAt.getTime() - now.getTime()).toBe(48 * 3_600_000);
+
+    // Everything old is gone: the session, the password with the app, the recovery codes.
+    expect(await readSession(getPool(), owner.session, now)).toBeNull();
+    const at = later(now, 2);
+    expect(await login({ email: owner.email, password: PASSWORD, code: codeAt(owner.secret, at), visitor: visitor() }, at)).toEqual({ ok: false, error: "invalid" });
+    expect(await login({ email: owner.email, password: PASSWORD, code: owner.codes[0], visitor: visitor() }, at)).toEqual({ ok: false, error: "invalid" });
+    const [codes] = await selectRows<{ n: number | string }>(getPool(), "SELECT COUNT(*) AS n FROM admin_recovery_codes WHERE admin_id = ?", [owner.id]);
+    expect(Number(codes?.n)).toBe(0);
+    // Only the hash of the key is stored.
+    const [stored] = await selectRows<{ n: number | string }>(getPool(), "SELECT COUNT(*) AS n FROM admin_invites WHERE admin_id = ? AND token_hash = ?", [owner.id, sha256(result.token)]);
+    expect(Number(stored?.n)).toBe(1);
+    expect(await audits(owner.id, "admin.recovered")).toBe(1);
+    const [entry] = await selectRows<{ actor: string }>(getPool(), "SELECT actor FROM audit_log WHERE object_type = 'admin' AND object_id = ? AND action = 'admin.recovered'", [String(owner.id)]);
+    expect(entry?.actor).toBe(RECOVERY_ACTOR);
+
+    // The link sets a new password and app, once; then logging in works again.
+    const secret = newTotpSecret();
+    const accept = (when: Date) =>
+      acceptInvite({ token: result.token, password: "een nieuwe zin voor het paneel", pending: sealPending(secret, `invite:${sha256(result.token)}`, now, adminKey()), code: codeAt(secret, when), visitor: visitor() }, when);
+    expect((await accept(later(now, 3))).ok).toBe(true);
+    expect(await accept(later(now, 4))).toEqual({ ok: false, error: "invalid" });
+    const after = later(now, 5);
+    expect((await login({ email: owner.email, password: "een nieuwe zin voor het paneel", code: codeAt(secret, after), visitor: visitor() }, after)).ok).toBe(true);
+  });
+
+  it("only an active owner: another role, a disabled owner or an unknown address change nothing", async () => {
+    const now = new Date();
+    const owner = await makeAdmin("eigenaar", now);
+    const keeper = await makeAdmin("boekhouder", now);
+    const gone = await makeAdmin("eigenaar", now);
+    expect(await disableAdmin(`admin:${owner.id}`, gone.id, now)).toEqual({ ok: true });
+
+    expect(await recoverOwner("geen mailadres", now)).toEqual({ ok: false, error: "email" });
+    expect(await recoverOwner(`t-${randomUUID()}@test.wonzo.nl`, now)).toEqual({ ok: false, error: "not-found" });
+    expect(await recoverOwner(keeper.email, now)).toEqual({ ok: false, error: "not-found" });
+    expect(await recoverOwner(gone.email, now)).toEqual({ ok: false, error: "not-found" });
+
+    // No side effect on the bookkeeper: the session still works, no log line.
+    expect(await readSession(getPool(), keeper.session, now)).not.toBeNull();
+    expect(await audits(keeper.id, "admin.recovered")).toBe(0);
+    expect(await audits(gone.id, "admin.recovered")).toBe(0);
   });
 });

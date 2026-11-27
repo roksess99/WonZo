@@ -759,6 +759,18 @@ gebruikt zolang de eigenaar het zo wil. Verworpen: een bedraggrens of een
 tweede persoon (er is geen tweede persoon). Alle vragen van D-07 zijn
 hiermee beantwoord; `DECIDED` zetten is aan de eigenaar.
 
+**Gebruiker (2026-11-24): herstel zonder tweede eigenaar.** De enige
+eigenaar was wachtwoord, app en herstelcodes kwijt; "toegang opnieuw
+instellen" kan alleen een andere eigenaar. Gebouwd: `pnpm admin:herstel`
+(`recoverOwner` in `src/lib/admin/auth.ts`), door de eigenaar zelf gedraaid
+met de live databasegegevens. Het wist de inloggegevens van het actieve
+eigenaarsaccount met dat mailadres en geeft een uitnodigingslink (48 uur, één
+keer) die alleen in de terminal staat; in het logboek als "herstelscript".
+Niet bereikbaar via de site: wie het kan draaien, heeft de database al.
+Verworpen: rijen verwijderen om de opzetpagina te heropenen (het account hangt
+aan logboek en bestellingen), en "wachtwoord vergeten" per mail (dan is de
+mailbox de sleutel tot het paneel; kan later als aparte keuze).
+
 ---
 
 ## D-08 · Kortingen en acties
@@ -1694,6 +1706,7 @@ reparatie er is.
 
 | Datum | Beslissing | Wijziging |
 |---|---|---|
+| 2026-11-24 | D-07 | Gebruiker: herstel van de enige eigenaar met `pnpm admin:herstel` (uitnodigingslink in de terminal, logboekregel); geen "wachtwoord vergeten" per mail. Gebouwd |
 | 2026-11-17 | D-02, D-04, D-07, D-22 | Eigenaar via de gebruiker: Fitness › Accessoires erbij, buiten sporten niet (D-02); terugbetalen na 24 uur weigeren alleen na goedkeuring van de eigenaar in het paneel, niet meer automatisch (D-04); één beheerder, een volgende krijgt dezelfde rechten, geen bedraggrens (D-07); prijs en artikelen 30 minuten vast vanaf het afrekenen, gemeld in de winkelwagen (D-22). Gebouwd, behalve het vasthouden van de voorraad (D-22, te bevestigen) |
 | 2026-11-13 | D-33 | Gebruiker namens de eigenaar: donker thema voor de webshop (niet het beheer), apparaat + knop, kleuren voorgesteld door Claude. Gebouwd; de eigenaar keurt de kleuren nog goed |
 | 2026-11-13 | D-04 | Gebruiker: na 24 uur weigeringen bij BigBuy vanzelf annuleren en volledig terugbetalen, met een mail aan de beheerder om op te waarderen; prijs boven 10 % blijft de keuze van de eigenaar. Gebouwd |
