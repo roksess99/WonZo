@@ -467,7 +467,8 @@
       "system": "systeem",
       "provider": "betaaldienst",
       "reconciliation": "controle",
-      "visitor": "onbekende bezoeker"
+      "visitor": "onbekende bezoeker",
+      "script:herstel": "herstelscript"
     },
     "objects": {
       "order": "bestelling",
@@ -513,7 +514,8 @@
       "admin.role-changed": "Rol gewijzigd",
       "admin.disabled": "Beheerder uitgeschakeld",
       "admin.enabled": "Beheerder weer ingeschakeld",
-      "admin.reset": "Toegang opnieuw ingesteld"
+      "admin.reset": "Toegang opnieuw ingesteld",
+      "admin.recovered": "Toegang hersteld met het herstelscript"
     }
   },
   "returns": {

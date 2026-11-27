@@ -247,6 +247,14 @@ verzoek van de klant (nu: verbergen met die reden).
   uitloggen, nieuwe herstelcodes). Telefoon kwijt: inloggen met een
   herstelcode, of een andere eigenaar stelt de toegang opnieuw in. Het
   logboek toont de naam van de beheerder.
+- **Alles kwijt en geen andere eigenaar** (gebouwd 2026-11-24, D-07): de
+  eigenaar draait `pnpm admin:herstel` met de live databasegegevens als
+  `LIVE_DATABASE_*` en `ADMIN_RECOVER_EMAIL` in `.env`. Wachtwoord, app, herstelcodes en
+  sessies van dat eigenaarsaccount worden gewist; de uitnodigingslink (48 uur,
+  één keer) staat alleen in de terminal. Het account blijft, dus het logboek
+  en de bestellingen blijven eraan hangen; in het logboek: "herstelscript".
+  Daarna het IP-adres weer weghalen bij Remote MySQL en `LIVE_DATABASE_*`
+  weer leegmaken.
 
 ---
 

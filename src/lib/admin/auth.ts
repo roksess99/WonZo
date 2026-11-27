@@ -477,6 +477,35 @@ export async function resetAdmin(actor: string, adminId: number, now: Date = new
   );
 }
 
+export const RECOVERY_ACTOR = "script:herstel";
+
+export type RecoverResult = { ok: true; adminId: number; token: string; expiresAt: Date } | { ok: false; error: "email" | "not-found" };
+
+/**
+ * Access lost and no other owner to reset it (D-07, user 2026-11-24): what
+ * resetAdmin does, for an active owner found by address, with the new
+ * invitation's key returned instead of mailed. Never reachable from a request:
+ * only the owner's own terminal calls it (scripts/admin/recover.run.ts), with
+ * access to the database, which is already everything. The key exists as text
+ * only in that terminal; the database keeps its hash, for 48 hours, once.
+ */
+export async function recoverOwner(email: unknown, now: Date = new Date()): Promise<RecoverResult> {
+  const address = parseEmail(email);
+  if (!address) return { ok: false, error: "email" };
+  return inTransaction<RecoverResult>(async (conn) => {
+    const [a] = await selectRows<{ id: number | string }>(conn, "SELECT id FROM admins WHERE email = ? AND role = 'eigenaar' AND disabled_at IS NULL FOR UPDATE", [address]);
+    if (!a) throw new Abort<RecoverResult>({ ok: false, error: "not-found" });
+    const id = Number(a.id);
+    await conn.query("UPDATE admins SET password_hash = NULL, totp_secret_enc = NULL, totp_last_step = NULL WHERE id = ?", [id]);
+    await conn.query("DELETE FROM admin_sessions WHERE admin_id = ?", [id]);
+    await conn.query("DELETE FROM admin_recovery_codes WHERE admin_id = ?", [id]);
+    const invite = await issueInvite(conn, id, now);
+    if (!invite) throw new Error("recoverOwner: no invitation after clearing the credentials");
+    await appendAudit(conn, { actor: RECOVERY_ACTOR, action: "admin.recovered", objectType: "admin", objectId: id }, now);
+    return { ok: true, adminId: id, token: invite.token, expiresAt: invite.expiresAt };
+  });
+}
+
 /** The invitation once more, for someone who has not accepted it yet. */
 export async function resendInvite(actor: string, adminId: number, now: Date = new Date()): Promise<ManageResult> {
   return manage(
