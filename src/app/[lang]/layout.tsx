@@ -19,6 +19,16 @@ import "../globals.css";
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 
+// Every shop page is rendered per request, also the ones without data
+// (contact, cart, "Zo werkt WonZo"). Prerendered, Next.js sends them with
+// `Cache-Control: s-maxage=31536000` (GEMETEN), and Hostinger's CDN can keep the HTML of
+// an old deploy for a year. That HTML points at JavaScript the new deploy no
+// longer has; most likely an open tab then kept reloading and prefetching (AANNAME): 77,075 requests
+// from one address in a day, and Hostinger blocked it (2026-11-21). Dynamic
+// pages get `private, no-store`, so the CDN never keeps HTML; static files
+// under /_next keep their own long cache.
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
