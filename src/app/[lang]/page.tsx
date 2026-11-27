@@ -10,7 +10,9 @@ import { getCatalogOrUnavailable } from "@/lib/catalog/provider";
 import { heroShowcase } from "@/lib/catalog/showcase";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages, type Messages } from "@/lib/i18n/messages";
-import { pageMetadata } from "@/lib/seo";
+import { localizePath } from "@/lib/i18n/paths";
+import { pageMetadata, siteUrl } from "@/lib/seo";
+import { jsonLd, websiteJsonLd } from "@/lib/structured-data";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -52,8 +54,14 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const m = getMessages(lang);
+  const homePath = localizePath(lang, "/");
   return (
     <>
+      {/* The site itself, per language; our own texts, "<" escaped (src/lib/structured-data.ts). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(websiteJsonLd(siteUrl, homePath, m.meta.siteName, m.meta.description, lang === "nl" ? "nl-NL" : "en-GB")) }}
+      />
       <Hero
         locale={lang}
         m={m}

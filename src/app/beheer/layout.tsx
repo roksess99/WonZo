@@ -72,6 +72,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/beheer">) 
                     {m.nav.promotions}
                   </Link>
                 ) : null}
+                {can(admin.role, "productteksten") ? (
+                  <Link href="/beheer/productteksten" className="underline-offset-4 hover:underline">
+                    {m.nav.texts}
+                  </Link>
+                ) : null}
                 {can(admin.role, "beoordelingen") ? (
                   <Link href="/beheer/beoordelingen" className="underline-offset-4 hover:underline">
                     {m.nav.reviews}

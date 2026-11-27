@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CategoryPage } from "@/components/catalog/CategoryPage";
+import { CategoryPage, categoryIntro } from "@/components/catalog/CategoryPage";
 import { findCategoryBySlug, findSubcategoryBySlug } from "@/lib/catalog/assortment";
 import { parseListingQuery } from "@/lib/catalog/query";
 import { isLocale } from "@/lib/i18n/config";
@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/[category]
       en: localizePath("en", `/${category.slug.en}/${sub.slug.en}`),
     },
     m.subcategories[sub.key as keyof typeof m.subcategories],
-    m.categories[category.key as keyof typeof m.categories].intro,
+    // Its own description: the four subcategories of Wonen all had that of /wonen (SEO audit 2026-11-27).
+    categoryIntro(m, category, sub),
   );
 }
 

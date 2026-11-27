@@ -230,6 +230,28 @@ verzoek van de klant (nu: verbergen met die reden).
 
 ---
 
+## Productteksten
+
+**Gebouwd (2026-11-27, gebruiker, na de SEO-audit):** `/beheer/productteksten`
+(recht "productteksten", alleen de rol eigenaar: marketing is volgens D-07
+kortingen, beoordelingen en statistieken; verruimen is een keuze van de
+eigenaar). Een lijst van de artikelen in de winkel, te zoeken op naam, merk
+of artikelnummer en te filteren op met of zonder inleiding; per artikel één
+formulier met de inleiding in het Nederlands en het Engels, en de
+omschrijving van BigBuy ter vergelijking.
+
+- De inleiding staat op de productpagina onder de naam, open (de tekst van
+  BigBuy klapt eronder dicht). Ze gaat vóór de tekst van BigBuy in de meta
+  description en in de markering.
+- Waarom: de tekst van BigBuy staat letterlijk bij elke winkel die hetzelfde
+  artikel verkoopt (SEO-audit 2026-11-27). Begin bij de artikelen die het
+  meest verkopen of de diepste voorraad hebben.
+- Gewone tekst, hoogstens 600 tekens per taal; leeg is geen inleiding. Opslaan
+  alleen op de versie die het formulier toonde; elke wijziging in het logboek
+  met de hele tekst ervoor en erna.
+
+---
+
 ## Beheerders
 
 - De eerste komt uit een opzetpagina die **zichzelf sluit** zodra er één is.

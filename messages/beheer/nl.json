@@ -20,7 +20,8 @@
     "account": "Account",
     "logout": "Uitloggen",
     "prices": "Prijzen",
-    "promotions": "Kortingen"
+    "promotions": "Kortingen",
+    "texts": "Productteksten"
   },
   "notFound": {
     "title": "Niet gevonden",
@@ -40,7 +41,8 @@
     "retouren": "retouren",
     "beheerders": "beheerders",
     "statistieken": "statistieken",
-    "logboek": "het logboek"
+    "logboek": "het logboek",
+    "productteksten": "productteksten"
   },
   "health": {
     "mollieNoKey": "Afrekenen kan niet: er staat geen sleutel van Mollie ingesteld.",
@@ -515,7 +517,8 @@
       "admin.disabled": "Beheerder uitgeschakeld",
       "admin.enabled": "Beheerder weer ingeschakeld",
       "admin.reset": "Toegang opnieuw ingesteld",
-      "admin.recovered": "Toegang hersteld met het herstelscript"
+      "admin.recovered": "Toegang hersteld met het herstelscript",
+      "product.text-changed": "Producttekst gewijzigd"
     }
   },
   "returns": {
@@ -936,5 +939,41 @@
     "errorNotFound": "Deze code bestaat niet.",
     "errorEnded": "Deze code is al afgelopen.",
     "errorAccess": "Je hebt geen toegang tot de kortingen."
+  },
+  "texts": {
+    "title": "Productteksten",
+    "intro": "Een eigen inleiding bij een artikel, in je eigen woorden. Hij staat op de productpagina onder de naam, en zoekmachines lezen hem als eerste. De omschrijving van BigBuy blijft eronder staan: die staat bij elke winkel die hetzelfde artikel verkoopt, jouw inleiding niet.",
+    "searchLabel": "Zoek een artikel",
+    "searchHint": "Op naam, merk of artikelnummer.",
+    "search": "Zoeken",
+    "filterLabel": "Laten zien",
+    "filterAll": "Alle artikelen",
+    "filterWithout": "Zonder inleiding",
+    "filterWith": "Met inleiding",
+    "results": "{shown} van {count} artikelen",
+    "resultsMore": "Zoek preciezer om de rest te zien.",
+    "none": "Geen artikelen gevonden.",
+    "colProduct": "Artikel",
+    "colTexts": "Inleiding",
+    "hasNl": "NL",
+    "hasEn": "EN",
+    "missing": "nog geen",
+    "edit": "Schrijven",
+    "back": "Terug naar de lijst",
+    "editTitle": "Inleiding bij {name}",
+    "viewShop": "Bekijk in de winkel",
+    "supplierTitle": "Omschrijving van BigBuy (ter vergelijking)",
+    "nlLabel": "Inleiding in het Nederlands",
+    "enLabel": "Inleiding in het Engels",
+    "fieldHint": "Twee tot vier zinnen: wat het is, voor wie, en waarom je het zou kiezen. Gewone tekst; een witregel begint een nieuwe alinea. Leeg: geen inleiding. Hoogstens {max} tekens.",
+    "counter": "{count} van {max} tekens",
+    "save": "Opslaan",
+    "done": "Opgeslagen. De productpagina toont de nieuwe inleiding meteen.",
+    "unchanged": "Er was niets gewijzigd.",
+    "errorTooLong": "Een inleiding is hoogstens {max} tekens, zonder speciale tekens.",
+    "errorChanged": "Deze tekst is intussen ergens anders gewijzigd. Laad de pagina opnieuw; je tekst staat hieronder nog, kopieer hem eerst.",
+    "errorProduct": "Dit artikel staat niet (meer) in de winkel.",
+    "errorAccess": "Je mag geen productteksten wijzigen.",
+    "notFound": "Dit artikel staat niet (meer) in de winkel."
   }
 }

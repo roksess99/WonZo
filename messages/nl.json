@@ -66,6 +66,20 @@
     "manden": "Manden en dekens",
     "kleding": "Hondenkleding"
   },
+  "subcategoryIntros": {
+    "opslag": "Rekken, manden, bakken en organizers die ruimte maken in kast, keuken en hal.",
+    "meubels": "Kasten, stoelen, krukken en tafels voor in huis.",
+    "decoratie": "Spiegels, schilderijen, vazen, kaarshouders, klokken en beeldjes om je huis aan te kleden.",
+    "keuken": "Borden, glazen, pannen, placemats en handige hulpjes voor de keuken en de gedekte tafel.",
+    "tuinmeubels": "Tuinstoelen, tafels, parasols en parasolvoeten voor de tuin en het balkon.",
+    "bewatering": "Spullen om je tuin en je planten water te geven.",
+    "barbecue": "Houtskoolbarbecues en accessoires om buiten te koken.",
+    "kamperen": "Kampeerstoelen en -tafels, slaapzakken en luchtbedden voor op de camping.",
+    "thuis-sporten": "Weerstandsbanden, pull-up stations en andere spullen om thuis te trainen.",
+    "halsbanden": "Halsbanden, tuigen en riemen voor je hond.",
+    "manden": "Manden, kussens en dekens waar je huisdier lekker op ligt.",
+    "kleding": "Jassen en kleding voor je hond."
+  },
   "home": {
     "title": "Slim spul voor thuis",
     "intro": "Een overzichtelijk aanbod voor in en rond het huis. Bij elk product zie je meteen wat het kost en wanneer het er is.",
@@ -98,7 +112,9 @@
     "emptyText": "Met deze filters vinden we niets. Wis een filter of bekijk alles in deze categorie.",
     "emptyCategory": "Hier is op dit moment niets leverbaar. Kijk binnenkort nog eens, of bekijk een andere categorie.",
     "unavailableTitle": "De producten zijn even niet te laden",
-    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw."
+    "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw.",
+    "aboutTitle": "Zo koop je bij WonZo",
+    "aboutText": "Op elke productpagina zie je de prijs inclusief btw, de levertijd en de verzendkosten, voordat je bestelt. Verzending kost {fee}; vanaf {freeFrom} is het gratis. Grote artikelen, zoals meubels, hebben eigen verzendkosten per stuk: die staan op de productpagina en tellen niet mee voor gratis verzending. We bezorgen alleen in Nederland. Je hebt {days} dagen bedenktijd."
   },
   "search": {
     "title": "Zoeken",
@@ -146,7 +162,8 @@
     "unavailableTitle": "Dit product is even niet te laden",
     "unavailableText": "Onze leverancier is tijdelijk niet bereikbaar. Probeer het over een paar minuten opnieuw.",
     "promotionFlag": "{percent}% korting",
-    "promotionUntil": "Actie tot {date}"
+    "promotionUntil": "Actie tot {date}",
+    "metaLead": "{price} · bezorgd in {min}–{max} werkdagen."
   },
   "cart": {
     "title": "Winkelwagen",

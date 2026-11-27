@@ -17,7 +17,10 @@ export function ProductImage({ src, alt, noImageText, priority, sizes }: Props) 
           alt={alt}
           fill
           sizes={sizes}
-          priority={priority}
+          // `priority` is deprecated in Next.js 16 and only made the image eager; the docs advise eager plus a
+          // high fetch priority for the largest image above the fold (node_modules/next/dist/docs, image § preload).
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
           // SVG mock images are not run through the optimiser.
           unoptimized={src.endsWith(".svg")}
           className="object-contain p-4"
