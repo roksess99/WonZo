@@ -66,6 +66,20 @@
     "manden": "Beds and blankets",
     "kleding": "Dog clothing"
   },
+  "subcategoryIntros": {
+    "opslag": "Racks, baskets, boxes and organisers that make room in cupboards, the kitchen and the hall.",
+    "meubels": "Cabinets, chairs, stools and tables for in the house.",
+    "decoratie": "Mirrors, paintings, vases, candle holders, clocks and figures to dress up your home.",
+    "keuken": "Plates, glasses, pans, placemats and handy helpers for the kitchen and the table.",
+    "tuinmeubels": "Garden chairs, tables, parasols and parasol bases for the garden and the balcony.",
+    "bewatering": "Things to water your garden and your plants.",
+    "barbecue": "Charcoal barbecues and accessories for cooking outdoors.",
+    "kamperen": "Camping chairs and tables, sleeping bags and air beds for the campsite.",
+    "thuis-sporten": "Resistance bands, pull-up stations and more to work out at home.",
+    "halsbanden": "Collars, harnesses and leads for your dog.",
+    "manden": "Beds, cushions and blankets for your pet to lie on.",
+    "kleding": "Coats and clothing for your dog."
+  },
   "home": {
     "title": "Clever things for home",
     "intro": "A clear range for in and around the house. Every product shows straight away what it costs and when it arrives.",
@@ -98,7 +112,9 @@
     "emptyText": "Nothing matches these filters. Clear a filter or see everything in this category.",
     "emptyCategory": "Nothing is available here right now. Check back soon, or have a look at another category.",
     "unavailableTitle": "The products can't be loaded right now",
-    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes."
+    "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes.",
+    "aboutTitle": "Buying at WonZo",
+    "aboutText": "Every product page shows the price including VAT, the delivery time and the shipping costs before you order. Shipping costs {fee}, and it is free from {freeFrom}. Large items, such as furniture, have their own shipping costs per piece: they are on the product page and do not count towards free shipping. We deliver in the Netherlands only. You have {days} days to change your mind."
   },
   "search": {
     "title": "Search",
@@ -146,7 +162,8 @@
     "unavailableTitle": "This product can't be loaded right now",
     "unavailableText": "Our supplier is temporarily unreachable. Please try again in a few minutes.",
     "promotionFlag": "{percent}% off",
-    "promotionUntil": "Offer until {date}"
+    "promotionUntil": "Offer until {date}",
+    "metaLead": "{price} · delivered in {min}–{max} working days."
   },
   "cart": {
     "title": "Cart",

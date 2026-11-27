@@ -9,14 +9,15 @@ import { Breadcrumb, Container, StateMessage } from "@/components/ui";
 import { categoryByKey } from "@/lib/catalog/assortment";
 import { structureDescription } from "@/lib/catalog/description";
 import { getProduct, SupplierUnavailableError } from "@/lib/catalog/provider";
+import { getProductIntro } from "@/lib/catalog/texts";
 import type { Product } from "@/lib/catalog/types";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getMessages, t, type Messages } from "@/lib/i18n/messages";
 import { localizePath } from "@/lib/i18n/paths";
 import { formatMoney, formatMoneyShort } from "@/lib/money";
 import { productShipping } from "@/lib/pricing/shipping";
-import { pageMetadata, siteUrl } from "@/lib/seo";
-import { jsonLd, productJsonLd } from "@/lib/structured-data";
+import { metaDescription, pageMetadata, shareImageUrl, siteUrl } from "@/lib/seo";
+import { breadcrumbJsonLd, jsonLd, productJsonLd } from "@/lib/structured-data";
 
 const idFromSlug = (slug: string) => /-(\d+)$/.exec(slug)?.[1] ?? (/^\d+$/.test(slug) ? slug : null);
 
@@ -45,7 +46,19 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/product/[s
     nl: localizePath("nl", `/product/${lang === "nl" ? p.slug : (other?.slug ?? p.slug)}`),
     en: localizePath("en", `/product/${lang === "en" ? p.slug : (other?.slug ?? p.slug)}`),
   };
-  return pageMetadata(lang, paths, p.name, p.description[0] ?? p.name);
+  const m = getMessages(lang);
+  // Price and delivery first: what a searcher decides on. Then as much of the description as fits (src/lib/seo.ts).
+  const lead = t(m.product.metaLead, { price: formatMoney(p.price), min: p.delivery.minWorkingDays, max: p.delivery.maxWorkingDays });
+  const photo = p.imageUrls[0];
+  // The shop's own introduction when there is one: the supplier's text is the same in every shop.
+  const intro = await getProductIntro(lang, p.source, p.id);
+  return pageMetadata(
+    lang,
+    paths,
+    p.name,
+    metaDescription(lead, intro ?? p.description.join(" ")),
+    photo ? { url: shareImageUrl(photo), alt: p.name } : undefined,
+  );
 }
 
 /** The end of a promotion as the visitor reads it: Dutch time, in the page's language. */
@@ -79,25 +92,26 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
   const specLabels = m.product.spec as Record<string, string>;
   // Shipping costs before the button (docs/ONDERZOEK.md § 1.2, ACM), from the same rule as the cart.
   const shipping = productShipping(p.shippingAlone);
+  const intro = await getProductIntro(lang, p.source, p.id);
+  // One list for the visible breadcrumb and its markup, so they cannot differ.
+  const crumbs = [
+    { href: localizePath(lang, "/"), label: m.meta.siteName },
+    ...(category && categoryPath ? [{ href: categoryPath, label: m.categories[category.key as keyof Messages["categories"]].name }] : []),
+    ...(category && sub && categoryPath
+      ? [{ href: `${categoryPath}/${sub.slug[lang]}`, label: m.subcategories[sub.key as keyof Messages["subcategories"]] }]
+      : []),
+    { label: p.name },
+  ];
 
   return (
     <Container className="flex flex-col gap-8 py-8">
       <script
         type="application/ld+json"
         // JSON.stringify of our own canonical data; "<" is escaped so a product name cannot close the tag.
-        dangerouslySetInnerHTML={{ __html: jsonLd(productJsonLd(p, url, siteUrl)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(productJsonLd(p, url, siteUrl, intro)) }}
       />
-      <Breadcrumb
-        label={m.a11y.breadcrumb}
-        items={[
-          { href: localizePath(lang, "/"), label: m.meta.siteName },
-          ...(category && categoryPath ? [{ href: categoryPath, label: m.categories[category.key as keyof Messages["categories"]].name }] : []),
-          ...(category && sub && categoryPath
-            ? [{ href: `${categoryPath}/${sub.slug[lang]}`, label: m.subcategories[sub.key as keyof Messages["subcategories"]] }]
-            : []),
-          { label: p.name },
-        ]}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbJsonLd(crumbs, siteUrl)) }} />
+      <Breadcrumb label={m.a11y.breadcrumb} items={crumbs} />
 
       <div className="grid gap-8 md:grid-cols-2">
         <ProductGallery urls={p.imageUrls} name={p.name} labels={{ ...m.product.gallery, noImage: m.product.noImage }} />
@@ -107,6 +121,14 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
             {p.brand ? <p className="text-label uppercase text-muted">{p.brand}</p> : null}
             <h1 className="font-display text-h1 font-bold">{p.name}</h1>
           </div>
+          {/* The shop's own words, open on the page (the supplier's text folds away below). Plain text, a blank line a new paragraph. */}
+          {intro
+            ? intro.split("\n\n").map((para, i) => (
+                <p key={i} className="max-w-prose whitespace-pre-line">
+                  {para}
+                </p>
+              ))
+            : null}
 
           {/* The buy block: price, stock, delivery, shipping and the button together (docs/SCHERMEN.md). */}
           <section aria-label={m.product.addToCart} className="flex flex-col gap-4 rounded-md bg-surface p-6 ring-1 ring-line">

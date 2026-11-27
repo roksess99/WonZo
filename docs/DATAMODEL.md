@@ -251,6 +251,24 @@ Eén markt (D-14), dus geen kolom voor de markt. Bewaartermijn: D-24
 (minimaal de referentieperiode plus marge, langer als bewijs bij een geschil
 gewenst is).
 
+### ProductText
+
+De eigen inleiding bij een artikel (gebruiker 2026-11-27), in
+`product_texts` (migratie 0014). Eigen tabel, niet in de catalogustabellen:
+die worden elke nacht opnieuw gevuld (D-31), deze tekst is niet terug te
+halen.
+
+| Veld | Opmerking |
+|---|---|
+| `source`, `product_id` | het artikel zoals de catalogus het kent |
+| `intro_nl`, `intro_en` | gewone tekst, hoogstens 600 tekens; leeg is "geen inleiding" |
+| `version` | omhoog bij elke opslag; opslaan alleen op de versie die het formulier toonde |
+| `updated_at`, `updated_by` | wie het laatst schreef |
+
+Elke wijziging komt met de hele tekst ervoor en erna in het logboek
+(`product.text-changed`): zo is een eerdere versie terug te vinden. Geen
+persoonsgegevens.
+
 ### Return
 
 | Veld | Opmerking |

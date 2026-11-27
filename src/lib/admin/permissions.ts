@@ -21,6 +21,12 @@ export const PERMISSIONS = [
   "statistieken",
   /** The audit log: who did what to which object (docs/BEHEER.md § Beheerders). Only the owner's role has it (D-07). */
   "logboek",
+  /**
+   * The shop's own introduction per product (user 2026-11-27). Only the
+   * owner's role: the marketing role is "kortingen, beoordelingen,
+   * statistieken" (D-07), and widening it is the owner's choice.
+   */
+  "productteksten",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 

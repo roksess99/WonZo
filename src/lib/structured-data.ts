@@ -41,7 +41,7 @@ export function organizationJsonLd(base: URL) {
  * piece), the delivery time and the 14-day withdrawal window. No rating until
  * there are real reviews (D-12).
  */
-export function productJsonLd(p: Product, url: string, base: URL) {
+export function productJsonLd(p: Product, url: string, base: URL, intro: string | null = null) {
   const shipping = shippingFor(p.price, [{ shippingAlone: p.shippingAlone, quantity: 1 }]).total;
   return {
     "@context": "https://schema.org",
@@ -51,7 +51,8 @@ export function productJsonLd(p: Product, url: string, base: URL) {
     ...(p.ean ? { gtin13: p.ean } : {}),
     ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}),
     ...(p.imageUrls.length ? { image: p.imageUrls.map((u) => new URL(u, base).toString()) } : {}),
-    description: p.description.join(" "),
+    // The shop's own introduction first, as on the page (src/lib/catalog/texts.ts), then the supplier's text.
+    description: [...(intro ? [intro] : []), ...p.description].join(" "),
     offers: {
       "@type": "Offer",
       url,
@@ -77,6 +78,38 @@ export function productJsonLd(p: Product, url: string, base: URL) {
         returnMethod: "https://schema.org/ReturnByMail",
       },
     },
+  };
+}
+
+/**
+ * The breadcrumb the page shows, as BreadcrumbList: the same items, in the
+ * same order (.claude/rules/frontend.md § SEO: markup describes the page).
+ * The last item is the page itself and has no link, which schema.org allows.
+ */
+export function breadcrumbJsonLd(items: { href?: string; label: string }[], base: URL) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.label,
+      ...(item.href ? { item: new URL(item.href, base).toString() } : {}),
+    })),
+  };
+}
+
+/** The site itself, on the home page of each language: its name, address and language, published by the shop. */
+export function websiteJsonLd(base: URL, homePath: string, name: string, description: string, inLanguage: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": new URL(`${homePath === "/" ? "" : homePath}/#website`, base).toString(),
+    name,
+    description,
+    url: new URL(homePath, base).toString(),
+    inLanguage,
+    publisher: { "@id": new URL("/#organization", base).toString() },
   };
 }
 
